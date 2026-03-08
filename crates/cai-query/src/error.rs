@@ -5,6 +5,39 @@ use cai_core::Error as CoreError;
 /// Query-specific result type
 pub type QueryResult<T> = std::result::Result<T, QueryError>;
 
+/// Schema information returned by SHOW TABLES and DESCRIBE queries
+#[derive(Debug, Clone, serde::Serialize)]
+pub struct SchemaInfo {
+    /// Query type (SHOW_TABLES or DESCRIBE)
+    pub query_type: SchemaQueryType,
+    /// Table name (for DESCRIBE queries)
+    pub table_name: Option<String>,
+    /// List of tables (for SHOW TABLES)
+    pub tables: Vec<String>,
+    /// Column information (for DESCRIBE)
+    pub columns: Vec<ColumnInfo>,
+}
+
+/// Type of schema query
+#[derive(Debug, Clone, serde::Serialize)]
+pub enum SchemaQueryType {
+    /// SHOW TABLES query
+    ShowTables,
+    /// DESCRIBE table query
+    DescribeTable,
+}
+
+/// Column information for DESCRIBE queries
+#[derive(Debug, Clone, serde::Serialize)]
+pub struct ColumnInfo {
+    /// Column name
+    pub name: String,
+    /// Column data type
+    pub data_type: String,
+    /// Column description
+    pub description: String,
+}
+
 /// Query engine errors
 #[derive(Debug, thiserror::Error)]
 pub enum QueryError {

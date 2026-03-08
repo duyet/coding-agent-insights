@@ -2,9 +2,12 @@
 //!
 //! These tests verify complete query flows from various sources.
 
-use cai_core::{Entry, Source, Metadata};
+#[cfg(test)]
 use chrono::{DateTime, Utc};
+#[cfg(test)]
+use cai_core::{Entry, Source, Metadata};
 
+#[cfg(test)]
 fn setup_test_entries() -> Vec<Entry> {
     vec![
         Entry {
@@ -74,14 +77,15 @@ fn setup_test_entries() -> Vec<Entry> {
 
 #[cfg(test)]
 mod basic_query_tests {
-    use super::*;
     use cai_storage::{MemoryStorage, Storage, Filter};
+    use cai_core::Source;
+    use chrono::{DateTime, Utc};
 
     /// Test simple SELECT all query
     #[tokio::test]
     async fn test_query_all_entries() {
         let storage = MemoryStorage::new();
-        let entries = setup_test_entries();
+        let entries = super::setup_test_entries();
 
         for entry in &entries {
             storage.store(entry).await.unwrap();
@@ -95,7 +99,7 @@ mod basic_query_tests {
     #[tokio::test]
     async fn test_query_by_source() {
         let storage = MemoryStorage::new();
-        let entries = setup_test_entries();
+        let entries = super::setup_test_entries();
 
         for entry in &entries {
             storage.store(entry).await.unwrap();
@@ -116,7 +120,7 @@ mod basic_query_tests {
     #[tokio::test]
     async fn test_query_after_date() {
         let storage = MemoryStorage::new();
-        let entries = setup_test_entries();
+        let entries = super::setup_test_entries();
 
         for entry in &entries {
             storage.store(entry).await.unwrap();
@@ -137,7 +141,7 @@ mod basic_query_tests {
     #[tokio::test]
     async fn test_query_before_date() {
         let storage = MemoryStorage::new();
-        let entries = setup_test_entries();
+        let entries = super::setup_test_entries();
 
         for entry in &entries {
             storage.store(entry).await.unwrap();
@@ -158,7 +162,7 @@ mod basic_query_tests {
     #[tokio::test]
     async fn test_query_combined_filter() {
         let storage = MemoryStorage::new();
-        let entries = setup_test_entries();
+        let entries = super::setup_test_entries();
 
         for entry in &entries {
             storage.store(entry).await.unwrap();
@@ -179,7 +183,6 @@ mod basic_query_tests {
 
 #[cfg(test)]
 mod output_format_tests {
-    use super::*;
     use cai_storage::{MemoryStorage, Storage};
     use std::io::Cursor;
     use cai_output::{JsonFormatter, JsonlFormatter, Formatter};
@@ -188,7 +191,7 @@ mod output_format_tests {
     #[tokio::test]
     async fn test_json_output() {
         let storage = MemoryStorage::new();
-        let entries = setup_test_entries();
+        let entries = super::setup_test_entries();
 
         for entry in &entries {
             storage.store(entry).await.unwrap();
@@ -212,7 +215,7 @@ mod output_format_tests {
     #[tokio::test]
     async fn test_jsonl_output() {
         let storage = MemoryStorage::new();
-        let entries = setup_test_entries();
+        let entries = super::setup_test_entries();
 
         for entry in &entries {
             storage.store(entry).await.unwrap();
@@ -256,14 +259,14 @@ mod output_format_tests {
 
 #[cfg(test)]
 mod edge_case_tests {
-    use super::*;
     use cai_storage::{MemoryStorage, Storage, Filter};
+    use chrono::{DateTime, Utc};
 
     /// Test query with no matches
     #[tokio::test]
     async fn test_query_no_matches() {
         let storage = MemoryStorage::new();
-        let entries = setup_test_entries();
+        let entries = super::setup_test_entries();
 
         for entry in &entries {
             storage.store(entry).await.unwrap();
@@ -283,7 +286,7 @@ mod edge_case_tests {
     #[tokio::test]
     async fn test_query_outside_date_range() {
         let storage = MemoryStorage::new();
-        let entries = setup_test_entries();
+        let entries = super::setup_test_entries();
 
         for entry in &entries {
             storage.store(entry).await.unwrap();
@@ -304,7 +307,7 @@ mod edge_case_tests {
     #[tokio::test]
     async fn test_get_by_id() {
         let storage = MemoryStorage::new();
-        let entries = setup_test_entries();
+        let entries = super::setup_test_entries();
 
         for entry in &entries {
             storage.store(entry).await.unwrap();
@@ -312,7 +315,7 @@ mod edge_case_tests {
 
         let entry = storage.get("query-test-2").await.unwrap();
         assert!(entry.is_some(), "Should find entry by ID");
-        assert_eq!(entry.unwrap().source, Source::Codex);
+        assert_eq!(entry.unwrap().source, cai_core::Source::Codex);
 
         let missing = storage.get("non-existent").await.unwrap();
         assert!(missing.is_none(), "Should not find non-existent entry");
@@ -325,7 +328,7 @@ mod edge_case_tests {
 
         assert_eq!(storage.count().await.unwrap(), 0, "Initial count should be 0");
 
-        let entries = setup_test_entries();
+        let entries = super::setup_test_entries();
         for entry in &entries {
             storage.store(entry).await.unwrap();
         }

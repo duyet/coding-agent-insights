@@ -1,8 +1,11 @@
 //! Integration tests for CAI
 
+#[cfg(test)]
 use cai_core::{Entry, Source, Metadata};
+#[cfg(test)]
 use chrono::{DateTime, Utc};
 
+#[cfg(test)]
 fn setup_test_data() -> Vec<Entry> {
     vec![
         Entry {
@@ -62,6 +65,7 @@ mod tests {
     use cai_storage::{MemoryStorage, Storage, Filter};
     use cai_output::{JsonFormatter, JsonlFormatter, Formatter};
     use std::io::Cursor;
+    use chrono::Utc;
 
     #[tokio::test]
     async fn test_storage_and_query_integration() {
