@@ -9,6 +9,7 @@ use colored::Colorize;
 #[derive(Parser, Clone)]
 #[command(name = "cai")]
 #[command(about = "Superior AI coding history analyzer", long_about = None)]
+#[command(version = "0.1.0")]
 struct Cli {
     #[command(subcommand)]
     command: Commands,
@@ -68,10 +69,11 @@ async fn main() -> cai_core::Result<()> {
             Ok(())
         }
         Commands::Tui => {
-            // Initialize in-memory storage for now
-            let storage = std::sync::Arc::new(cai_storage::MemoryStorage::new());
+            // Initialize in-memory storage with mock data for testing
+            let storage = std::sync::Arc::new(cai_storage::MemoryStorage::with_mock_data());
             cai_tui::run(storage).await
         }
+        #[cfg(feature = "web")]
         Commands::Web { port } => {
             let storage = std::sync::Arc::new(cai_storage::MemoryStorage::new());
             let config = cai_web::Config {
@@ -80,6 +82,11 @@ async fn main() -> cai_core::Result<()> {
             };
             println!("{} {}", "Starting web server on port:".green(), port);
             cai_web::run(storage, config).await
+        }
+        #[cfg(not(feature = "web"))]
+        Commands::Web { .. } => {
+            eprintln!("{}", "Web feature not enabled. Build with --features web.".red());
+            std::process::exit(1);
         }
     }
 }
