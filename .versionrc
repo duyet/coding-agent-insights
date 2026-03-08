@@ -1,0 +1,18 @@
+{
+  "types": [
+    { "type": "feat", "section": "Added" },
+    { "type": "fix", "section": "Fixed" },
+    { "type": "refactor", "section": "Changed" },
+    { "type": "perf", "section": "Changed" },
+    { "type": "docs", "section": "Documentation" },
+    { "type": "chore", "section": "Other", "hidden": false },
+    { "type": "style", "hidden": true },
+    { "type": "test", "section": "Other", "hidden": false },
+    { "type": "build", "hidden": true },
+    { "type": "ci", "hidden": true }
+  ],
+  "commitUrlFormat": "https://github.com/duyet/coding-agent-insights/commit/{{hash}}",
+  "compareUrlFormat": "https://github.com/duyet/coding-agent-insights/compare/{{previousTag}}...{{currentTag}}",
+  "issueUrlFormat": "https://github.com/duyet/coding-agent-insights/issues/{{id}}",
+  "userUrlFormat": "https://github.com/{{user}}"
+}
