@@ -1,0 +1,27 @@
+[package]
+name = "cai-benches"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+publish = false
+
+[[bin]]
+name = "query_bench"
+path = "src/query_bench.rs"
+
+[[bin]]
+name = "format_bench"
+path = "src/format_bench.rs"
+
+[dependencies]
+cai-core = { path = "../crates/cai-core" }
+cai-storage = { path = "../crates/cai-storage" }
+cai-output = { path = "../crates/cai-output" }
+
+divan = { workspace = true }
+tokio = { workspace = true }
+serde_json = { workspace = true }
+chrono = { workspace = true }

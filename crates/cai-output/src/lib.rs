@@ -31,12 +31,19 @@ pub enum OutputFormat {
 }
 
 /// Dynamic formatter that can hold any formatter type
+#[non_exhaustive]
 pub enum DynFormatter {
+    /// JSON array formatter
     Json(JsonFormatter),
+    /// JSON Lines formatter
     Jsonl(JsonlFormatter),
+    /// CSV formatter
     Csv(CsvFormatter),
+    /// Table formatter
     Table(TableFormatter),
+    /// AI-optimized formatter
     Ai(AiFormatter),
+    /// Statistics formatter
     Stats(StatsFormatter),
 }
 
