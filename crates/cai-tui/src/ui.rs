@@ -7,7 +7,7 @@ use crate::{
     event::EventHandler,
 };
 use crossterm::{
-    event::{KeyCode, KeyEvent, KeyModifiers},
+    event::{KeyCode, KeyEvent},
     execute,
     terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
 };
@@ -15,7 +15,7 @@ use ratatui::{
     backend::CrosstermBackend,
     layout::{Alignment, Constraint, Direction, Layout, Margin, Rect},
     style::{Color, Modifier, Style},
-    text::{Line, Span, Text},
+    text::{Line, Span},
     widgets::{
         Block, Borders, Cell, Clear, Paragraph, Row, Scrollbar, ScrollbarOrientation,
         ScrollbarState, Table, TableState, Wrap,
@@ -115,6 +115,8 @@ where
         Mode::Query => handle_query_mode(app, key),
         Mode::Search => handle_search_mode(app, key),
         Mode::Normal => handle_normal_mode(app, key),
+        Mode::Detail => handle_detail_mode(app, key),
+        Mode::Help => handle_help_mode(app, key),
     }
 }
 
@@ -136,11 +138,23 @@ where
             app.search_input.clear();
             app.set_status("Search mode: Type to filter, Esc to cancel".to_string(), Color::Cyan);
         }
+        KeyCode::Char('?') => {
+            app.mode = Mode::Help;
+            app.help_scroll = 0;
+            app.set_status("Help: Press Esc or q to close".to_string(), Color::Cyan);
+        }
+        KeyCode::Enter => {
+            if app.selected_entry().is_some() {
+                app.mode = Mode::Detail;
+                app.detail_scroll_reset();
+                app.set_status("Detail view: Press Esc or q to close, arrows to scroll".to_string(), Color::Cyan);
+            }
+        }
         KeyCode::Up | KeyCode::Char('k') => {
             app.select_previous();
         }
         KeyCode::Down | KeyCode::Char('j') => {
-            app.select_next();
+            app.select_next(20); // Default height, will be refined
         }
         KeyCode::Char('t') => {
             app.toggle_sort(Column::Timestamp);
@@ -233,6 +247,46 @@ where
     }
 }
 
+/// Handle key events in detail mode
+fn handle_detail_mode<S>(app: &mut AppState<S>, key: KeyEvent)
+where
+    S: cai_storage::Storage,
+{
+    match key.code {
+        KeyCode::Esc | KeyCode::Char('q') => {
+            app.mode = Mode::Normal;
+            app.reset_status();
+        }
+        KeyCode::Up | KeyCode::Char('k') => {
+            app.detail_scroll_up();
+        }
+        KeyCode::Down | KeyCode::Char('j') => {
+            app.detail_scroll_down();
+        }
+        _ => {}
+    }
+}
+
+/// Handle key events in help mode
+fn handle_help_mode<S>(app: &mut AppState<S>, key: KeyEvent)
+where
+    S: cai_storage::Storage,
+{
+    match key.code {
+        KeyCode::Esc | KeyCode::Char('q') => {
+            app.mode = Mode::Normal;
+            app.reset_status();
+        }
+        KeyCode::Up | KeyCode::Char('k') => {
+            app.help_scroll_up();
+        }
+        KeyCode::Down | KeyCode::Char('j') => {
+            app.help_scroll_down();
+        }
+        _ => {}
+    }
+}
+
 /// Draw the UI
 fn ui<S>(f: &mut Frame, app: &AppState<S>)
 where
@@ -249,11 +303,13 @@ where
     // Status bar
     render_status(f, app, chunks[1]);
 
-    // Draw input/overlay if in query or search mode
-    if app.mode == Mode::Query {
-        render_query_input(f, app);
-    } else if app.mode == Mode::Search {
-        render_search_input(f, app);
+    // Draw overlays based on mode
+    match app.mode {
+        Mode::Query => render_query_input(f, app),
+        Mode::Search => render_search_input(f, app),
+        Mode::Detail => render_detail_view(f, app),
+        Mode::Help => render_help_screen(f, app),
+        Mode::Normal => {}
     }
 }
 
@@ -362,6 +418,8 @@ where
                 Mode::Normal => "NORMAL",
                 Mode::Query => "QUERY",
                 Mode::Search => "SEARCH",
+                Mode::Detail => "DETAIL",
+                Mode::Help => "HELP",
             },
             Style::default().fg(Color::Green).add_modifier(Modifier::BOLD),
         ),
@@ -399,7 +457,12 @@ where
         .wrap(Wrap { trim: false });
 
     f.render_widget(input, area);
-    f.set_cursor(area.x + app.query_input.len() as u16 + 1, area.y + 1);
+    let cursor_x = area.x + app.query_input.len() as u16 + 1;
+    let cursor_y = area.y + 1;
+    // Ensure cursor is within bounds
+    if cursor_x < area.right() && cursor_y < area.bottom() {
+        f.set_cursor_position((cursor_x, cursor_y));
+    }
 }
 
 /// Render search input overlay
@@ -421,7 +484,12 @@ where
         .wrap(Wrap { trim: false });
 
     f.render_widget(input, area);
-    f.set_cursor(area.x + app.search_input.len() as u16 + 1, area.y + 1);
+    let cursor_x = area.x + app.search_input.len() as u16 + 1;
+    let cursor_y = area.y + 1;
+    // Ensure cursor is within bounds
+    if cursor_x < area.right() && cursor_y < area.bottom() {
+        f.set_cursor_position((cursor_x, cursor_y));
+    }
 }
 
 /// Helper to create centered rectangle
@@ -463,4 +531,247 @@ fn truncate_string(s: &str, max_len: usize) -> String {
     } else {
         format!("{}...", &s[..max_len.saturating_sub(3)])
     }
+}
+
+/// Render detail view overlay
+fn render_detail_view<S>(f: &mut Frame, app: &AppState<S>)
+where
+    S: cai_storage::Storage,
+{
+    let area = centered_rect(80, 70, f.area());
+
+    f.render_widget(Clear, area);
+
+    if let Some(entry) = app.selected_entry() {
+        let content = vec![
+            Line::from(vec![
+                Span::styled("ID: ", Style::default().fg(Color::Cyan)),
+                Span::raw(&entry.id),
+            ]),
+            Line::from(vec![
+                Span::styled("Source: ", Style::default().fg(Color::Cyan)),
+                Span::raw(format!("{:?}", entry.source)),
+            ]),
+            Line::from(vec![
+                Span::styled("Timestamp: ", Style::default().fg(Color::Cyan)),
+                Span::raw(format_timestamp(entry.timestamp)),
+            ]),
+            Line::from(""),
+            Line::from(vec![
+                Span::styled("Prompt:", Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD)),
+            ]),
+            Line::from(""),
+        ];
+
+        let mut full_content = content.clone();
+
+        // Add prompt content (split into lines)
+        for line in word_wrap(&entry.prompt, 76) {
+            full_content.push(Line::from(vec![
+                Span::raw("  "),
+                Span::raw(line),
+            ]));
+        }
+
+        full_content.push(Line::from(""));
+        full_content.push(Line::from(vec![
+            Span::styled("Response:", Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD)),
+        ]));
+        full_content.push(Line::from(""));
+
+        // Add response content
+        for line in word_wrap(&entry.response, 76) {
+            full_content.push(Line::from(vec![
+                Span::raw("  "),
+                Span::raw(line),
+            ]));
+        }
+
+        // Add metadata if present
+        if entry.metadata.file_path.is_some() || entry.metadata.language.is_some() {
+            full_content.push(Line::from(""));
+            full_content.push(Line::from(vec![
+                Span::styled("Metadata:", Style::default().fg(Color::Cyan)),
+            ]));
+
+            if let Some(ref file) = entry.metadata.file_path {
+                full_content.push(Line::from(vec![
+                    Span::raw("  File: "),
+                    Span::raw(file),
+                ]));
+            }
+
+            if let Some(ref lang) = entry.metadata.language {
+                full_content.push(Line::from(vec![
+                    Span::raw("  Language: "),
+                    Span::raw(lang),
+                ]));
+            }
+
+            if let Some(ref repo) = entry.metadata.repo_url {
+                full_content.push(Line::from(vec![
+                    Span::raw("  Repo: "),
+                    Span::raw(repo),
+                ]));
+            }
+        }
+
+        let paragraph = Paragraph::new(full_content.clone())
+            .block(
+                Block::default()
+                    .borders(Borders::ALL)
+                    .border_style(Style::default().fg(Color::Cyan))
+                    .title("Entry Details"),
+            )
+            .scroll((app.detail_scroll as u16, 0))
+            .wrap(Wrap { trim: false });
+
+        f.render_widget(paragraph, area);
+
+        // Render scrollbar if content overflows
+        if full_content.len() > area.height as usize {
+            let scrollbar = Scrollbar::new(ScrollbarOrientation::VerticalRight);
+            let mut scrollbar_state = ScrollbarState::new(full_content.len()).position(app.detail_scroll);
+            f.render_stateful_widget(
+                scrollbar,
+                area.inner(Margin::new(0, 1)),
+                &mut scrollbar_state,
+            );
+        }
+    } else {
+        let no_entry = Paragraph::new("No entry selected")
+            .block(
+                Block::default()
+                    .borders(Borders::ALL)
+                    .border_style(Style::default().fg(Color::Cyan))
+                    .title("Entry Details"),
+            );
+        f.render_widget(no_entry, area);
+    }
+}
+
+/// Render help screen overlay
+fn render_help_screen<S>(f: &mut Frame, app: &AppState<S>)
+where
+    S: cai_storage::Storage,
+{
+    let area = centered_rect(80, 80, f.area());
+
+    f.render_widget(Clear, area);
+
+    let help_text = vec![
+        Line::from(vec![
+            Span::styled("CAI TUI - Keyboard Shortcuts", Style::default().fg(Color::Green).add_modifier(Modifier::BOLD)),
+        ]),
+        Line::from(""),
+        Line::from(vec![
+            Span::styled("Normal Mode:", Style::default().fg(Color::Cyan).add_modifier(Modifier::BOLD)),
+        ]),
+        Line::from("  q          - Quit application"),
+        Line::from("  i          - Enter query mode"),
+        Line::from("  /          - Enter search mode"),
+        Line::from("  ?          - Show this help screen"),
+        Line::from("  Enter      - View selected entry details"),
+        Line::from("  Up/Down    - Navigate entries"),
+        Line::from("  j/k        - Navigate entries (vim-style)"),
+        Line::from("  t          - Sort by timestamp"),
+        Line::from("  s          - Sort by source"),
+        Line::from("  p          - Sort by prompt"),
+        Line::from("  r          - Refresh data"),
+        Line::from(""),
+        Line::from(vec![
+            Span::styled("Query Mode:", Style::default().fg(Color::Cyan).add_modifier(Modifier::BOLD)),
+        ]),
+        Line::from("  Enter      - Execute query"),
+        Line::from("  Esc        - Cancel"),
+        Line::from("  Up/Down    - Navigate history"),
+        Line::from(""),
+        Line::from(vec![
+            Span::styled("Search Mode:", Style::default().fg(Color::Cyan).add_modifier(Modifier::BOLD)),
+        ]),
+        Line::from("  Enter      - Apply search"),
+        Line::from("  Esc        - Cancel"),
+        Line::from(""),
+        Line::from(vec![
+            Span::styled("Detail View:", Style::default().fg(Color::Cyan).add_modifier(Modifier::BOLD)),
+        ]),
+        Line::from("  Esc/q      - Close detail view"),
+        Line::from("  Up/Down    - Scroll content"),
+        Line::from(""),
+        Line::from(vec![
+            Span::styled("Help Screen:", Style::default().fg(Color::Cyan).add_modifier(Modifier::BOLD)),
+        ]),
+        Line::from("  Esc/q      - Close help"),
+        Line::from("  Up/Down    - Scroll help"),
+        Line::from(""),
+        Line::from(vec![
+            Span::styled("Press Esc or q to close this help screen", Style::default().fg(Color::Yellow)),
+        ]),
+    ];
+
+    let paragraph = Paragraph::new(help_text.clone())
+        .block(
+            Block::default()
+                .borders(Borders::ALL)
+                .border_style(Style::default().fg(Color::Cyan))
+                .title("Help"),
+        )
+        .scroll((app.help_scroll as u16, 0))
+        .wrap(Wrap { trim: false });
+
+    f.render_widget(paragraph, area);
+
+    // Render scrollbar if content overflows
+    if help_text.len() > area.height as usize {
+        let scrollbar = Scrollbar::new(ScrollbarOrientation::VerticalRight);
+        let mut scrollbar_state = ScrollbarState::new(help_text.len()).position(app.help_scroll);
+        f.render_stateful_widget(
+            scrollbar,
+            area.inner(Margin::new(0, 1)),
+            &mut scrollbar_state,
+        );
+    }
+}
+
+/// Simple word wrap for text
+fn word_wrap(text: &str, max_width: usize) -> Vec<String> {
+    let mut lines = Vec::new();
+    let mut current_line = String::new();
+    let mut current_length = 0;
+
+    for word in text.split_whitespace() {
+        let word_len = word.len();
+
+        if current_length == 0 {
+            current_line = word.to_string();
+            current_length = word_len;
+        } else if current_length + 1 + word_len <= max_width {
+            current_line.push(' ');
+            current_line.push_str(word);
+            current_length += 1 + word_len;
+        } else {
+            lines.push(current_line);
+            current_line = word.to_string();
+            current_length = word_len;
+        }
+    }
+
+    if !current_line.is_empty() {
+        lines.push(current_line);
+    }
+
+    // Handle long words that exceed max_width
+    let mut result = Vec::new();
+    for line in lines {
+        if line.len() <= max_width {
+            result.push(line);
+        } else {
+            // Split long words
+            for chunk in line.as_bytes().chunks(max_width) {
+                result.push(String::from_utf8_lossy(chunk).to_string());
+            }
+        }
+    }
+
+    result
 }

@@ -2,13 +2,9 @@
 
 use cai_core::Entry;
 use cai_storage::Storage;
-use ratatui::{
-    style::{Color, Style},
-    text::Span,
-};
+use ratatui::style::Color;
 use std::sync::Arc;
 use std::time::{SystemTime, UNIX_EPOCH};
-use tokio::sync::RwLock;
 
 /// Application mode
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -19,6 +15,10 @@ pub enum Mode {
     Query,
     /// Search mode
     Search,
+    /// Detail view - showing selected entry
+    Detail,
+    /// Help screen
+    Help,
 }
 
 /// Application state
@@ -85,6 +85,10 @@ where
     pub history: Vec<String>,
     /// History index (for navigation)
     pub history_index: Option<usize>,
+    /// Detail view scroll offset
+    pub detail_scroll: usize,
+    /// Help scroll offset
+    pub help_scroll: usize,
 }
 
 impl<S> App<S>
@@ -109,6 +113,8 @@ where
             status_timestamp: now(),
             history: Vec::new(),
             history_index: None,
+            detail_scroll: 0,
+            help_scroll: 0,
         }
     }
 
@@ -196,10 +202,14 @@ where
     }
 
     /// Select next entry
-    pub fn select_next(&mut self) {
+    pub fn select_next(&mut self, height: usize) {
         if !self.entries.is_empty() {
             self.selected = self.selected.saturating_add(1).min(self.entries.len() - 1);
-            // Adjust scroll if needed (handled by UI rendering)
+            // Calculate visible area height (minus header and padding)
+            let visible_height = height.saturating_sub(4);
+            if self.selected >= self.scroll + visible_height && visible_height > 0 {
+                self.scroll = self.selected - visible_height + 1;
+            }
         }
     }
 
@@ -300,12 +310,38 @@ where
     }
 
     /// Get row style based on selection
-    pub fn row_style(&self, index: usize) -> Style {
+    pub fn row_style(&self, index: usize) -> ratatui::style::Style {
+        use ratatui::style::Style;
         if index == self.selected {
-            Style::default().bg(Color::DarkGray)
+            Style::default().bg(ratatui::style::Color::DarkGray)
         } else {
             Style::default()
         }
+    }
+
+    /// Scroll detail view down
+    pub fn detail_scroll_down(&mut self) {
+        self.detail_scroll = self.detail_scroll.saturating_add(1);
+    }
+
+    /// Scroll detail view up
+    pub fn detail_scroll_up(&mut self) {
+        self.detail_scroll = self.detail_scroll.saturating_sub(1);
+    }
+
+    /// Reset detail scroll
+    pub fn detail_scroll_reset(&mut self) {
+        self.detail_scroll = 0;
+    }
+
+    /// Scroll help view down
+    pub fn help_scroll_down(&mut self) {
+        self.help_scroll = self.help_scroll.saturating_add(1);
+    }
+
+    /// Scroll help view up
+    pub fn help_scroll_up(&mut self) {
+        self.help_scroll = self.help_scroll.saturating_sub(1);
     }
 }
 
