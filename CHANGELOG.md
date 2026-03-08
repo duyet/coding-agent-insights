@@ -117,9 +117,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Phase 8: Documentation & Release ✅
 - [x] README and docs
-- [x] Release binaries (v0.1.0 tag created)
-- [ ] Homebrew formula
-- [ ] NPM publish
+- [x] Release binaries (v0.1.0 release created)
+- [x] Homebrew formula
+- [x] NPM publish (script ready, manual publish required)
 
 [Unreleased]: https://github.com/duyet/coding-agent-insights/compare/v0.1.0...HEAD
 [0.1.0]: https://github.com/duyet/coding-agent-insights/releases/tag/v0.1.0
