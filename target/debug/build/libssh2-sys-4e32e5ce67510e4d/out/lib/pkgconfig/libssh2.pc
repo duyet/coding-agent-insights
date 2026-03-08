@@ -5,10 +5,10 @@
 # SPDX-License-Identifier: BSD-3-Clause
 ###########################################################################
 
-prefix=/Users/duet/project/coding-agent-insights/target/debug/build/libssh2-sys-4e32e5ce67510e4d/out
+prefix=/Users/duet/project/cai-worktree-storage/target/debug/build/libssh2-sys-4e32e5ce67510e4d/out
 exec_prefix=
-libdir=/Users/duet/project/coding-agent-insights/target/debug/build/libssh2-sys-4e32e5ce67510e4d/out/lib
-includedir=/Users/duet/project/coding-agent-insights/target/debug/build/libssh2-sys-4e32e5ce67510e4d/out/include
+libdir=/Users/duet/project/cai-worktree-storage/target/debug/build/libssh2-sys-4e32e5ce67510e4d/out/lib
+includedir=/Users/duet/project/cai-worktree-storage/target/debug/build/libssh2-sys-4e32e5ce67510e4d/out/include
 
 Name: libssh2
 URL: https://libssh2.org/

@@ -1,6 +1,6 @@
 cargo:rerun-if-env-changed=LIBSSH2_SYS_USE_PKG_CONFIG
-cargo:include=/Users/duet/project/coding-agent-insights/target/debug/build/libssh2-sys-4e32e5ce67510e4d/out/include
-cargo:root=/Users/duet/project/coding-agent-insights/target/debug/build/libssh2-sys-4e32e5ce67510e4d/out
+cargo:include=/Users/duet/project/cai-worktree-storage/target/debug/build/libssh2-sys-4e32e5ce67510e4d/out/include
+cargo:root=/Users/duet/project/cai-worktree-storage/target/debug/build/libssh2-sys-4e32e5ce67510e4d/out
 cargo:rerun-if-env-changed=DEP_Z_INCLUDE
 cargo:rerun-if-env-changed=DEP_OPENSSL_INCLUDE
 OPT_LEVEL = Some(0)
@@ -73,4 +73,4 @@ ARFLAGS_aarch64_apple_darwin = None
 cargo:rerun-if-env-changed=ARFLAGS_aarch64-apple-darwin
 ARFLAGS_aarch64-apple-darwin = None
 cargo:rustc-link-lib=static=ssh2
-cargo:rustc-link-search=native=/Users/duet/project/coding-agent-insights/target/debug/build/libssh2-sys-4e32e5ce67510e4d/out/build
+cargo:rustc-link-search=native=/Users/duet/project/cai-worktree-storage/target/debug/build/libssh2-sys-4e32e5ce67510e4d/out/build

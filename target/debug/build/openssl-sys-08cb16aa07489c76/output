@@ -62,7 +62,7 @@ cargo:rustc-link-search=native=/opt/homebrew/opt/openssl@3/lib
 cargo:include=/opt/homebrew/opt/openssl@3/include
 cargo:rerun-if-changed=build/expando.c
 OPT_LEVEL = Some(0)
-OUT_DIR = Some(/Users/duet/project/coding-agent-insights/target/debug/build/openssl-sys-08cb16aa07489c76/out)
+OUT_DIR = Some(/Users/duet/project/cai-worktree-storage/target/debug/build/openssl-sys-08cb16aa07489c76/out)
 TARGET = Some(aarch64-apple-darwin)
 CARGO_ENCODED_RUSTFLAGS = Some()
 HOST = Some(aarch64-apple-darwin)
