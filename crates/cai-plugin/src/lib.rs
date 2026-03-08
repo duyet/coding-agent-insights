@@ -166,12 +166,27 @@ impl CaiPlugin {
     }
 }
 
-/// Export for WASM
+/// Create a new CAI plugin instance
+///
+/// Returns a pointer to a heap-allocated `CaiPlugin` that must be freed
+/// using `cai_plugin_destroy` to avoid memory leaks.
+///
+/// # Safety
+///
+/// - The returned pointer must be freed with `cai_plugin_destroy`
+/// - The pointer is valid until `cai_plugin_destroy` is called
 #[no_mangle]
 pub extern "C" fn cai_plugin_create() -> *mut CaiPlugin {
     Box::into_raw(Box::new(CaiPlugin::new()))
 }
 
+/// Destroy a CAI plugin instance
+///
+/// # Safety
+///
+/// - `ptr` must be a valid pointer returned by `cai_plugin_create` or null
+/// - This function should only be called once per plugin instance
+/// - The pointer becomes invalid after this call
 #[no_mangle]
 pub extern "C" fn cai_plugin_destroy(ptr: *mut CaiPlugin) {
     unsafe {
