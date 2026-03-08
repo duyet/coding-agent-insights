@@ -3,7 +3,6 @@
 //! These tests verify complete ingestion flows from various sources.
 
 use std::path::PathBuf;
-use std::fs;
 
 fn fixture_path(name: &str) -> PathBuf {
     // CARGO_MANIFEST_DIR for cai-tests is the tests/ directory
@@ -14,6 +13,7 @@ fn fixture_path(name: &str) -> PathBuf {
 #[cfg(test)]
 mod ingest_tests {
     use super::*;
+    use std::fs;
 
     /// Test ingesting Claude conversation from fixture file
     #[tokio::test]
@@ -152,7 +152,6 @@ def456|invalid-timestamp|Name|email@example.com|Invalid timestamp"#;
 
 #[cfg(test)]
 mod integration {
-    use super::*;
     use cai_core::{Entry, Source, Metadata};
     use cai_storage::{MemoryStorage, Storage};
 

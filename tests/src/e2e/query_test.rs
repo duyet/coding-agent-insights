@@ -3,10 +3,7 @@
 //! These tests verify complete query flows from various sources.
 
 use cai_core::{Entry, Source, Metadata};
-use cai_storage::{MemoryStorage, Storage, Filter};
 use chrono::{DateTime, Utc};
-use std::io::Cursor;
-use cai_output::{JsonFormatter, JsonlFormatter, Formatter};
 
 fn setup_test_entries() -> Vec<Entry> {
     vec![
@@ -78,6 +75,7 @@ fn setup_test_entries() -> Vec<Entry> {
 #[cfg(test)]
 mod basic_query_tests {
     use super::*;
+    use cai_storage::{MemoryStorage, Storage, Filter};
 
     /// Test simple SELECT all query
     #[tokio::test]
@@ -182,6 +180,9 @@ mod basic_query_tests {
 #[cfg(test)]
 mod output_format_tests {
     use super::*;
+    use cai_storage::{MemoryStorage, Storage};
+    use std::io::Cursor;
+    use cai_output::{JsonFormatter, JsonlFormatter, Formatter};
 
     /// Test JSON output format
     #[tokio::test]
@@ -256,6 +257,7 @@ mod output_format_tests {
 #[cfg(test)]
 mod edge_case_tests {
     use super::*;
+    use cai_storage::{MemoryStorage, Storage, Filter};
 
     /// Test query with no matches
     #[tokio::test]
