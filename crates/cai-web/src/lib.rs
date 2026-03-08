@@ -14,13 +14,10 @@
 //!
 //! ```rust,no_run
 //! use cai_web::run;
-//! use cai_storage::MemoryStorage;
 //!
-//! # async fn example() -> cai_core::Result<()> {
-//! let storage = MemoryStorage::new();
-//! run(storage, 3000).await?;
-//! # Ok(())
-//! # }
+//! // Create a storage implementation and pass to run()
+//! // let storage = ...;
+//! // run(storage, 3000).await?;
 //! ```
 
 #![warn(missing_docs, unused_crate_dependencies)]
@@ -55,10 +52,7 @@ impl Default for Config {
 
 /// Shared application state
 #[derive(Clone)]
-pub struct AppState<S>
-where
-    S: Storage + ?Sized,
-{
+pub struct AppState {
     /// Storage backend
-    pub storage: std::sync::Arc<S>,
+    pub storage: std::sync::Arc<dyn Storage + Send + Sync>,
 }

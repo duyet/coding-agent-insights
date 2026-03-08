@@ -26,7 +26,7 @@
 //! use chrono::Utc;
 //!
 //! let entry = Entry {
-//!     id: uuid::Uuid::new_v4().to_string(),
+//!     id: "test-entry-123".to_string(),
 //!     source: Source::Claude,
 //!     timestamp: Utc::now(),
 //!     prompt: "Help me refactor this function".to_string(),
@@ -57,7 +57,7 @@
 //! Error handling:
 //!
 //! ```rust
-//! use cai_core::{Error, Result};
+//! use cai_core::{Error, Result, Entry};
 //!
 //! fn process_entry(entry: &Entry) -> Result<()> {
 //!     if entry.prompt.is_empty() {
