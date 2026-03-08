@@ -11,9 +11,7 @@ rust-version.workspace = true
 cai-core = { path = "../cai-core" }
 
 serde_json = { workspace = true }
-tabled = { workspace = true }
-colored = { workspace = true }
-chrono = { workspace = true }
 
 [dev-dependencies]
 rstest = { workspace = true }
+chrono = { workspace = true }

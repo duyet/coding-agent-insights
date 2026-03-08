@@ -12,10 +12,7 @@ cai-core = { path = "../cai-core" }
 cai-storage = { path = "../cai-storage" }
 
 thiserror = { workspace = true }
-anyhow = { workspace = true }
-serde = { workspace = true }
 sqlparser = { workspace = true }
-tracing = { workspace = true }
 chrono = { workspace = true }
 
 [dev-dependencies]
