@@ -123,29 +123,32 @@ pub fn load_config() -> CaiConfig {
 
     let config_str = config_path.to_string_lossy().to_string();
 
-    let settings = Config::builder()
+    let built_settings = match Config::builder()
         .add_source(File::with_name(&config_str))
-        .add_source(Environment::with_prefix("CAI").separator("_"));
-
-    match settings.build() {
-        Ok(config) => match config.try_deserialize::<CaiConfig>() {
-            Ok(config) => {
-                tracing::debug!("Loaded config from {:?}", config_path);
-                config
-            }
-            Err(e) => {
-                tracing::warn!("Failed to parse config file {:?}: {:?}, using defaults", config_path, e);
-                CaiConfig::default()
-            }
-        },
+        .add_source(Environment::with_prefix("CAI").separator("_"))
+        .build()
+    {
+        Ok(s) => s,
         Err(e) => {
             tracing::warn!("Failed to load config file {:?}: {:?}, using defaults", config_path, e);
+            return CaiConfig::default();
+        }
+    };
+
+    match built_settings.try_deserialize::<CaiConfig>() {
+        Ok(config) => {
+            tracing::debug!("Loaded config from {:?}", config_path);
+            config
+        }
+        Err(e) => {
+            tracing::warn!("Failed to parse config file {:?}: {:?}, using defaults", config_path, e);
             CaiConfig::default()
         }
     }
 }
 
 /// Save configuration to file
+#[allow(dead_code)]
 pub fn save_config(config: &CaiConfig) -> Result<()> {
     let config_path = get_config_file();
 

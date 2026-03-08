@@ -13,6 +13,7 @@ use chrono::{Duration, Utc};
 use colored::Colorize;
 use config::load_config;
 use std::path::PathBuf;
+<<<<<<< HEAD
 use std::sync::Arc;
 
 /// Create storage with mock data for testing
@@ -90,6 +91,9 @@ fn format_with_formatter<F: Formatter>(
         cai_core::Error::Message(format!("Invalid UTF-8 in {} output: {}", format_name, e))
     })
 }
+=======
+use config::load_config;
+>>>>>>> 6878351f (fix(cli): address CodeRabbit review feedback)
 
 /// Coding Agent Insights - Query AI coding history
 #[derive(Parser, Clone)]
@@ -281,8 +285,14 @@ async fn main() -> cai_core::Result<()> {
             execute_stats().await
         }
         Commands::Tui => {
+<<<<<<< HEAD
             // TODO: Use SQLite storage when config.storage.r#type == "sqlite"
             let storage = Arc::new(create_storage_with_mock_data().await);
+=======
+            let storage = std::sync::Arc::new(cai_storage::MemoryStorage::new());
+            // TODO: Use SQLite storage when config.storage.r#type == "sqlite"
+            // For now, always use memory storage regardless of config
+>>>>>>> 6878351f (fix(cli): address CodeRabbit review feedback)
             cai_tui::run(storage).await
         }
         #[cfg(feature = "web")]
@@ -293,7 +303,11 @@ async fn main() -> cai_core::Result<()> {
             };
             println!("{} {}", "Starting web server on port:".green(), port);
             // TODO: Use configured storage backend based on config.storage.r#type
+<<<<<<< HEAD
             let storage = Arc::new(cai_storage::MemoryStorage::new());
+=======
+            let storage = std::sync::Arc::new(cai_storage::MemoryStorage::new());
+>>>>>>> 6878351f (fix(cli): address CodeRabbit review feedback)
             cai_web::run(storage, web_config).await
         }
         #[cfg(not(feature = "web"))]
