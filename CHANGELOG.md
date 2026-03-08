@@ -8,6 +8,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **SQLite storage backend** (`cai-storage` with `sqlite` feature)
+  - Persistent storage using SQLite database
+  - File-based and in-memory storage modes
+  - Thread-safe concurrent access via `Arc<Mutex<Connection>>`
+  - Indexes on `source` and `timestamp` columns for query performance
+  - Type-safe `Source` enum to/from string conversion
+  - Optional feature flag (not enabled by default)
 - **CLI query execution** - Full SQL query support with all output formatters
   - `cai query "SELECT..." --output table|json|jsonl|csv|ai|stats`
   - Async mock data initialization to avoid nested runtime issues
