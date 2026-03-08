@@ -5,7 +5,13 @@
 pub use cai_core::Result;
 
 use async_trait::async_trait;
-use cai_core::Entry;
+use cai_core::{Entry, Source};
+
+#[cfg(feature = "sqlite")]
+pub mod sqlite;
+
+#[cfg(feature = "sqlite")]
+pub use sqlite::SqliteStorage;
 
 /// Storage backend trait
 #[async_trait]
