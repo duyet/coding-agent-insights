@@ -22,6 +22,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Indexes on `source` and `timestamp` columns for query performance
   - Type-safe `Source` enum to/from string conversion
   - Optional feature flag (not enabled by default)
+- **DuckDB storage backend** (`cai-storage` with `duckdb` feature)
+  - Analytics-focused OLAP database storage
+  - Columnar storage for efficient query performance
+  - SQL-native querying without translation layer
+  - Automatic schema migration support
+  - Type-safe parameter binding via duckdb::Value
+  - Optional feature flag (not enabled by default)
 - **CLI query execution** - Full SQL query support with all output formatters
   - `cai query "SELECT..." --output table|json|jsonl|csv|ai|stats`
   - Async mock data initialization to avoid nested runtime issues
@@ -76,6 +83,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - DevOps infrastructure documentation
 
 ### Fixed
+- **Security vulnerability GHSA-j39j-6gw9-jw6h** - git2 null pointer issue (updated to 0.20)
+- DCO compliance for all automated dependency PRs (Renovate/Dependabot)
+- Build artifact commits with comprehensive `.gitignore`
 - Divan benchmark compilation errors (types -> args)
 - DynFormatter enum missing documentation
 - Doctest failures in cai-core, cai-tui, and cai-web
@@ -84,6 +94,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Compiler warnings from unused dependencies across all crates
 
 ### Changed
+- **Dependency updates** for security and compatibility:
+  - git2: 0.19 → 0.20 (security fix for GHSA-j39j-6gw9-jw6h)
+  - rusqlite: 0.37 → 0.38
+  - criterion: 0.5 → 0.8 (benchmarking framework)
+  - crossterm: 0.28 → 0.29 (TUI terminal handling)
+  - ratatui: 0.29 → 0.30 (TUI framework)
+- Added comprehensive `.gitignore` to exclude build artifacts from version control
 - Updated Metadata to use HashMap for extensibility
 - Enhanced Makefile with release targets (patch/minor/major/dry-run/push)
 - Added benches to workspace members
