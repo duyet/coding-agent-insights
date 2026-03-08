@@ -115,9 +115,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - [x] CI/CD pipeline
 - [x] Performance benchmarks (divan)
 
-### Phase 8: Documentation & Release 🚧
+### Phase 8: Documentation & Release ✅
 - [x] README and docs
-- [ ] Release binaries
+- [x] Release binaries (v0.1.0 tag created)
 - [ ] Homebrew formula
 - [ ] NPM publish
 
