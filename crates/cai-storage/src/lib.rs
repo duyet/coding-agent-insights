@@ -5,7 +5,7 @@
 pub use cai_core::{Error, Result};
 
 use async_trait::async_trait;
-use cai_core::{Entry, Source};
+use cai_core::Entry;
 
 #[cfg(feature = "sqlite")]
 pub mod sqlite;

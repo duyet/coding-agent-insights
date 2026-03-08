@@ -1,1 +1,0 @@
-std::iter::Map<std::option::IntoIter<sqlparser::ast::OrderBy>, fn(sqlparser::ast::OrderByExpr) -> Result<parser::OrderBy, QueryError> {parse_order_by}>

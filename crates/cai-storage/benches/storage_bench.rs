@@ -3,9 +3,13 @@
 use cai_storage::{MemoryStorage, Storage, Filter};
 use cai_core::{Entry, Source, Metadata};
 use chrono::{Utc, Duration};
-use std::str::FromStr;
+use std::collections::HashMap;
 
 fn create_benchmark_entry(id: usize) -> Entry {
+    let mut extra = HashMap::new();
+    extra.insert("complexity".to_string(), format!("{}", id % 10));
+    extra.insert("lines".to_string(), format!("{}", id * 10));
+
     Entry {
         id: format!("bench-entry-{}", id),
         source: match id % 4 {
@@ -22,12 +26,13 @@ fn create_benchmark_entry(id: usize) -> Entry {
             repo_url: Some("https://github.com/test/repo".to_string()),
             commit_hash: Some(format!("commit{}", id)),
             language: Some("Rust".to_string()),
-            extra: vec![
-                ("complexity".to_string(), format!("{}", id % 10)),
-                ("lines".to_string(), format!("{}", id * 10)),
-            ],
+            extra,
         },
     }
+}
+
+fn main() {
+    divan::main();
 }
 
 #[divan::bench(
@@ -97,7 +102,7 @@ fn bench_get_by_id(b: divan::Bencher) {
 
     b.bench(|| {
         let rt = tokio::runtime::Runtime::new().unwrap();
-        rt.block_on(async {
+        let _ = rt.block_on(async {
             storage.get("bench-entry-50").await
         });
     });
@@ -120,7 +125,7 @@ fn bench_query_all_small(b: divan::Bencher) {
 
     b.bench(|| {
         let rt = tokio::runtime::Runtime::new().unwrap();
-        rt.block_on(async {
+        let _ = rt.block_on(async {
             storage.query(None).await
         });
     });
@@ -143,7 +148,7 @@ fn bench_query_all_large(b: divan::Bencher) {
 
     b.bench(|| {
         let rt = tokio::runtime::Runtime::new().unwrap();
-        rt.block_on(async {
+        let _ = rt.block_on(async {
             storage.query(None).await
         });
     });
@@ -172,7 +177,7 @@ fn bench_query_with_filter(b: divan::Bencher) {
 
     b.bench(|| {
         let rt = tokio::runtime::Runtime::new().unwrap();
-        rt.block_on(async {
+        let _ = rt.block_on(async {
             storage.query(Some(&filter)).await
         });
     });
@@ -195,7 +200,7 @@ fn bench_count(b: divan::Bencher) {
 
     b.bench(|| {
         let rt = tokio::runtime::Runtime::new().unwrap();
-        rt.block_on(async {
+        let _ = rt.block_on(async {
             storage.count().await
         });
     });

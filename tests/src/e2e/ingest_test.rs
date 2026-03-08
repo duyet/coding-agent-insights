@@ -2,8 +2,10 @@
 //!
 //! These tests verify complete ingestion flows from various sources.
 
+#[cfg(test)]
 use std::path::PathBuf;
 
+#[cfg(test)]
 fn fixture_path(name: &str) -> PathBuf {
     // CARGO_MANIFEST_DIR for cai-tests is the tests/ directory
     // Fixtures are at tests/fixtures/
@@ -12,13 +14,12 @@ fn fixture_path(name: &str) -> PathBuf {
 
 #[cfg(test)]
 mod ingest_tests {
-    use super::*;
     use std::fs;
 
     /// Test ingesting Claude conversation from fixture file
     #[tokio::test]
     async fn test_ingest_claude_conversation() {
-        let fixture_path = fixture_path("claude_conversation.json");
+        let fixture_path = super::fixture_path("claude_conversation.json");
         assert!(fixture_path.exists(), "Fixture file should exist");
 
         let content = fs::read_to_string(&fixture_path)
@@ -41,7 +42,7 @@ mod ingest_tests {
     /// Test ingesting Codex history from fixture file
     #[tokio::test]
     async fn test_ingest_codex_history() {
-        let fixture_path = fixture_path("codex_history.jsonl");
+        let fixture_path = super::fixture_path("codex_history.jsonl");
         assert!(fixture_path.exists(), "Fixture file should exist");
 
         let content = fs::read_to_string(&fixture_path)
@@ -64,7 +65,7 @@ mod ingest_tests {
     /// Test ingesting Git log from fixture file
     #[tokio::test]
     async fn test_ingest_git_log() {
-        let fixture_path = fixture_path("git_log.txt");
+        let fixture_path = super::fixture_path("git_log.txt");
         assert!(fixture_path.exists(), "Fixture file should exist");
 
         let content = fs::read_to_string(&fixture_path)
@@ -90,7 +91,7 @@ mod ingest_tests {
     /// Test error handling for non-existent file
     #[tokio::test]
     async fn test_ingest_nonexistent_file() {
-        let fixture_path = fixture_path("nonexistent.json");
+        let fixture_path = super::fixture_path("nonexistent.json");
         assert!(!fixture_path.exists());
 
         let result = fs::read_to_string(&fixture_path);

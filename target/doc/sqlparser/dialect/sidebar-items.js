@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"enum":["Precedence"],"fn":["dialect_from_str"],"struct":["AnsiDialect","BigQueryDialect","ClickHouseDialect","DatabricksDialect","DuckDbDialect","GenericDialect","HiveDialect","MsSqlDialect","MySqlDialect","PostgreSqlDialect","RedshiftSqlDialect","SQLiteDialect","SnowflakeDialect"],"trait":["Dialect"]};
