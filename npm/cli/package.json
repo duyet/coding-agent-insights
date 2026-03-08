@@ -6,10 +6,13 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/yourusername/coding-agent-insights.git",
+    "url": "git+https://github.com/duyet/coding-agent-insights.git",
     "directory": "npm/cli"
   },
-  "homepage": "https://github.com/yourusername/coding-agent-insights#readme",
+  "homepage": "https://github.com/duyet/coding-agent-insights#readme",
+  "bugs": {
+    "url": "https://github.com/duyet/coding-agent-insights/issues"
+  },
   "keywords": [
     "analytics",
     "sql",
@@ -26,9 +29,12 @@
   "main": "./index.js",
   "files": [
     "bin/",
-    "lib/",
-    "scripts/"
+    "scripts/",
+    "README.md"
   ],
+  "dependencies": {
+    "tar": "^7.4.3"
+  },
   "scripts": {
     "postinstall": "node scripts/install.js",
     "preuninstall": "node scripts/uninstall.js"

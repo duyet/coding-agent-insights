@@ -30,9 +30,13 @@ Thumbs.db
 .gitlab-ci.yml
 .travis.yml
 
-# Docs (already in README)
+# Docs
 *.md
 !README.md
+
+# Don't publish test fixtures
+tests/
+test/
 
 # NPM internal
 .npmrc

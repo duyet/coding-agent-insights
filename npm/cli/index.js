@@ -2,7 +2,7 @@
  * @cai/cli - Query and analyze AI coding history
  *
  * This package installs the CAI binary and provides a Node.js wrapper.
- * For full documentation, see: https://github.com/yourusername/coding-agent-insights
+ * For full documentation, see: https://github.com/duyet/coding-agent-insights
  */
 
 module.exports = {
