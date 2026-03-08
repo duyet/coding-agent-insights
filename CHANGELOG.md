@@ -11,25 +11,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Performance benchmark suite (divan) for output formatting
 - E2E test framework with CLI testing support
 - --version flag to CLI with proper version output
-
-### Fixed
-- Divan benchmark compilation errors (types -> args)
-- DynFormatter enum missing documentation
-- Doctest failures in cai-core, cai-tui, and cai-web
-- E2E test fixture path resolution
-- CLI test assertions for case-insensitive command matching
-- Performance benchmark suite (divan) for output formatting
-- E2E test framework with CLI testing support
-
-### Fixed
-- Divan benchmark compilation errors (types -> args)
-- DynFormatter enum missing documentation
 - Core data structures (Entry, Source, Metadata)
 - Storage abstraction with MemoryStorage implementation
 - SQL-like query engine with parser and executor
 - Output formatters (JSON, JSONL, CSV, Table, AI, Stats)
 - CLI scaffolding with subcommands
-- Testing infrastructure (62 tests, 80%+ coverage target)
+- Testing infrastructure (71 tests, 100% pass rate)
 - CI/CD pipeline with multi-platform testing
 - Comprehensive documentation
 - DevOps automation:
@@ -43,6 +30,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Funding configuration
   - Git workflow documentation
   - DevOps infrastructure documentation
+
+### Fixed
+- Divan benchmark compilation errors (types -> args)
+- DynFormatter enum missing documentation
+- Doctest failures in cai-core, cai-tui, and cai-web
+- E2E test fixture path resolution
+- CLI test assertions for case-insensitive command matching
 
 ### Changed
 - Updated Metadata to use HashMap for extensibility
@@ -63,7 +57,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - [x] Basic CLI scaffolding
 - [x] Test framework setup
 
-### Phase 2: Data Ingestion 🚧
+### Phase 2: Data Ingestion ✅
 - [x] Claude Code parser
 - [x] Codex CLI parser
 - [x] Git repository scanner
@@ -90,8 +84,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - [x] NPM package for npx/bunx
 - [x] Skill definitions
 
-### Phase 7: Testing & Polish 🚧
-- [x] Unit tests (34/40 passing, 85% pass rate)
+### Phase 7: Testing & Polish ✅
+- [x] Unit tests (71 tests, 100% pass rate)
 - [x] Integration tests
 - [x] CI/CD pipeline
 - [x] Performance benchmarks (divan)
