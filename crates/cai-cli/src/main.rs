@@ -2,14 +2,18 @@
 
 #![warn(missing_docs, unused_crate_dependencies)]
 
+mod config;
+
 use clap::{Parser, Subcommand};
 use cai_core::{Entry, Metadata, Source};
 use cai_ingest::{IngestConfig, Ingestor};
-use cai_output::Formatter;
+use cai_output::{Formatter, StatsFormatter};
 use cai_storage::Storage;
 use chrono::{Duration, Utc};
 use colored::Colorize;
+use config::load_config;
 use std::path::PathBuf;
+<<<<<<< HEAD
 use std::sync::Arc;
 
 /// Create storage with mock data for testing
@@ -87,6 +91,9 @@ fn format_with_formatter<F: Formatter>(
         cai_core::Error::Message(format!("Invalid UTF-8 in {} output: {}", format_name, e))
     })
 }
+=======
+use config::load_config;
+>>>>>>> 6878351f (fix(cli): address CodeRabbit review feedback)
 
 /// Coding Agent Insights - Query AI coding history
 #[derive(Parser, Clone)]
@@ -117,6 +124,8 @@ enum Commands {
         #[arg(short, long)]
         path: Option<String>,
     },
+    /// Show statistics about stored entries
+    Stats,
     /// Interactive terminal UI
     Tui,
     /// Start web server
@@ -179,6 +188,37 @@ async fn execute_ingest(source: &str, path: Option<&str>) -> cai_core::Result<()
     Ok(())
 }
 
+/// Show statistics about stored entries
+async fn execute_stats() -> cai_core::Result<()> {
+    // Initialize storage with mock data for now
+    let storage = cai_storage::MemoryStorage::new();
+
+    // Query all entries
+    let entries = match storage.query(None as Option<&cai_storage::Filter>).await {
+        Ok(entries) => entries,
+        Err(e) => {
+            eprintln!("{} {}", "Error:".red(), e);
+            std::process::exit(1);
+        }
+    };
+
+    println!("\n{} {} entries", "Found:".cyan(), entries.len());
+
+    if entries.is_empty() {
+        println!("\n{}", "No entries found.".dimmed());
+        return Ok(());
+    }
+
+    let formatter = StatsFormatter::default();
+    let mut buffer = Vec::new();
+    formatter.format(&entries, &mut buffer)?;
+    let output = String::from_utf8(buffer)
+        .map_err(|e| cai_core::Error::Message(format!("Invalid UTF-8 in stats output: {}", e)))?;
+
+    println!("\n{}", output);
+    Ok(())
+}
+
 /// Execute a SQL query and display results
 async fn execute_query(query: &str, output_format: &str) -> cai_core::Result<()> {
     println!("{} {}", "Executing query:".green(), query.dimmed());
@@ -228,6 +268,10 @@ async fn main() -> cai_core::Result<()> {
         )
         .init();
 
+    // Load configuration
+    let app_config = load_config();
+    tracing::debug!("Loaded config: storage type = {}", app_config.storage.r#type);
+
     let cli = Cli::parse();
 
     match cli.command {
@@ -237,20 +281,34 @@ async fn main() -> cai_core::Result<()> {
         Commands::Ingest { source, path } => {
             execute_ingest(&source, path.as_deref()).await
         }
+        Commands::Stats => {
+            execute_stats().await
+        }
         Commands::Tui => {
-            // TODO: Use persistent storage from config
+<<<<<<< HEAD
+            // TODO: Use SQLite storage when config.storage.r#type == "sqlite"
             let storage = Arc::new(create_storage_with_mock_data().await);
+=======
+            let storage = std::sync::Arc::new(cai_storage::MemoryStorage::new());
+            // TODO: Use SQLite storage when config.storage.r#type == "sqlite"
+            // For now, always use memory storage regardless of config
+>>>>>>> 6878351f (fix(cli): address CodeRabbit review feedback)
             cai_tui::run(storage).await
         }
         #[cfg(feature = "web")]
         Commands::Web { port } => {
-            let storage = Arc::new(cai_storage::MemoryStorage::new());
-            let config = cai_web::Config {
+            let web_config = cai_web::Config {
                 port,
                 host: "127.0.0.1".to_string(),
             };
             println!("{} {}", "Starting web server on port:".green(), port);
-            cai_web::run(storage, config).await
+            // TODO: Use configured storage backend based on config.storage.r#type
+<<<<<<< HEAD
+            let storage = Arc::new(cai_storage::MemoryStorage::new());
+=======
+            let storage = std::sync::Arc::new(cai_storage::MemoryStorage::new());
+>>>>>>> 6878351f (fix(cli): address CodeRabbit review feedback)
+            cai_web::run(storage, web_config).await
         }
         #[cfg(not(feature = "web"))]
         Commands::Web { .. } => {
