@@ -28,13 +28,13 @@ impl GitScanner {
     /// Scan repository and convert commits to entries
     pub fn scan(&self) -> Result<Vec<Entry>, IngestError> {
         let repo = Repository::open(&self.repo_path)
-            .map_err(|e| IngestError::GitError(e))?;
+            .map_err(IngestError::GitError)?;
 
         // Get repo URL if available
         let repo_url = get_remote_url(&repo);
 
         let mut revwalk = repo.revwalk()
-            .map_err(|e| IngestError::GitError(e))?;
+            .map_err(IngestError::GitError)?;
 
         // Try to push HEAD - this will fail on empty repositories
         match revwalk.push_head() {
@@ -48,9 +48,9 @@ impl GitScanner {
         let mut entries = Vec::new();
 
         for oid in revwalk {
-            let oid = oid.map_err(|e| IngestError::GitError(e))?;
+            let oid = oid.map_err(IngestError::GitError)?;
             let commit = repo.find_commit(oid)
-                .map_err(|e| IngestError::GitError(e))?;
+                .map_err(IngestError::GitError)?;
 
             debug!("Scanning commit: {}", commit.id());
 
@@ -100,7 +100,7 @@ impl GitScanner {
         extra.insert("committer_email".to_string(), commit.committer().email().unwrap_or("").to_string());
 
         // Add parent commit IDs
-        if let Some(parent_id) = commit.parent_id(0).ok() {
+        if let Ok(parent_id) = commit.parent_id(0) {
             extra.insert("parent_commit".to_string(), parent_id.to_string());
         }
 

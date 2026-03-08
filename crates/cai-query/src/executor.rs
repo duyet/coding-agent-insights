@@ -33,7 +33,7 @@ impl QueryEngine {
         let parsed = crate::parse(sql)?;
 
         // Validate table name
-        if parsed.table.as_ref().map_or(false, |t| t.to_lowercase() != "entries") {
+        if parsed.table.as_ref().is_some_and(|t| t.to_lowercase() != "entries") {
             if let Some(table) = parsed.table {
                 return Err(QueryError::InvalidTable(table));
             }

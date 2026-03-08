@@ -4,9 +4,12 @@ use crate::error::{QueryError, QueryResult};
 use chrono::{DateTime, Utc};
 use std::collections::HashMap;
 
+/// Type alias for SQL function implementation
+type SqlFunction = Box<dyn Fn(&[FunctionArg]) -> QueryResult<FunctionArg> + Send + Sync>;
+
 /// Function registry for SQL functions
 pub struct FunctionRegistry {
-    functions: HashMap<String, Box<dyn Fn(&[FunctionArg]) -> QueryResult<FunctionArg> + Send + Sync>>,
+    functions: HashMap<String, SqlFunction>,
 }
 
 impl Default for FunctionRegistry {
