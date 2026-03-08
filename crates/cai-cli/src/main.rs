@@ -67,10 +67,25 @@ async fn create_storage_with_mock_data() -> cai_storage::MemoryStorage {
     ];
 
     for entry in mock_entries {
-        let _ = storage.store(&entry).await;
+        if let Err(e) = storage.store(&entry).await {
+            tracing::warn!("Failed to store mock entry {}: {}", entry.id, e);
+        }
     }
 
     storage
+}
+
+/// Generic helper to format results using any formatter
+fn format_with_formatter<F: Formatter>(
+    results: &[Entry],
+    formatter: F,
+    format_name: &str,
+) -> cai_core::Result<String> {
+    let mut buffer = Vec::new();
+    formatter.format(results, &mut buffer)?;
+    String::from_utf8(buffer).map_err(|e| {
+        cai_core::Error::Message(format!("Invalid UTF-8 in {} output: {}", format_name, e))
+    })
 }
 
 /// Coding Agent Insights - Query AI coding history
@@ -168,18 +183,13 @@ async fn execute_ingest(source: &str, path: Option<&str>) -> cai_core::Result<()
 async fn execute_query(query: &str, output_format: &str) -> cai_core::Result<()> {
     println!("{} {}", "Executing query:".green(), query.dimmed());
 
-    // Initialize storage with mock data for now
+    // TODO: Use persistent storage from config instead of mock data
     let storage = create_storage_with_mock_data().await;
 
     // Parse and execute query
     let query_engine = cai_query::QueryEngine::new(storage);
-    let results = match query_engine.execute(query).await {
-        Ok(r) => r,
-        Err(e) => {
-            eprintln!("{} {}", "Error:".red(), e);
-            std::process::exit(1);
-        }
-    };
+    let results = query_engine.execute(query).await
+        .map_err(|e| cai_core::Error::Message(format!("Query execution failed: {}", e)))?;
 
     // Display results count
     println!("\n{} {} results", "Found:".cyan(), results.len());
@@ -191,12 +201,12 @@ async fn execute_query(query: &str, output_format: &str) -> cai_core::Result<()>
 
     // Format and display output
     let output = match output_format.to_lowercase().as_str() {
-        "json" => format_as_json(&results)?,
-        "jsonl" => format_as_jsonl(&results)?,
-        "csv" => format_as_csv(&results)?,
-        "table" => format_as_table(&results)?,
-        "ai" => format_as_ai(&results)?,
-        "stats" => format_as_stats(&results)?,
+        "json" => format_with_formatter(&results, cai_output::JsonFormatter::default(), "json")?,
+        "jsonl" => format_with_formatter(&results, cai_output::JsonlFormatter::default(), "jsonl")?,
+        "csv" => format_with_formatter(&results, cai_output::CsvFormatter::default(), "csv")?,
+        "table" => format_with_formatter(&results, cai_output::TableFormatter::default(), "table")?,
+        "ai" => format_with_formatter(&results, cai_output::AiFormatter::default(), "ai")?,
+        "stats" => format_with_formatter(&results, cai_output::StatsFormatter::default(), "stats")?,
         _ => {
             return Err(cai_core::Error::Message(format!(
                 "Unknown output format: '{}'. Valid options: json, jsonl, csv, table, ai, stats",
@@ -207,60 +217,6 @@ async fn execute_query(query: &str, output_format: &str) -> cai_core::Result<()>
 
     println!("\n{}", output);
     Ok(())
-}
-
-/// Format results as JSON
-fn format_as_json(results: &[cai_core::Entry]) -> cai_core::Result<String> {
-    let formatter = cai_output::JsonFormatter::default();
-    let mut buffer = Vec::new();
-    formatter.format(results, &mut buffer)?;
-    String::from_utf8(buffer)
-        .map_err(|e| cai_core::Error::Message(format!("Invalid UTF-8 in JSON output: {}", e)))
-}
-
-/// Format results as JSON Lines
-fn format_as_jsonl(results: &[cai_core::Entry]) -> cai_core::Result<String> {
-    let formatter = cai_output::JsonlFormatter::default();
-    let mut buffer = Vec::new();
-    formatter.format(results, &mut buffer)?;
-    String::from_utf8(buffer)
-        .map_err(|e| cai_core::Error::Message(format!("Invalid UTF-8 in JSONL output: {}", e)))
-}
-
-/// Format results as CSV
-fn format_as_csv(results: &[cai_core::Entry]) -> cai_core::Result<String> {
-    let formatter = cai_output::CsvFormatter::default();
-    let mut buffer = Vec::new();
-    formatter.format(results, &mut buffer)?;
-    String::from_utf8(buffer)
-        .map_err(|e| cai_core::Error::Message(format!("Invalid UTF-8 in CSV output: {}", e)))
-}
-
-/// Format results as table
-fn format_as_table(results: &[cai_core::Entry]) -> cai_core::Result<String> {
-    let formatter = cai_output::TableFormatter::default();
-    let mut buffer = Vec::new();
-    formatter.format(results, &mut buffer)?;
-    String::from_utf8(buffer)
-        .map_err(|e| cai_core::Error::Message(format!("Invalid UTF-8 in table output: {}", e)))
-}
-
-/// Format results as AI-optimized
-fn format_as_ai(results: &[cai_core::Entry]) -> cai_core::Result<String> {
-    let formatter = cai_output::AiFormatter::default();
-    let mut buffer = Vec::new();
-    formatter.format(results, &mut buffer)?;
-    String::from_utf8(buffer)
-        .map_err(|e| cai_core::Error::Message(format!("Invalid UTF-8 in AI output: {}", e)))
-}
-
-/// Format results as statistics
-fn format_as_stats(results: &[cai_core::Entry]) -> cai_core::Result<String> {
-    let formatter = cai_output::StatsFormatter::default();
-    let mut buffer = Vec::new();
-    formatter.format(results, &mut buffer)?;
-    String::from_utf8(buffer)
-        .map_err(|e| cai_core::Error::Message(format!("Invalid UTF-8 in stats output: {}", e)))
 }
 
 #[tokio::main]
@@ -282,7 +238,7 @@ async fn main() -> cai_core::Result<()> {
             execute_ingest(&source, path.as_deref()).await
         }
         Commands::Tui => {
-            // Initialize in-memory storage with mock data for testing
+            // TODO: Use persistent storage from config
             let storage = Arc::new(create_storage_with_mock_data().await);
             cai_tui::run(storage).await
         }
@@ -299,7 +255,7 @@ async fn main() -> cai_core::Result<()> {
         #[cfg(not(feature = "web"))]
         Commands::Web { .. } => {
             eprintln!("{}", "Web feature not enabled. Build with --features web.".red());
-            std::process::exit(1);
+            Err(cai_core::Error::Message("Web feature not enabled".to_string()))
         }
     }
 }
