@@ -13,11 +13,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - --version flag to CLI with proper version output
 - Core data structures (Entry, Source, Metadata)
 - Storage abstraction with MemoryStorage implementation
+- Storage test helper: `with_mock_data()` for convenient test data
 - SQL-like query engine with parser and executor
+- SQL function system with FunctionRegistry for extensibility
+- Built-in SQL functions:
+  - `date_format(timestamp, format)` - Date formatting
+  - `concat(...args)` - String concatenation
+  - `length(str)` - String length
+  - `upper(str)`/`lower(str)` - Case conversion
+  - `substring(str, start, length)` - Extract substring
+  - `coalesce(...args)` - First non-null value
+  - `now()` - Current timestamp
 - Output formatters (JSON, JSONL, CSV, Table, AI, Stats)
 - CLI scaffolding with subcommands
 - Testing infrastructure (71 tests, 100% pass rate)
 - CI/CD pipeline with multi-platform testing
+- TUI enhancements:
+  - Sort columns (timestamp, source, prompt)
+  - Sort order toggle (asc/desc)
+  - Detail view for selected entry
+  - Enhanced search with next/prev navigation
+  - Improved keyboard handling
+- Web UI enhancements:
+  - WebSocket support for live updates
+  - Enhanced dashboard with statistics cards
+  - Improved responsive layout and styling
+  - Real-time entry streaming and filtering
 - Comprehensive documentation
 - DevOps automation:
   - Release script with version bumping
@@ -40,7 +61,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - Updated Metadata to use HashMap for extensibility
-- Enhanced Makefile with release targets
+- Enhanced Makefile with release targets (patch/minor/major/dry-run/push)
+- Added benches to workspace members
+- Updated dependencies: axum with ws feature, tokio-tungstenite 0.28
+- Improved NPM package scripts and configuration
+- Enhanced crate README documentation
 
 ## [0.1.0] - TBD
 
