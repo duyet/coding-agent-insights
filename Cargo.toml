@@ -52,7 +52,7 @@ tabled = "0.20"
 colored = "3.0"
 
 # TUI
-ratatui = "0.29"
+ratatui = "0.30"
 crossterm = "0.29"
 
 # Web
