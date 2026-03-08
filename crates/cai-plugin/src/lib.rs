@@ -188,7 +188,7 @@ pub extern "C" fn cai_plugin_create() -> *mut CaiPlugin {
 /// - This function should only be called once per plugin instance
 /// - The pointer becomes invalid after this call
 #[no_mangle]
-pub extern "C" fn cai_plugin_destroy(ptr: *mut CaiPlugin) {
+pub unsafe extern "C" fn cai_plugin_destroy(ptr: *mut CaiPlugin) {
     unsafe {
         if !ptr.is_null() {
             let _ = Box::from_raw(ptr);
