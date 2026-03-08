@@ -8,13 +8,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
-- **Comprehensive documentation and release tooling**
-  - DEVOPS.md for DevOps practices and workflows
-  - GIT_WORKFLOW.md for git branch and PR workflow
-  - RELEASE.md for release process documentation
-  - Release automation scripts (bump-version, gen-release-notes, release.sh)
-  - CLAUDE.md crate documentation for all major crates
-  - E2E test fixtures for Claude, Codex, and Git formats
+- **CLI ingest command** - Data ingestion from Claude Code and Codex CLI
+  - `cai ingest --source claude|codex|all [--path PATH]`
+  - Uses Ingestor orchestrator to parse and store entries
+  - Reports count of ingested entries
+- **CLI query execution** - Full SQL query support with all output formatters
+  - `cai query "SELECT..." --output table|json|jsonl|csv|ai|stats`
+  - Async mock data initialization to avoid nested runtime issues
+  - Proper error handling with user-friendly messages
+- **CLI configuration file support** (~/.cai/config.toml)
+  - Storage backend configuration (memory/sqlite types)
+  - Output format preferences
+  - Environment variable override support (CAI_STORAGE_TYPE, etc.)
+  - XDG config directory support (~/.config/cai/)
 - **SQLite storage backend** (`cai-storage` with `sqlite` feature)
   - Persistent storage using SQLite database
   - File-based and in-memory storage modes
@@ -29,6 +35,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Automatic schema migration support
   - Type-safe parameter binding via duckdb::Value
   - Optional feature flag (not enabled by default)
+- **Comprehensive documentation and release tooling**
+  - DEVOPS.md for DevOps practices and workflows
+  - GIT_WORKFLOW.md for git branch and PR workflow
+  - RELEASE.md for release process documentation
+  - Release automation scripts (bump-version, gen-release-notes, release.sh)
+  - CLAUDE.md crate documentation for all major crates
+  - E2E test fixtures for Claude, Codex, and Git formats
 - **CLI query execution** - Full SQL query support with all output formatters
   - `cai query "SELECT..." --output table|json|jsonl|csv|ai|stats`
   - Async mock data initialization to avoid nested runtime issues
