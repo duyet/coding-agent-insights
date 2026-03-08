@@ -3,7 +3,9 @@
 #![warn(missing_docs, unused_crate_dependencies)]
 
 use clap::{Parser, Subcommand};
+use cai_ingest::{IngestConfig, Ingestor};
 use colored::Colorize;
+use std::path::PathBuf;
 
 /// Coding Agent Insights - Query AI coding history
 #[derive(Parser, Clone)]
@@ -43,6 +45,59 @@ enum Commands {
     },
 }
 
+/// Execute data ingestion from specified source
+async fn execute_ingest(source: &str, path: Option<&str>) -> cai_core::Result<()> {
+    println!("{} {}", "Ingesting from:".green(), source);
+
+    // Build config based on source
+    let config = match source.to_lowercase().as_str() {
+        "claude" => IngestConfig {
+            parse_claude: true,
+            parse_codex: false,
+            scan_git: false,
+            claude_dir: path.map(|p| PathBuf::from(p)),
+            ..Default::default()
+        },
+        "codex" => IngestConfig {
+            parse_claude: false,
+            parse_codex: true,
+            scan_git: false,
+            codex_file: path.map(|p| PathBuf::from(p)),
+            ..Default::default()
+        },
+        "all" => IngestConfig {
+            parse_claude: true,
+            parse_codex: true,
+            scan_git: false,
+            claude_dir: path.map(|p| PathBuf::from(p)),
+            codex_file: path.map(|p| PathBuf::from(p)),
+            ..Default::default()
+        },
+        _ => {
+            return Err(cai_core::Error::Message(format!(
+                "Unknown source: '{}'. Valid options: claude, codex, all",
+                source
+            )));
+        }
+    };
+
+    // Create ingestor and storage
+    let ingestor = Ingestor::new(config);
+    let storage = cai_storage::MemoryStorage::new();
+
+    // Execute ingestion
+    let count = match ingestor.ingest_all(&storage).await {
+        Ok(count) => count,
+        Err(e) => {
+            eprintln!("{} {}", "Error:".red(), e);
+            std::process::exit(1);
+        }
+    };
+
+    println!("\n{} {} entries", "Successfully ingested:".green(), count);
+    Ok(())
+}
+
 #[tokio::main]
 async fn main() -> cai_core::Result<()> {
     tracing_subscriber::fmt()
@@ -62,11 +117,7 @@ async fn main() -> cai_core::Result<()> {
             Ok(())
         }
         Commands::Ingest { source, path } => {
-            println!("{} {}", "Ingesting from:".green(), source);
-            if let Some(p) = path {
-                println!("{} {}", "Path:".cyan(), p);
-            }
-            Ok(())
+            execute_ingest(&source, path.as_deref()).await
         }
         Commands::Tui => {
             // Initialize in-memory storage with mock data for testing
