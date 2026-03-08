@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"mod":["attached_token","stmt_create_table","stmt_data_loading"]};
