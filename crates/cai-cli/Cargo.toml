@@ -18,7 +18,7 @@ cai-query = { path = "../cai-query" }
 cai-storage = { path = "../cai-storage" }
 cai-output = { path = "../cai-output" }
 cai-tui = { path = "../cai-tui" }
-cai-web = { path = "../cai-web" }
+cai-web = { path = "../cai-web", optional = true }
 
 thiserror = { workspace = true }
 anyhow = { workspace = true }
@@ -27,3 +27,7 @@ tokio = { workspace = true }
 tracing = { workspace = true }
 tracing-subscriber = { workspace = true }
 colored = { workspace = true }
+
+[features]
+default = []
+web = ["dep:cai-web"]
