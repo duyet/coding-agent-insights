@@ -2,7 +2,7 @@
 
 #![warn(missing_docs, unused_crate_dependencies)]
 
-pub use cai_core::Result;
+pub use cai_core::{Error, Result};
 
 use async_trait::async_trait;
 use cai_core::{Entry, Source};
@@ -28,6 +28,12 @@ pub trait Storage: Send + Sync {
     /// Count entries
     async fn count(&self) -> Result<usize>;
 }
+
+#[cfg(feature = "duckdb")]
+pub mod duckdb;
+
+#[cfg(feature = "duckdb")]
+pub use duckdb::DuckDBStorage;
 
 /// Query filter
 #[derive(Debug, Clone, Default)]

@@ -13,11 +13,13 @@ cai-core = { path = "../cai-core" }
 tokio = { workspace = true }
 async-trait = "0.1"
 chrono = { workspace = true }
+duckdb = { version = "1.4", features = ["chrono"], optional = true }
 rusqlite = { version = "0.32", features = ["bundled", "chrono"], optional = true }
 
 [features]
 default = []
 sqlite = ["rusqlite"]
+duckdb = ["dep:duckdb"]
 
 [dev-dependencies]
 divan = { workspace = true }
