@@ -1,0 +1,176 @@
+name: PR Checks
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, edited]
+    branches: [main, develop]
+
+env:
+  CARGO_TERM_COLOR: always
+  RUST_BACKTRACE: 1
+
+jobs:
+  commitlint:
+    name: Commit Message Lint
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install commitlint
+        run: |
+          npm install -g @commitlint/cli @commitlint/config-conventional
+
+      - name: Validate commit messages
+        run: |
+          git fetch origin $GITHUB_BASE_REF
+          commitlint --from=origin/$GITHUB_BASE_REF --to=$GITHUB_SHA --verbose
+
+  pr-size:
+    name: PR Size Check
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Calculate PR size
+        id: size
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            FETCH_REF="origin/${{ github.base_ref }}"
+          else
+            FETCH_REF="HEAD^"
+          fi
+
+          LINES_CHANGED=$(git diff --shortstat $FETCH_REF | grep -o '[0-9]* insertion' | grep -o '[0-9]*' || echo 0)
+          DELETIONS=$(git diff --shortstat $FETCH_REF | grep -o '[0-9]* deletion' | grep -o '[0-9]*' || echo 0)
+          TOTAL_LINES=$((LINES_CHANGED + DELETIONS))
+
+          echo "lines_changed=$TOTAL_LINES" >> $GITHUB_OUTPUT
+          echo "Files changed: $(git diff --name-only $FETCH_REF | wc -l)"
+          echo "Lines changed: $TOTAL_LINES"
+
+          # Warn on large PRs
+          if [ $TOTAL_LINES -gt 1000 ]; then
+            echo "::warning::Large PR detected ($TOTAL_LINES lines). Consider splitting into smaller PRs."
+          fi
+
+  label-check:
+    name: Required Labels
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    steps:
+      - name: Check for required labels
+        run: |
+          LABELS="${{ toJson(github.event.pull_request.labels.*.name) }}"
+          echo "PR labels: $LABELS"
+
+          # At least one label should be present
+          if [ "$LABELS" = "[]" ]; then
+            echo "::warning::PR has no labels. Consider adding labels: [enhancement, bug, documentation, breaking-change]"
+          fi
+
+  dco-check:
+    name: DCO Check
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install DCO checker
+        run: |
+          wget https://raw.githubusercontent.com/src-d/dco/master/install.sh
+          bash install.sh v0.2.0
+          rm install.sh
+
+      - name: Run DCO check
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            git fetch origin ${{ github.base_ref }}
+            dco check --origin origin/${{ github.base_ref }}
+          else
+            dco check
+          fi
+
+  quick-checks:
+    name: Quick Pre-Merge Checks
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+
+      - name: Cache dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Format check
+        run: cargo fmt --all -- --check
+
+      - name: Clippy (quick)
+        run: cargo clippy --workspace --all-targets -- -D warnings
+
+      - name: Unit tests (quick)
+        run: cargo test --workspace --lib --quiet
+
+  pr-summary:
+    name: PR Summary
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    permissions:
+      pull-requests: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Generate PR summary
+        run: |
+          echo "## 📊 Pull Request Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- **Title**: ${{ github.event.pull_request.title }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Author**: @${{ github.event.pull_request.user.login }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Base**: ${{ github.base_ref }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Head**: ${{ github.head_ref }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          # Count changed files
+          git fetch origin ${{ github.base_ref }}
+          FILES_CHANGED=$(git diff --name-only origin/${{ github.base_ref }}...HEAD | wc -l | tr -d ' ')
+          echo "- **Files changed**: $FILES_CHANGED" >> $GITHUB_STEP_SUMMARY
+
+          # Get commits
+          COMMITS=$(git log origin/${{ github.base_ref }}..HEAD --oneline | wc -l | tr -d ' ')
+          echo "- **Commits**: $COMMITS" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          # List modified crates
+          echo "### 📦 Modified Crates" >> $GITHUB_STEP_SUMMARY
+          git diff --name-only origin/${{ github.base_ref }}...HEAD | grep '^crates/' | cut -d'/' -f2 | sort -u | while read crate; do
+            echo "- \`cai-$crate\`" >> $GITHUB_STEP_SUMMARY
+          done
