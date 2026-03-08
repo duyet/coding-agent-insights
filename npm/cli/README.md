@@ -49,7 +49,7 @@ cai web
 
 ## Documentation
 
-Full documentation at [https://github.com/yourusername/coding-agent-insights](https://github.com/yourusername/coding-agent-insights)
+Full documentation at [https://github.com/duyet/coding-agent-insights](https://github.com/duyet/coding-agent-insights)
 
 ## License
 
