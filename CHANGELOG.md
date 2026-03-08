@@ -8,6 +8,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **CLI query execution** - Full SQL query support with all output formatters
+  - `cai query "SELECT..." --output table|json|jsonl|csv|ai|stats`
+  - Async mock data initialization to avoid nested runtime issues
+  - Proper error handling with user-friendly messages
 - **CLI configuration file support** (~/.cai/config.toml)
   - Storage backend configuration (memory/sqlite types)
   - Output format preferences
