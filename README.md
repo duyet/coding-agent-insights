@@ -2,8 +2,8 @@
 
 > A superior Rust-based tool for analyzing AI coding history with SQL-like queries, multiple output formats, and agent-optimized workflows.
 
-[![CI](https://github.com/cai-dev/coding-agent-insights/workflows/CI/badge.svg)](https://github.com/cai-dev/coding-agent-insights/actions)
-[![codecov](https://codecov.io/gh/cai-dev/coding-agent-insights/branch/main/graph/badge.svg)](https://codecov.io/gh/cai-dev/coding-agent-insights)
+[![CI](https://github.com/duyet/coding-agent-insights/workflows/CI/badge.svg)](https://github.com/duyet/coding-agent-insights/actions)
+[![codecov](https://codecov.io/gh/duyet/coding-agent-insights/branch/master/graph/badge.svg)](https://codecov.io/gh/duyet/coding-agent-insights)
 [![License](https://img.shields.io/badge/license-MIT%20OR%20Apache--2.0-blue.svg)](LICENSE)
 
 ## Overview
@@ -31,7 +31,7 @@ cargo install cai-cli
 brew install cai-cli
 
 # Build from source
-git clone https://github.com/cai-dev/coding-agent-insights.git
+git clone https://github.com/duyet/coding-agent-insights.git
 cd coding-agent-insights
 cargo build --release
 ```
@@ -189,6 +189,6 @@ Inspired by [devsql](https://github.com/anthropics/devsql) but built from scratc
 
 ## Contact
 
-- GitHub: [cai-dev/coding-agent-insights](https://github.com/cai-dev/coding-agent-insights)
-- Issues: [GitHub Issues](https://github.com/cai-dev/coding-agent-insights/issues)
-- Discussions: [GitHub Discussions](https://github.com/cai-dev/coding-agent-insights/discussions)
+- GitHub: [duyet/coding-agent-insights](https://github.com/duyet/coding-agent-insights)
+- Issues: [GitHub Issues](https://github.com/duyet/coding-agent-insights/issues)
+- Discussions: [GitHub Discussions](https://github.com/duyet/coding-agent-insights/discussions)
