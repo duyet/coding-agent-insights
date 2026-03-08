@@ -13,7 +13,6 @@ use chrono::{Duration, Utc};
 use colored::Colorize;
 use config::load_config;
 use std::path::PathBuf;
-<<<<<<< HEAD
 use std::sync::Arc;
 
 /// Create storage with mock data for testing
@@ -91,9 +90,6 @@ fn format_with_formatter<F: Formatter>(
         cai_core::Error::Message(format!("Invalid UTF-8 in {} output: {}", format_name, e))
     })
 }
-=======
-use config::load_config;
->>>>>>> 6878351f (fix(cli): address CodeRabbit review feedback)
 
 /// Coding Agent Insights - Query AI coding history
 #[derive(Parser, Clone)]
@@ -126,6 +122,12 @@ enum Commands {
     },
     /// Show statistics about stored entries
     Stats,
+    /// Show database schema information
+    Schema {
+        /// Table name to describe (optional)
+        #[arg(short, long)]
+        table: Option<String>,
+    },
     /// Interactive terminal UI
     Tui,
     /// Start web server
@@ -219,6 +221,55 @@ async fn execute_stats() -> cai_core::Result<()> {
     Ok(())
 }
 
+/// Show database schema information
+async fn execute_schema(table: Option<&str>) -> cai_core::Result<()> {
+    println!("\n{}", "Database Schema".bold().cyan());
+    println!("{}", "=================".cyan());
+
+    // Show available tables
+    println!("\n{}", "Available Tables:".bold().green());
+    println!("  - {}", "entries".bold());
+
+    // If a table is specified, show its schema
+    if let Some(table_name) = table {
+        if table_name.to_lowercase() == "entries" {
+            println!("\n{}", format!("Table: {}", table_name).bold().green());
+            println!("{}", "────────────────────────────────────────────────────────────────────");
+            println!("{:<20} {:<20} {:<40}", "Column", "Type", "Description");
+            println!("{}", "────────────────────────────────────────────────────────────────────");
+            println!("{:<20} {:<20} {:<40}", "id", "TEXT", "Unique identifier");
+            println!("{:<20} {:<20} {:<40}", "source", "TEXT", "Source system (Claude, Codex, Git, Other)");
+            println!("{:<20} {:<20} {:<40}", "timestamp", "TIMESTAMP", "Interaction timestamp (UTC)");
+            println!("{:<20} {:<20} {:<40}", "prompt", "TEXT", "User prompt/input");
+            println!("{:<20} {:<20} {:<40}", "response", "TEXT", "AI response/output");
+            println!("{:<20} {:<20} {:<40}", "metadata", "JSON", "Additional metadata (file_path, language, etc.)");
+            println!("{}", "────────────────────────────────────────────────────────────────────");
+        } else {
+            return Err(cai_core::Error::Message(format!(
+                "Unknown table: '{}'. Available tables: entries",
+                table_name
+            )));
+        }
+    } else {
+        // Show column list for entries table
+        println!("\n{}", "Columns in 'entries' table:".bold());
+        println!("  id         - Unique identifier (TEXT)");
+        println!("  source     - Source system (TEXT)");
+        println!("  timestamp  - Interaction timestamp (TIMESTAMP)");
+        println!("  prompt     - User prompt/input (TEXT)");
+        println!("  response   - AI response/output (TEXT)");
+        println!("  metadata   - Additional metadata (JSON)");
+    }
+
+    println!("\n{}", "Query Examples:".bold().green());
+    println!("  SHOW TABLES");
+    println!("  DESCRIBE entries");
+    println!("  SELECT * FROM entries LIMIT 10");
+    println!("  SELECT * FROM entries WHERE source = 'Claude'");
+
+    Ok(())
+}
+
 /// Execute a SQL query and display results
 async fn execute_query(query: &str, output_format: &str) -> cai_core::Result<()> {
     println!("{} {}", "Executing query:".green(), query.dimmed());
@@ -284,15 +335,12 @@ async fn main() -> cai_core::Result<()> {
         Commands::Stats => {
             execute_stats().await
         }
+        Commands::Schema { table } => {
+            execute_schema(table.as_deref()).await
+        }
         Commands::Tui => {
-<<<<<<< HEAD
             // TODO: Use SQLite storage when config.storage.r#type == "sqlite"
             let storage = Arc::new(create_storage_with_mock_data().await);
-=======
-            let storage = std::sync::Arc::new(cai_storage::MemoryStorage::new());
-            // TODO: Use SQLite storage when config.storage.r#type == "sqlite"
-            // For now, always use memory storage regardless of config
->>>>>>> 6878351f (fix(cli): address CodeRabbit review feedback)
             cai_tui::run(storage).await
         }
         #[cfg(feature = "web")]
@@ -303,11 +351,7 @@ async fn main() -> cai_core::Result<()> {
             };
             println!("{} {}", "Starting web server on port:".green(), port);
             // TODO: Use configured storage backend based on config.storage.r#type
-<<<<<<< HEAD
-            let storage = Arc::new(cai_storage::MemoryStorage::new());
-=======
             let storage = std::sync::Arc::new(cai_storage::MemoryStorage::new());
->>>>>>> 6878351f (fix(cli): address CodeRabbit review feedback)
             cai_web::run(storage, web_config).await
         }
         #[cfg(not(feature = "web"))]
