@@ -13,13 +13,11 @@
 //!
 //! ```rust,no_run
 //! use cai_tui::run;
-//! use cai_storage::MemoryStorage;
 //!
-//! # async fn example() -> cai_core::Result<()> {
-//! let storage = MemoryStorage::new();
-//! run(storage).await?;
-//! # Ok(())
-//! # }
+//! // Create a storage implementation (MemoryStorage, SqliteStorage, etc.)
+//! // and pass it to the run function
+//! // let storage = ...;
+//! // run(storage).await?;
 //! ```
 
 #![warn(missing_docs, unused_crate_dependencies)]

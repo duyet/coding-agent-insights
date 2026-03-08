@@ -10,6 +10,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Performance benchmark suite (divan) for output formatting
 - E2E test framework with CLI testing support
+- --version flag to CLI with proper version output
+
+### Fixed
+- Divan benchmark compilation errors (types -> args)
+- DynFormatter enum missing documentation
+- Doctest failures in cai-core, cai-tui, and cai-web
+- E2E test fixture path resolution
+- CLI test assertions for case-insensitive command matching
+- Performance benchmark suite (divan) for output formatting
+- E2E test framework with CLI testing support
 
 ### Fixed
 - Divan benchmark compilation errors (types -> args)
