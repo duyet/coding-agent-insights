@@ -39,7 +39,7 @@ clap = { version = "4.5", features = ["derive", "env"] }
 
 # Database
 rusqlite = { version = "0.38", features = ["bundled", "functions"] }
-sqlparser = "0.61" (chore(deps): update rust crate rusqlite to 0.38)
+sqlparser = "0.61"
 
 # Async
 async-trait = "0.1"
