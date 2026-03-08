@@ -230,11 +230,9 @@ version = "0.1.0"
 dependencies = [
  "cai-core",
  "cai-output",
- "cai-query",
  "cai-storage",
  "cai-tui",
  "cai-web",
- "chrono",
  "clap",
  "colored",
  "tokio",

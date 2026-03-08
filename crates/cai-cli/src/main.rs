@@ -5,7 +5,7 @@
 use clap::{Parser, Subcommand};
 use cai_core::{Entry, Metadata, Source};
 use cai_ingest::{IngestConfig, Ingestor};
-use cai_output::Formatter;
+use cai_output::{Formatter, StatsFormatter};
 use cai_storage::Storage;
 use chrono::{Duration, Utc};
 use colored::Colorize;
@@ -117,6 +117,8 @@ enum Commands {
         #[arg(short, long)]
         path: Option<String>,
     },
+    /// Show statistics about stored entries
+    Stats,
     /// Interactive terminal UI
     Tui,
     /// Start web server
@@ -179,6 +181,37 @@ async fn execute_ingest(source: &str, path: Option<&str>) -> cai_core::Result<()
     Ok(())
 }
 
+/// Show statistics about stored entries
+async fn execute_stats() -> cai_core::Result<()> {
+    // Initialize storage with mock data for now
+    let storage = cai_storage::MemoryStorage::new();
+
+    // Query all entries
+    let entries = match storage.query(None as Option<&cai_storage::Filter>).await {
+        Ok(entries) => entries,
+        Err(e) => {
+            eprintln!("{} {}", "Error:".red(), e);
+            std::process::exit(1);
+        }
+    };
+
+    println!("\n{} {} entries", "Found:".cyan(), entries.len());
+
+    if entries.is_empty() {
+        println!("\n{}", "No entries found.".dimmed());
+        return Ok(());
+    }
+
+    let formatter = StatsFormatter::default();
+    let mut buffer = Vec::new();
+    formatter.format(&entries, &mut buffer)?;
+    let output = String::from_utf8(buffer)
+        .map_err(|e| cai_core::Error::Message(format!("Invalid UTF-8 in stats output: {}", e)))?;
+
+    println!("\n{}", output);
+    Ok(())
+}
+
 /// Execute a SQL query and display results
 async fn execute_query(query: &str, output_format: &str) -> cai_core::Result<()> {
     println!("{} {}", "Executing query:".green(), query.dimmed());
@@ -236,6 +269,9 @@ async fn main() -> cai_core::Result<()> {
         }
         Commands::Ingest { source, path } => {
             execute_ingest(&source, path.as_deref()).await
+        }
+        Commands::Stats => {
+            execute_stats().await
         }
         Commands::Tui => {
             // TODO: Use persistent storage from config
