@@ -1,13 +1,12 @@
 //! CAI Ingest - Data ingestion from various sources
 
 #![warn(missing_docs, unused_crate_dependencies)]
-
 pub use cai_core::Result;
 
-// Tokio is used in tests via #[tokio::test]
+// Tokio is used for async functions in this crate (via #[tokio::test] in tests)
 // This import suppresses the unused_crate_dependencies lint
 #[allow(unused_imports)]
-use tokio;
+use tokio as _;
 
 mod claude;
 mod codex;
