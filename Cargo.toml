@@ -11,6 +11,7 @@ members = [
     "crates/cai-cli",
     "crates/cai-plugin",
     "tests",
+    "benches",
 ]
 
 [workspace.package]
@@ -55,8 +56,8 @@ ratatui = "0.29"
 crossterm = "0.28"
 
 # Web
-axum = "0.8"
-tokio-tungstenite = "0.26"
+axum = { version = "0.8", features = ["ws"] }
+tokio-tungstenite = "0.28"
 
 # Testing
 rstest = "0.24"

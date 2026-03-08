@@ -1,6 +1,6 @@
 # CAI Makefile - Common development and testing commands
 
-.PHONY: help build test clean lint fmt check-coverage benchmark all
+.PHONY: help build test clean lint fmt check-coverage benchmark all release-bump release-dry-run
 
 # Default target
 help:
@@ -28,6 +28,12 @@ help:
 	@echo ""
 	@echo "Benchmarks:"
 	@echo "  make benchmark   - Run benchmarks"
+	@echo ""
+	@echo "Release:"
+	@echo "  make release-patch  - Bump patch version and prepare release"
+	@echo "  make release-minor  - Bump minor version and prepare release"
+	@echo "  make release-major  - Bump major version and prepare release"
+	@echo "  make release-dry-run - Preview release changes"
 	@echo ""
 	@echo "Other:"
 	@echo "  make clean       - Clean build artifacts"
@@ -86,3 +92,19 @@ clean:
 check: test lint
 
 all: build test lint
+
+# Release targets
+release-patch:
+	./scripts/release.sh -b patch
+
+release-minor:
+	./scripts/release.sh -b minor
+
+release-major:
+	./scripts/release.sh -b major
+
+release-dry-run:
+	./scripts/release.sh -b patch -d
+
+release-push:
+	./scripts/release.sh -b patch -p
