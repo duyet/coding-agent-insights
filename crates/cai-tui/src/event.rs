@@ -17,8 +17,8 @@ pub enum Event {
 
 /// Event handler for terminal events
 pub struct EventHandler {
-    /// Event sender channel
-    sender: mpsc::UnboundedSender<Event>,
+    /// Event sender channel (kept to hold channel open)
+    _sender: mpsc::UnboundedSender<Event>,
     /// Event receiver channel
     receiver: mpsc::UnboundedReceiver<Event>,
     /// Event handler task handle
@@ -49,7 +49,7 @@ impl EventHandler {
         });
 
         Self {
-            sender,
+            _sender: sender,
             receiver,
             _handle,
         }
