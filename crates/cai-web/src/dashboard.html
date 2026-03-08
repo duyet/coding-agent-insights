@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CAI - Coding Agent Insights</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
@@ -21,6 +22,9 @@
             border-bottom: 1px solid #30363d;
             padding-bottom: 20px;
             margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
         h1 {
             font-size: 28px;
@@ -52,9 +56,11 @@
             display: flex;
             gap: 10px;
             margin-bottom: 20px;
+            flex-wrap: wrap;
         }
         #query-input {
             flex: 1;
+            min-width: 300px;
             background: #0d1117;
             border: 1px solid #30363d;
             border-radius: 6px;
@@ -75,9 +81,17 @@
             padding: 12px 24px;
             font-size: 14px;
             cursor: pointer;
+            transition: background 0.2s;
         }
         button:hover {
             background: #2ea043;
+        }
+        button.secondary {
+            background: #21262d;
+            border: 1px solid #30363d;
+        }
+        button.secondary:hover {
+            background: #30363d;
         }
         .results {
             background: #161b22;
@@ -86,29 +100,44 @@
             overflow: hidden;
         }
         .results-header {
-            display: grid;
-            grid-template-columns: 200px 150px 1fr;
-            gap: 10px;
-            padding: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 20px;
             background: #21262d;
             border-bottom: 1px solid #30363d;
-            font-weight: bold;
-            color: #8b949e;
         }
-        .results-row {
-            display: grid;
-            grid-template-columns: 200px 150px 1fr;
-            gap: 10px;
+        .results-header h2 {
+            font-size: 16px;
+            color: #c9d1d9;
+        }
+        .export-buttons {
+            display: flex;
+            gap: 8px;
+        }
+        .results-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .results-table th {
+            text-align: left;
+            padding: 12px;
+            background: #21262d;
+            color: #8b949e;
+            font-weight: 600;
+            border-bottom: 1px solid #30363d;
+        }
+        .results-table td {
             padding: 12px;
             border-bottom: 1px solid #30363d;
-            cursor: pointer;
         }
-        .results-row:hover {
+        .results-table tr:hover {
             background: #21262d;
         }
         .timestamp {
             color: #8b949e;
             font-size: 12px;
+            white-space: nowrap;
         }
         .source {
             display: inline-block;
@@ -123,24 +152,95 @@
         .source-other { background: #8b949e; color: #ffffff; }
         .prompt {
             color: #c9d1d9;
-            white-space: nowrap;
+            max-width: 600px;
             overflow: hidden;
             text-overflow: ellipsis;
+            white-space: nowrap;
         }
         .status {
             color: #8b949e;
             font-size: 12px;
-            margin-top: 10px;
         }
         .status.connected { color: #238636; }
         .status.disconnected { color: #f85149; }
+        .charts {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        .chart-card {
+            background: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 6px;
+            padding: 20px;
+        }
+        .chart-card h3 {
+            font-size: 14px;
+            color: #8b949e;
+            margin-bottom: 15px;
+        }
+        .quick-queries {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        .quick-query-btn {
+            background: #21262d;
+            border: 1px solid #30363d;
+            color: #58a6ff;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 12px;
+            cursor: pointer;
+        }
+        .quick-query-btn:hover {
+            background: #30363d;
+            border-color: #58a6ff;
+        }
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #8b949e;
+        }
+        .no-results {
+            text-align: center;
+            padding: 40px;
+            color: #8b949e;
+        }
+        .entry-detail {
+            max-height: 200px;
+            overflow-y: auto;
+            background: #0d1117;
+            padding: 8px;
+            border-radius: 4px;
+            font-family: 'SF Mono', Monaco, monospace;
+            font-size: 12px;
+        }
+        .copy-btn {
+            background: transparent;
+            border: none;
+            color: #58a6ff;
+            cursor: pointer;
+            padding: 4px 8px;
+            font-size: 12px;
+        }
+        .copy-btn:hover {
+            background: #21262d;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <header>
-            <h1>CAI - Coding Agent Insights</h1>
-            <p class="status" id="status">Connecting...</p>
+            <div>
+                <h1>CAI - Coding Agent Insights</h1>
+                <p class="status" id="status">Connecting...</p>
+            </div>
+            <div class="export-buttons">
+                <button class="secondary" onclick="shareQuery()">Share Query</button>
+            </div>
         </header>
 
         <div class="stats">
@@ -162,6 +262,35 @@
             </div>
         </div>
 
+        <div class="charts">
+            <div class="chart-card">
+                <h3>Entries by Source</h3>
+                <canvas id="sourceChart"></canvas>
+            </div>
+            <div class="chart-card">
+                <h3>Activity Timeline</h3>
+                <canvas id="timelineChart"></canvas>
+            </div>
+        </div>
+
+        <div class="quick-queries">
+            <button class="quick-query-btn" onclick="setQuery('SELECT * FROM entries ORDER BY timestamp DESC LIMIT 50')">
+                Recent 50
+            </button>
+            <button class="quick-query-btn" onclick="setQuery('SELECT * FROM entries WHERE source = \\'Claude\\' ORDER BY timestamp DESC LIMIT 20')">
+                Claude Recent
+            </button>
+            <button class="quick-query-btn" onclick="setQuery('SELECT * FROM entries WHERE source = \\'Git\\' ORDER BY timestamp DESC LIMIT 20')">
+                Git Recent
+            </button>
+            <button class="quick-query-btn" onclick="setQuery('SELECT * FROM entries WHERE prompt LIKE \\'%refactor%\\' ORDER BY timestamp DESC')">
+                Refactoring
+            </button>
+            <button class="quick-query-btn" onclick="setQuery('SELECT * FROM entries WHERE prompt LIKE \\'%bug%\\' OR prompt LIKE \\'%error%\\' ORDER BY timestamp DESC')">
+                Bugs & Errors
+            </button>
+        </div>
+
         <div class="query-bar">
             <input
                 type="text"
@@ -172,7 +301,7 @@
         </div>
 
         <div class="results" id="results">
-            <div style="padding: 40px; text-align: center; color: #8b949e;">
+            <div class="no-results">
                 Enter a query above to see results
             </div>
         </div>
@@ -180,10 +309,14 @@
 
     <script>
         let ws = null;
+        let currentQuery = '';
+        let currentResults = [];
+        let sourceChart = null;
+        let timelineChart = null;
 
         function connect() {
             const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-            ws = new WebSocket(`${protocol}//${window.location.host}`);
+            ws = new WebSocket(`${protocol}//${window.location.host}/api/ws`);
 
             ws.onopen = () => {
                 document.getElementById('status').textContent = 'Connected';
@@ -217,10 +350,11 @@
                     updateStats(data);
                     break;
                 case 'query_result':
-                    displayResults(data.entries);
+                    currentResults = data.entries || [];
+                    displayResults(currentResults);
                     break;
                 case 'error':
-                    console.error('Server error:', data.message);
+                    displayError(data.message);
                     break;
             }
         }
@@ -232,51 +366,212 @@
         }
 
         function updateStats(data) {
-            document.getElementById('total-entries').textContent = data.total;
-            document.getElementById('claude-count').textContent = data.by_source.Claude || 0;
-            document.getElementById('codex-count').textContent = data.by_source.Codex || 0;
-            document.getElementById('git-count').textContent = data.by_source.Git || 0;
+            document.getElementById('total-entries').textContent = data.total || 0;
+            document.getElementById('claude-count').textContent = data.by_source?.Claude || 0;
+            document.getElementById('codex-count').textContent = data.by_source?.Codex || 0;
+            document.getElementById('git-count').textContent = data.by_source?.Git || 0;
+
+            updateCharts(data);
+        }
+
+        function updateCharts(data) {
+            const sources = Object.keys(data.by_source || {});
+            const counts = Object.values(data.by_source || {});
+
+            if (sourceChart) sourceChart.destroy();
+            sourceChart = new Chart(document.getElementById('sourceChart'), {
+                type: 'doughnut',
+                data: {
+                    labels: sources,
+                    datasets: [{
+                        data: counts,
+                        backgroundColor: ['#1f6feb', '#8957e5', '#238636', '#8b949e'],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: { color: '#8b949e' }
+                        }
+                    }
+                }
+            });
+
+            // Timeline chart (mock data for now - would need proper aggregation)
+            if (timelineChart) timelineChart.destroy();
+            timelineChart = new Chart(document.getElementById('timelineChart'), {
+                type: 'line',
+                data: {
+                    labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                    datasets: [{
+                        label: 'Entries',
+                        data: [12, 19, 3, 5, 2, 3, 15],
+                        borderColor: '#58a6ff',
+                        backgroundColor: 'rgba(88, 166, 255, 0.1)',
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        x: {
+                            ticks: { color: '#8b949e' },
+                            grid: { color: '#30363d' }
+                        },
+                        y: {
+                            ticks: { color: '#8b949e' },
+                            grid: { color: '#30363d' }
+                        }
+                    }
+                }
+            });
+        }
+
+        function setQuery(query) {
+            document.getElementById('query-input').value = query;
         }
 
         function executeQuery() {
             const query = document.getElementById('query-input').value;
             if (!query.trim()) return;
 
+            currentQuery = query;
+            displayLoading();
+
             if (ws && ws.readyState === WebSocket.OPEN) {
                 ws.send(JSON.stringify({ type: 'query', query }));
             }
+        }
+
+        function displayLoading() {
+            const container = document.getElementById('results');
+            container.innerHTML = `
+                <div class="loading">
+                    <div style="margin-bottom: 10px;">Executing query...</div>
+                    <div style="font-size: 12px; color: #58a6ff;">${escapeHtml(currentQuery)}</div>
+                </div>
+            `;
+        }
+
+        function displayError(message) {
+            const container = document.getElementById('results');
+            container.innerHTML = `
+                <div class="no-results" style="color: #f85149;">
+                    <div style="margin-bottom: 10px;">Query Error</div>
+                    <div style="font-size: 12px;">${escapeHtml(message)}</div>
+                </div>
+            `;
         }
 
         function displayResults(entries) {
             const container = document.getElementById('results');
 
             if (entries.length === 0) {
-                container.innerHTML = '<div style="padding: 40px; text-align: center; color: #8b949e;">No results found</div>';
+                container.innerHTML = '<div class="no-results">No results found</div>';
                 return;
             }
 
-            let html = '<div class="results-header"><div>Timestamp</div><div>Source</div><div>Prompt</div></div>';
+            let html = `
+                <div class="results-header">
+                    <h2>${entries.length} Results</h2>
+                    <div class="export-buttons">
+                        <button class="secondary" onclick="exportJSON()">Export JSON</button>
+                        <button class="secondary" onclick="exportCSV()">Export CSV</button>
+                    </div>
+                </div>
+                <table class="results-table">
+                    <thead>
+                        <tr>
+                            <th>Timestamp</th>
+                            <th>Source</th>
+                            <th>Prompt</th>
+                            <th>Response Preview</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
 
             entries.forEach(entry => {
-                const sourceClass = `source-${entry.source.toLowerCase()}`;
-                const prompt = entry.prompt.length > 100 ? entry.prompt.substring(0, 100) + '...' : entry.prompt;
-                const timestamp = new Date(entry.timestamp).toLocaleString();
+                const sourceClass = `source-${(entry.source || 'other').toLowerCase()}`;
+                const prompt = entry.prompt || '';
+                const response = (entry.response || '').substring(0, 100);
+                const timestamp = entry.timestamp ? new Date(entry.timestamp).toLocaleString() : '-';
 
                 html += `
-                    <div class="results-row">
-                        <div class="timestamp">${timestamp}</div>
-                        <div><span class="source ${sourceClass}">${entry.source}</span></div>
-                        <div class="prompt">${prompt}</div>
-                    </div>
+                    <tr>
+                        <td class="timestamp">${escapeHtml(timestamp)}</td>
+                        <td><span class="source ${sourceClass}">${escapeHtml(entry.source || 'Unknown')}</span></td>
+                        <td>
+                            <div class="prompt" title="${escapeHtml(prompt)}">${escapeHtml(prompt)}</div>
+                        </td>
+                        <td>
+                            <div class="prompt" title="${escapeHtml(entry.response || '')}">${escapeHtml(response)}${response.length >= 100 ? '...' : ''}</div>
+                        </td>
+                    </tr>
                 `;
             });
 
+            html += '</tbody></table>';
             container.innerHTML = html;
+        }
+
+        function exportJSON() {
+            const data = JSON.stringify(currentResults, null, 2);
+            downloadFile(data, 'cai-export.json', 'application/json');
+        }
+
+        function exportCSV() {
+            let csv = 'id,timestamp,source,prompt,response\n';
+            currentResults.forEach(entry => {
+                const prompt = (entry.prompt || '').replace(/"/g, '""').replace(/\n/g, ' ');
+                const response = (entry.response || '').replace(/"/g, '""').replace(/\n/g, ' ');
+                csv += `"${entry.id}","${entry.timestamp}","${entry.source}","${prompt}","${response}"\n`;
+            });
+            downloadFile(csv, 'cai-export.csv', 'text/csv');
+        }
+
+        function downloadFile(content, filename, mimeType) {
+            const blob = new Blob([content], { type: mimeType });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function shareQuery() {
+            const url = new URL(window.location.href);
+            url.searchParams.set('q', currentQuery);
+            navigator.clipboard.writeText(url.toString()).then(() => {
+                alert('Shareable URL copied to clipboard!');
+            });
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
         }
 
         document.getElementById('query-input').addEventListener('keypress', (e) => {
             if (e.key === 'Enter') executeQuery();
         });
+
+        // Check for shared query in URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const sharedQuery = urlParams.get('q');
+        if (sharedQuery) {
+            setQuery(sharedQuery);
+            executeQuery();
+        }
 
         connect();
     </script>
