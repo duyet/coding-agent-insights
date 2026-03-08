@@ -1,0 +1,66 @@
+[workspace]
+resolver = "2"
+members = [
+    "crates/cai-core",
+    "crates/cai-ingest",
+    "crates/cai-query",
+    "crates/cai-storage",
+    "crates/cai-output",
+    "crates/cai-tui",
+    "crates/cai-web",
+    "crates/cai-cli",
+    "crates/cai-plugin",
+]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+license = "MIT OR Apache-2.0"
+authors = ["cai Contributors"]
+repository = "https://github.com/cai-dev/coding-agent-insights"
+rust-version = "1.80"
+
+[workspace.dependencies]
+# Core utilities
+thiserror = "2.0"
+anyhow = "1.0"
+
+# Async runtime
+tokio = { version = "1.42", features = ["full"] }
+
+# Serialization
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+
+# CLI
+clap = { version = "4.5", features = ["derive", "env"] }
+
+# Database
+rusqlite = { version = "0.32", features = ["bundled", "functions"] }
+sqlparser = "0.54"
+
+# Git operations
+git2 = "0.19"
+
+# Output formatting
+tabled = "0.17"
+colored = "3.0"
+
+# TUI
+ratatui = "0.29"
+crossterm = "0.28"
+
+# Web
+axum = "0.8"
+tokio-tungstenite = "0.26"
+
+# Testing
+rstest = "0.24"
+proptest = "1.5"
+
+# Logging
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+
+# Dates and times
+chrono = { version = "0.4", features = ["serde"] }
