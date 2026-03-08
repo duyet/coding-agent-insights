@@ -122,7 +122,7 @@ pub enum Source {
 }
 
 /// Metadata associated with an entry
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
 pub struct Metadata {
     /// Optional file path if applicable
     pub file_path: Option<String>,
@@ -135,18 +135,6 @@ pub struct Metadata {
     /// Additional custom fields (as key-value pairs)
     #[serde(default)]
     pub extra: std::collections::HashMap<String, String>,
-}
-
-impl Default for Metadata {
-    fn default() -> Self {
-        Self {
-            file_path: None,
-            repo_url: None,
-            commit_hash: None,
-            language: None,
-            extra: std::collections::HashMap::new(),
-        }
-    }
 }
 
 /// Result type for CAI operations

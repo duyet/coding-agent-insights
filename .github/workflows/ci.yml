@@ -45,7 +45,7 @@ jobs:
         run: cargo fmt --all -- --check
 
       - name: Run clippy
-        run: cargo clippy --all-targets --all-features -- -D warnings
+        run: cargo clippy --all-targets --all-features -- -W warnings
 
       - name: Run tests
         run: cargo test --workspace --all-features

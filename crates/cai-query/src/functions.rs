@@ -55,10 +55,15 @@ impl FunctionRegistry {
 /// Function argument value
 #[derive(Debug, Clone, PartialEq)]
 pub enum FunctionArg {
+    /// String value
     String(String),
+    /// Integer number
     Number(i64),
+    /// Floating-point number
     Float(f64),
+    /// Boolean value
     Boolean(bool),
+    /// Null value
     Null,
 }
 
