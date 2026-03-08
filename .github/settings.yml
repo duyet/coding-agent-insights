@@ -1,0 +1,101 @@
+# GitHub Repository Settings
+# This file can be used with tools like github-settings to automate repository configuration
+
+# Repository settings
+repository:
+  name: coding-agent-insights
+  description: Better alternative to devsql in Rust - Coding Agent Insights
+  homepage: https://cai.dev
+  topics:
+    - rust
+    - cli
+    - developer-tools
+    - sqlite
+    - query-language
+    - terminal-ui
+    - analytics
+
+  # Visibility and access
+  private: false
+  has_issues: true
+  has_projects: true
+  has_wiki: false
+  has_downloads: true
+
+  # Merge settings
+  allow_merge_commit: false
+  allow_squash_merge: true
+  allow_rebase_merge: true
+  delete_branch_on_merge: true
+
+  # Branch protection
+  branches:
+    - name: main
+      protection:
+        required_status_checks:
+          strict: true
+          contexts:
+            - CI
+            - PR Checks
+        enforce_admins: false
+        required_pull_request_reviews:
+          required_approving_review_count: 1
+          dismiss_stale_reviews: true
+          require_code_owner_reviews: true
+        restrictions: null
+        allow_force_pushes: false
+        allow_deletions: false
+
+# Labels
+labels:
+  - name: bug
+    color: d73a4a
+    description: Something isn't working
+
+  - name: enhancement
+    color: a2eeef
+    description: New feature or request
+
+  - name: documentation
+    color: 0075ca
+    description: Documentation improvements
+
+  - name: good first issue
+    color: 7057ff
+    description: Good for newcomers
+
+  - name: help wanted
+    color: 008672
+    description: Extra attention is needed
+
+  - name: question
+    color: d876e3
+    description: Further information requested
+
+  - name: breaking-change
+    color: b60205
+    description: Breaking changes
+
+  - name: dependencies
+    color: 0366d6
+    description: Pull requests that update dependencies
+
+  - name: performance
+    color: fbca04
+    description: Performance improvements
+
+  - name: security
+    color: 02e10c
+    description: Security-related issues
+
+  - name: stale
+    color: 7e8689
+    description: Stale issue or PR
+
+  - name: work-in-progress
+    color: eff1ad
+    description: Work in progress
+
+  - name: keep
+    color: 006b75
+    description: Keep open indefinitely

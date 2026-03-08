@@ -1,0 +1,73 @@
+# GitHub Labeler Configuration
+# Automatically labels PRs based on changed files
+
+# Core functionality
+cai-core:
+  - crates/cai-core/**/*
+
+# Storage layer
+cai-storage:
+  - crates/cai-storage/**/*
+
+# Query engine
+cai-query:
+  - crates/cai-query/**/*
+
+# Data ingestion
+cai-ingest:
+  - crates/cai-ingest/**/*
+
+# Output formatting
+cai-output:
+  - crates/cai-output/**/*
+
+# CLI interface
+cai-cli:
+  - crates/cai-cli/**/*
+
+# Terminal UI
+cai-tui:
+  - crates/cai-tui/**/*
+
+# Web interface
+cai-web:
+  - crates/cai-web/**/*
+
+# Plugin system
+cai-plugin:
+  - crates/cai-plugin/**/*
+  - plugin/**/*
+
+# Testing
+testing:
+  - tests/**/*
+  - **/tests/**/*.rs
+  - TESTING.md
+
+# Documentation
+documentation:
+  - "**.md"
+  - docs/**/*
+  - .github/ISSUE_TEMPLATE/**/*
+
+# CI/CD
+ci-cd:
+  - .github/workflows/**/*
+  - .github/CODEOWNERS
+  - scripts/**/*
+
+# Build configuration
+build:
+  - Cargo.toml
+  - Cargo.lock
+  - .cargo/**/*
+  - Makefile
+
+# Dependencies
+dependencies:
+  - "**/Cargo.toml"
+
+# Breaking changes
+breaking-change:
+  - any: ['crates/**/src/lib.rs']
+    changed: ['**pub enum**', '**pub struct**']

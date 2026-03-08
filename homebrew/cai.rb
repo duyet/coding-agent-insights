@@ -8,7 +8,7 @@ class Cai < Formula
   desc "SQL-like query tool for analyzing AI coding history"
   homepage "https://github.com/duyet/coding-agent-insights"
   url "https://github.com/duyet/coding-agent-insights/archive/refs/tags/v0.1.0.tar.gz"
-  sha256 "3f194c7dda84ef323676564e2cfbfb697e38280cad37bdcf500a0a16bdf14c2a"
+  sha256 "55daeba1395be6a4c3cdde1cf73476d002551ddbe3bda8f4b3ca888e16b74066"
   license "MIT OR Apache-2.0"
 
   depends_on "rust" => :build

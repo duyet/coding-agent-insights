@@ -1,0 +1,42 @@
+# CAI Code Owners
+
+# This file defines ownership rules for the CAI project
+# See: https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-codeowners
+
+# Core team approval required for changes to core functionality
+/crates/cai-core/ @cai-dev/core-team
+/crates/cai-storage/ @cai-dev/core-team
+
+# Query engine specialists
+/crates/cai-query/ @cai-dev/query-team
+
+# Infrastructure and CI/CD
+.github/ @cai-dev/devops-team
+/scripts/ @cai-dev/devops-team
+
+# Documentation
+/*.md @cai-dev/docs-team
+/docs/ @cai-dev/docs-team
+
+# CLI and user interfaces
+/crates/cai-cli/ @cai-dev/cli-team
+/crates/cai-tui/ @cai-dev/cli-team
+
+# Web interface
+/crates/cai-web/ @cai-dev/web-team
+
+# Plugin system
+/crates/cai-plugin/ @cai-dev/plugin-team
+/plugin/ @cai-dev/plugin-team
+
+# Tests and quality
+/tests/ @cai-dev/qa-team
+/TESTING.md @cai-dev/qa-team
+
+# Build and workspace configuration
+/Cargo.toml @cai-dev/core-team
+/Cargo.lock @cai-dev/core-team
+/.cargo/ @cai-dev/core-team
+
+# Default fallback (requires approval from any core team member)
+* @cai-dev/core-team
