@@ -58,6 +58,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Doctest failures in cai-core, cai-tui, and cai-web
 - E2E test fixture path resolution
 - CLI test assertions for case-insensitive command matching
+- Compiler warnings from unused dependencies across all crates
 
 ### Changed
 - Updated Metadata to use HashMap for extensibility
