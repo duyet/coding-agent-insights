@@ -1,0 +1,92 @@
+# Dependabot Configuration
+# See: https://docs.github.com/en/code-security/dependabot
+
+version: 2
+updates:
+  # Cargo dependencies
+  - package-ecosystem: "cargo"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+    open-pull-requests-limit: 10
+    reviewers:
+      - "cai-dev/core-team"
+    assignees:
+      - "cai-dev/core-team"
+    labels:
+      - "dependencies"
+      - "rust"
+    commit-message:
+      prefix: "chore"
+      include: "scope"
+    groups:
+      # Group all dev dependencies
+      dev-dependencies:
+        patterns:
+          - "*"
+        dependency-type: "development"
+      # Group test dependencies
+      test-dependencies:
+        patterns:
+          - "rstest"
+          - "proptest"
+          - "criterion"
+          - "divan"
+        dependency-type: "development"
+      # Group core dependencies
+      core-dependencies:
+        patterns:
+          - "thiserror"
+          - "anyhow"
+          - "serde"
+          - "tokio"
+    allow:
+      # Allow updates for these dependencies only (security updates)
+      - dependency-name: "thiserror"
+        update-types: ["security"]
+      - dependency-name: "anyhow"
+        update-types: ["security"]
+      - dependency-name: "tokio"
+        update-types: ["security"]
+      - dependency-name: "serde"
+        update-types: ["security"]
+
+  # GitHub Actions
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+    open-pull-requests-limit: 5
+    reviewers:
+      - "cai-dev/devops-team"
+    assignees:
+      - "cai-dev/devops-team"
+    labels:
+      - "dependencies"
+      - "ci-cd"
+    commit-message:
+      prefix: "ci"
+      include: "scope"
+
+  # NPM dependencies (for plugin package)
+  - package-ecosystem: "npm"
+    directory: "/npm"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+    open-pull-requests-limit: 5
+    reviewers:
+      - "cai-dev/plugin-team"
+    assignees:
+      - "cai-dev/plugin-team"
+    labels:
+      - "dependencies"
+      - "javascript"
+    commit-message:
+      prefix: "chore"
+      include: "scope"
