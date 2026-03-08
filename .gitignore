@@ -1,0 +1,50 @@
+# Build artifacts
+target/
+*.o
+*.a
+*.so
+*.dylib
+*.dll
+*.exe
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Debug files
+*.debug
+*.pdb
+
+# Profiling
+flamegraph.svg
+cachegrind.out.*
+
+# Testing
+.nextest/
+
+# Cargo
+Cargo.lock
+
+# Large binary artifacts
+*.bin
+*.wasm
+*.rlib
+
+# Rust analyzer
+rust-project.json
+
+# Local configuration (user-specific)
+.cai/
+
+# Test fixtures and temporary data
+tests/fixtures/temp/
+*.tmp
+
+# Build cache
+CACHEDIR.TAG
+.rustc_info.json
+.rustdoc_fingerprint.json
