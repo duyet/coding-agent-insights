@@ -14,7 +14,7 @@ tokio = { workspace = true }
 async-trait = "0.1"
 chrono = { workspace = true }
 duckdb = { version = "1.4", features = ["chrono"], optional = true }
-rusqlite = { version = "0.32", features = ["bundled", "chrono"], optional = true }
+rusqlite = { version = "0.38", features = ["bundled", "chrono"], optional = true }
 
 [features]
 default = []
