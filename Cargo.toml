@@ -60,7 +60,7 @@ axum = { version = "0.8", features = ["ws"] }
 tokio-tungstenite = "0.28"
 
 # Testing
-rstest = "0.24"
+rstest = "0.26"
 proptest = "1.5"
 
 # Benchmarking
