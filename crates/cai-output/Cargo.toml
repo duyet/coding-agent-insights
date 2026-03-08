@@ -17,3 +17,6 @@ serde_json = { workspace = true }
 tabled = { workspace = true }
 colored = { workspace = true }
 chrono = { workspace = true }
+
+[dev-dependencies]
+rstest = { workspace = true }

@@ -1,0 +1,9 @@
+(function() {
+    var implementors = Object.fromEntries([["sqlparser",[["impl&lt;T&gt; <a class=\"trait\" href=\"https://doc.rust-lang.org/1.93.0/core/iter/traits/exact_size/trait.ExactSizeIterator.html\" title=\"trait core::iter::traits::exact_size::ExactSizeIterator\">ExactSizeIterator</a> for <a class=\"struct\" href=\"sqlparser/ast/struct.OneOrManyWithParensIntoIter.html\" title=\"struct sqlparser::ast::OneOrManyWithParensIntoIter\">OneOrManyWithParensIntoIter</a>&lt;T&gt;<div class=\"where\">where\n    <a class=\"struct\" href=\"https://doc.rust-lang.org/1.93.0/core/iter/sources/once/struct.Once.html\" title=\"struct core::iter::sources::once::Once\">Once</a>&lt;T&gt;: <a class=\"trait\" href=\"https://doc.rust-lang.org/1.93.0/core/iter/traits/exact_size/trait.ExactSizeIterator.html\" title=\"trait core::iter::traits::exact_size::ExactSizeIterator\">ExactSizeIterator</a>,\n    &lt;<a class=\"struct\" href=\"https://doc.rust-lang.org/1.93.0/alloc/vec/struct.Vec.html\" title=\"struct alloc::vec::Vec\">Vec</a>&lt;T&gt; as <a class=\"trait\" href=\"https://doc.rust-lang.org/1.93.0/core/iter/traits/collect/trait.IntoIterator.html\" title=\"trait core::iter::traits::collect::IntoIterator\">IntoIterator</a>&gt;::<a class=\"associatedtype\" href=\"https://doc.rust-lang.org/1.93.0/core/iter/traits/collect/trait.IntoIterator.html#associatedtype.IntoIter\" title=\"type core::iter::traits::collect::IntoIterator::IntoIter\">IntoIter</a>: <a class=\"trait\" href=\"https://doc.rust-lang.org/1.93.0/core/iter/traits/exact_size/trait.ExactSizeIterator.html\" title=\"trait core::iter::traits::exact_size::ExactSizeIterator\">ExactSizeIterator</a>,</div>"]]]]);
+    if (window.register_implementors) {
+        window.register_implementors(implementors);
+    } else {
+        window.pending_implementors = implementors;
+    }
+})()
+//{"start":57,"fragment_lengths":[1613]}

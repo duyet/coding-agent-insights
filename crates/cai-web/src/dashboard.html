@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CAI - Coding Agent Insights</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: #0d1117;
+            color: #c9d1d9;
+            line-height: 1.6;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        header {
+            border-bottom: 1px solid #30363d;
+            padding-bottom: 20px;
+            margin-bottom: 20px;
+        }
+        h1 {
+            font-size: 28px;
+            color: #58a6ff;
+        }
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        .stat-card {
+            background: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 6px;
+            padding: 20px;
+        }
+        .stat-card h3 {
+            font-size: 14px;
+            color: #8b949e;
+            margin-bottom: 10px;
+        }
+        .stat-card .value {
+            font-size: 32px;
+            font-weight: bold;
+            color: #58a6ff;
+        }
+        .query-bar {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        #query-input {
+            flex: 1;
+            background: #0d1117;
+            border: 1px solid #30363d;
+            border-radius: 6px;
+            color: #c9d1d9;
+            padding: 12px;
+            font-size: 14px;
+            font-family: 'SF Mono', Monaco, monospace;
+        }
+        #query-input:focus {
+            outline: none;
+            border-color: #58a6ff;
+        }
+        button {
+            background: #238636;
+            color: #ffffff;
+            border: none;
+            border-radius: 6px;
+            padding: 12px 24px;
+            font-size: 14px;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #2ea043;
+        }
+        .results {
+            background: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 6px;
+            overflow: hidden;
+        }
+        .results-header {
+            display: grid;
+            grid-template-columns: 200px 150px 1fr;
+            gap: 10px;
+            padding: 12px;
+            background: #21262d;
+            border-bottom: 1px solid #30363d;
+            font-weight: bold;
+            color: #8b949e;
+        }
+        .results-row {
+            display: grid;
+            grid-template-columns: 200px 150px 1fr;
+            gap: 10px;
+            padding: 12px;
+            border-bottom: 1px solid #30363d;
+            cursor: pointer;
+        }
+        .results-row:hover {
+            background: #21262d;
+        }
+        .timestamp {
+            color: #8b949e;
+            font-size: 12px;
+        }
+        .source {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: bold;
+        }
+        .source-claude { background: #1f6feb; color: #ffffff; }
+        .source-codex { background: #8957e5; color: #ffffff; }
+        .source-git { background: #238636; color: #ffffff; }
+        .source-other { background: #8b949e; color: #ffffff; }
+        .prompt {
+            color: #c9d1d9;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .status {
+            color: #8b949e;
+            font-size: 12px;
+            margin-top: 10px;
+        }
+        .status.connected { color: #238636; }
+        .status.disconnected { color: #f85149; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>CAI - Coding Agent Insights</h1>
+            <p class="status" id="status">Connecting...</p>
+        </header>
+
+        <div class="stats">
+            <div class="stat-card">
+                <h3>Total Entries</h3>
+                <div class="value" id="total-entries">-</div>
+            </div>
+            <div class="stat-card">
+                <h3>Claude Code</h3>
+                <div class="value" id="claude-count">-</div>
+            </div>
+            <div class="stat-card">
+                <h3>Codex</h3>
+                <div class="value" id="codex-count">-</div>
+            </div>
+            <div class="stat-card">
+                <h3>Git</h3>
+                <div class="value" id="git-count">-</div>
+            </div>
+        </div>
+
+        <div class="query-bar">
+            <input
+                type="text"
+                id="query-input"
+                placeholder="Enter SQL query (e.g., SELECT * FROM entries LIMIT 10)"
+            />
+            <button onclick="executeQuery()">Execute Query</button>
+        </div>
+
+        <div class="results" id="results">
+            <div style="padding: 40px; text-align: center; color: #8b949e;">
+                Enter a query above to see results
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let ws = null;
+
+        function connect() {
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            ws = new WebSocket(`${protocol}//${window.location.host}`);
+
+            ws.onopen = () => {
+                document.getElementById('status').textContent = 'Connected';
+                document.getElementById('status').className = 'status connected';
+                requestStats();
+            };
+
+            ws.onclose = () => {
+                document.getElementById('status').textContent = 'Disconnected - Reconnecting...';
+                document.getElementById('status').className = 'status disconnected';
+                setTimeout(connect, 3000);
+            };
+
+            ws.onerror = () => {
+                document.getElementById('status').textContent = 'Connection Error';
+                document.getElementById('status').className = 'status disconnected';
+            };
+
+            ws.onmessage = (event) => {
+                const data = JSON.parse(event.data);
+                handleMessage(data);
+            };
+        }
+
+        function handleMessage(data) {
+            switch (data.type) {
+                case 'connected':
+                    console.log('Connected to CAI server');
+                    break;
+                case 'stats':
+                    updateStats(data);
+                    break;
+                case 'query_result':
+                    displayResults(data.entries);
+                    break;
+                case 'error':
+                    console.error('Server error:', data.message);
+                    break;
+            }
+        }
+
+        function requestStats() {
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({ type: 'stats' }));
+            }
+        }
+
+        function updateStats(data) {
+            document.getElementById('total-entries').textContent = data.total;
+            document.getElementById('claude-count').textContent = data.by_source.Claude || 0;
+            document.getElementById('codex-count').textContent = data.by_source.Codex || 0;
+            document.getElementById('git-count').textContent = data.by_source.Git || 0;
+        }
+
+        function executeQuery() {
+            const query = document.getElementById('query-input').value;
+            if (!query.trim()) return;
+
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({ type: 'query', query }));
+            }
+        }
+
+        function displayResults(entries) {
+            const container = document.getElementById('results');
+
+            if (entries.length === 0) {
+                container.innerHTML = '<div style="padding: 40px; text-align: center; color: #8b949e;">No results found</div>';
+                return;
+            }
+
+            let html = '<div class="results-header"><div>Timestamp</div><div>Source</div><div>Prompt</div></div>';
+
+            entries.forEach(entry => {
+                const sourceClass = `source-${entry.source.toLowerCase()}`;
+                const prompt = entry.prompt.length > 100 ? entry.prompt.substring(0, 100) + '...' : entry.prompt;
+                const timestamp = new Date(entry.timestamp).toLocaleString();
+
+                html += `
+                    <div class="results-row">
+                        <div class="timestamp">${timestamp}</div>
+                        <div><span class="source ${sourceClass}">${entry.source}</span></div>
+                        <div class="prompt">${prompt}</div>
+                    </div>
+                `;
+            });
+
+            container.innerHTML = html;
+        }
+
+        document.getElementById('query-input').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') executeQuery();
+        });
+
+        connect();
+    </script>
+</body>
+</html>

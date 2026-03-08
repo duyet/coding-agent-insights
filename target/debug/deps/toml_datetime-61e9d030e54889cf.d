@@ -1,0 +1,10 @@
+/Users/duet/project/coding-agent-insights/target/debug/deps/toml_datetime-61e9d030e54889cf.d: /Users/duet/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/toml_datetime-1.0.0+spec-1.1.0/src/lib.rs /Users/duet/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/toml_datetime-1.0.0+spec-1.1.0/src/datetime.rs /Users/duet/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/toml_datetime-1.0.0+spec-1.1.0/src/de.rs /Users/duet/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/toml_datetime-1.0.0+spec-1.1.0/src/ser.rs
+
+/Users/duet/project/coding-agent-insights/target/debug/deps/libtoml_datetime-61e9d030e54889cf.rlib: /Users/duet/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/toml_datetime-1.0.0+spec-1.1.0/src/lib.rs /Users/duet/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/toml_datetime-1.0.0+spec-1.1.0/src/datetime.rs /Users/duet/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/toml_datetime-1.0.0+spec-1.1.0/src/de.rs /Users/duet/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/toml_datetime-1.0.0+spec-1.1.0/src/ser.rs
+
+/Users/duet/project/coding-agent-insights/target/debug/deps/libtoml_datetime-61e9d030e54889cf.rmeta: /Users/duet/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/toml_datetime-1.0.0+spec-1.1.0/src/lib.rs /Users/duet/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/toml_datetime-1.0.0+spec-1.1.0/src/datetime.rs /Users/duet/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/toml_datetime-1.0.0+spec-1.1.0/src/de.rs /Users/duet/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/toml_datetime-1.0.0+spec-1.1.0/src/ser.rs
+
+/Users/duet/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/toml_datetime-1.0.0+spec-1.1.0/src/lib.rs:
+/Users/duet/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/toml_datetime-1.0.0+spec-1.1.0/src/datetime.rs:
+/Users/duet/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/toml_datetime-1.0.0+spec-1.1.0/src/de.rs:
+/Users/duet/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/toml_datetime-1.0.0+spec-1.1.0/src/ser.rs:

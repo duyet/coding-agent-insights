@@ -18,3 +18,10 @@ rusqlite = { workspace = true }
 tokio = { workspace = true }
 async-trait = "0.1"
 chrono = { workspace = true }
+
+[dev-dependencies]
+divan = { workspace = true }
+
+[[bench]]
+name = "storage_bench"
+harness = false

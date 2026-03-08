@@ -1,0 +1,1 @@
+/Users/duet/project/coding-agent-insights/target/debug/libcai_output.rlib: /Users/duet/project/coding-agent-insights/crates/cai-core/src/lib.rs /Users/duet/project/coding-agent-insights/crates/cai-output/src/formats.rs /Users/duet/project/coding-agent-insights/crates/cai-output/src/formatter.rs /Users/duet/project/coding-agent-insights/crates/cai-output/src/lib.rs

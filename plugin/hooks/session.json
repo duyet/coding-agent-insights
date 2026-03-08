@@ -1,0 +1,17 @@
+{
+  "name": "cai-session-hooks",
+  "version": "0.1.0",
+  "description": "Session lifecycle hooks for Coding Agent Insights",
+  "hooks": {
+    "onStart": {
+      "enabled": true,
+      "description": "Initialize CAI data store on session start",
+      "handler": "wasm"
+    },
+    "onEnd": {
+      "enabled": true,
+      "description": "Persist analytics on session end",
+      "handler": "wasm"
+    }
+  }
+}

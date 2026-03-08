@@ -1,0 +1,27 @@
+{
+  "name": "cai.web",
+  "description": "Launch web dashboard",
+  "handler": "binary",
+  "binary": "cai",
+  "args": ["web"],
+  "schema": {
+    "type": "object",
+    "properties": {
+      "port": {
+        "type": "number",
+        "default": 3030,
+        "description": "Port number"
+      },
+      "host": {
+        "type": "string",
+        "default": "127.0.0.1",
+        "description": "Bind address"
+      },
+      "open": {
+        "type": "boolean",
+        "default": false,
+        "description": "Open in browser"
+      }
+    }
+  }
+}

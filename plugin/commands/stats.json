@@ -1,0 +1,31 @@
+{
+  "name": "cai.stats",
+  "aliases": ["statistics"],
+  "description": "Display summary statistics",
+  "handler": "wasm",
+  "schema": {
+    "type": "object",
+    "properties": {
+      "by": {
+        "type": "string",
+        "enum": ["agent", "repo", "language", "date"],
+        "description": "Group by field"
+      },
+      "timeline": {
+        "type": "string",
+        "enum": ["hourly", "daily", "weekly", "monthly"],
+        "description": "Time granularity"
+      },
+      "top": {
+        "type": "number",
+        "description": "Show top N items"
+      },
+      "output": {
+        "type": "string",
+        "enum": ["table", "json"],
+        "default": "table",
+        "description": "Output format"
+      }
+    }
+  }
+}

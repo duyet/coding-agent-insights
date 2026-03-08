@@ -1,0 +1,11 @@
+{
+  "name": "cai.tui",
+  "description": "Launch interactive terminal UI",
+  "handler": "binary",
+  "binary": "cai",
+  "args": ["tui"],
+  "schema": {
+    "type": "object",
+    "properties": {}
+  }
+}
