@@ -1,0 +1,40 @@
+{
+  "name": "cai.ingest",
+  "aliases": ["import"],
+  "description": "Import coding history from various sources",
+  "handler": "wasm",
+  "schema": {
+    "type": "object",
+    "properties": {
+      "source": {
+        "type": "string",
+        "enum": ["claude", "codex", "git", "all"],
+        "description": "Data source to import from"
+      },
+      "path": {
+        "type": "string",
+        "description": "Path to data source"
+      },
+      "since": {
+        "type": "string",
+        "description": "Start date (ISO 8601)"
+      },
+      "until": {
+        "type": "string",
+        "description": "End date (ISO 8601)"
+      },
+      "storage": {
+        "type": "string",
+        "enum": ["sqlite", "memory", "json"],
+        "default": "sqlite",
+        "description": "Storage backend"
+      },
+      "merge": {
+        "type": "boolean",
+        "default": false,
+        "description": "Merge with existing data"
+      }
+    },
+    "required": ["source"]
+  }
+}

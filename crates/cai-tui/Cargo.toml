@@ -9,6 +9,7 @@ rust-version.workspace = true
 
 [dependencies]
 cai-core = { path = "../cai-core" }
+cai-storage = { path = "../cai-storage" }
 cai-query = { path = "../cai-query" }
 cai-output = { path = "../cai-output" }
 
@@ -17,3 +18,4 @@ anyhow = { workspace = true }
 ratatui = { workspace = true }
 crossterm = { workspace = true }
 tokio = { workspace = true }
+chrono = { workspace = true }

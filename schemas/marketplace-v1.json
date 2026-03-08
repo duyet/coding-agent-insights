@@ -1,0 +1,117 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://claude.ai/claude-code/schemas/marketplace-v1.json",
+  "title": "Claude Code Plugin Marketplace",
+  "description": "Schema for Claude Code plugin marketplace.json files",
+  "type": "object",
+  "required": ["name", "version", "displayName", "description", "author", "repository", "runtime"],
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "description": "JSON Schema reference"
+    },
+    "name": {
+      "type": "string",
+      "pattern": "^[a-z0-9-]+$",
+      "description": "Unique plugin identifier"
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+",
+      "description": "Semver version"
+    },
+    "displayName": {
+      "type": "string",
+      "description": "Human-readable display name"
+    },
+    "description": {
+      "type": "string",
+      "maxLength": 200,
+      "description": "Short plugin description"
+    },
+    "author": {
+      "type": "string",
+      "description": "Plugin author or organization"
+    },
+    "license": {
+      "type": "string",
+      "description": "SPDX license identifier"
+    },
+    "repository": {
+      "type": "string",
+      "format": "uri",
+      "description": "Git repository URL"
+    },
+    "homepage": {
+      "type": "string",
+      "format": "uri",
+      "description": "Project homepage"
+    },
+    "keywords": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Search keywords"
+    },
+    "categories": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Plugin categories"
+    },
+    "capabilities": {
+      "type": "object",
+      "properties": {
+        "skills": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "commands": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "hooks": {
+          "type": "object",
+          "additionalProperties": true
+        },
+        "mcp": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    },
+    "runtime": {
+      "type": "object",
+      "required": ["type"],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["wasm", "node", "binary"]
+        },
+        "entry": {
+          "type": "string",
+          "description": "Entry point path"
+        },
+        "alternate_binary": {
+          "type": "string",
+          "description": "Fallback binary command"
+        }
+      }
+    },
+    "installation": {
+      "type": "object",
+      "properties": {
+        "npm": {
+          "type": "string",
+          "description": "NPM package name"
+        },
+        "cargo": {
+          "type": "string",
+          "description": "Cargo package name"
+        }
+      }
+    },
+    "requires": {
+      "type": "object",
+      "description": "Minimum version requirements"
+    }
+  }
+}

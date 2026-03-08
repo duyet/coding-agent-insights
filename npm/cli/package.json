@@ -1,0 +1,48 @@
+{
+  "name": "@cai/cli",
+  "version": "0.1.0",
+  "description": "Query and analyze AI coding history from Claude, Codex, Git, and more",
+  "author": "cai-project",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/coding-agent-insights.git",
+    "directory": "npm/cli"
+  },
+  "homepage": "https://github.com/yourusername/coding-agent-insights#readme",
+  "keywords": [
+    "analytics",
+    "sql",
+    "history",
+    "query",
+    "claude",
+    "codex",
+    "git",
+    "devtools"
+  ],
+  "bin": {
+    "cai": "./bin/cai.js"
+  },
+  "main": "./index.js",
+  "files": [
+    "bin/",
+    "lib/",
+    "scripts/"
+  ],
+  "scripts": {
+    "postinstall": "node scripts/install.js",
+    "preuninstall": "node scripts/uninstall.js"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "os": [
+    "darwin",
+    "linux",
+    "win32"
+  ],
+  "cpu": [
+    "x64",
+    "arm64"
+  ]
+}

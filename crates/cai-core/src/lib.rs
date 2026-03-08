@@ -1,4 +1,89 @@
-//! CAI Core - Shared types, traits, and utilities
+//! # CAI Core - Shared types, traits, and utilities
+//!
+//! This crate provides the foundational data structures and shared utilities
+//! used throughout the CAI (Coding Agent Insights) workspace.
+//!
+//! ## Overview
+//!
+//! `cai-core` defines the core domain model for representing AI coding interactions.
+//! All other crates in the workspace depend on these types to ensure consistency
+//! across the system.
+//!
+//! ## Core Types
+//!
+//! - [`Entry`] - Represents a single AI coding interaction with all associated data
+//! - [`Source`] - Identifies the origin system (Claude, Codex, Git, etc.)
+//! - [`Metadata`] - Extensible metadata for additional context
+//! - [`Error`] - Unified error type for CAI operations
+//! - [`Result<T>`] - Type alias for `Result<T, Error>`
+//!
+//! ## Usage
+//!
+//! Creating a basic entry:
+//!
+//! ```rust
+//! use cai_core::{Entry, Source, Metadata};
+//! use chrono::Utc;
+//!
+//! let entry = Entry {
+//!     id: uuid::Uuid::new_v4().to_string(),
+//!     source: Source::Claude,
+//!     timestamp: Utc::now(),
+//!     prompt: "Help me refactor this function".to_string(),
+//!     response: "Here's the improved version...".to_string(),
+//!     metadata: Metadata::default(),
+//! };
+//! ```
+//!
+//! Working with metadata:
+//!
+//! ```rust
+//! use cai_core::Metadata;
+//! use std::collections::HashMap;
+//!
+//! let mut metadata = Metadata {
+//!     file_path: Some("src/main.rs".to_string()),
+//!     repo_url: Some("https://github.com/user/repo".to_string()),
+//!     commit_hash: Some("abc123def".to_string()),
+//!     language: Some("Rust".to_string()),
+//!     extra: HashMap::new(),
+//! };
+//!
+//! // Add custom fields
+//! metadata.extra.insert("complexity".to_string(), "high".to_string());
+//! metadata.extra.insert("reviewed".to_string(), "true".to_string());
+//! ```
+//!
+//! Error handling:
+//!
+//! ```rust
+//! use cai_core::{Error, Result};
+//!
+//! fn process_entry(entry: &Entry) -> Result<()> {
+//!     if entry.prompt.is_empty() {
+//!         return Err(Error::Message("Prompt cannot be empty".to_string()));
+//!     }
+//!     // Process the entry...
+//!     Ok(())
+//! }
+//! ```
+//!
+//! ## Design Principles
+//!
+//! - **Minimal dependencies**: Only essential dependencies (serde, chrono)
+//! - **Serialization**: All public types implement `Serialize` and `Deserialize`
+//! - **Extensibility**: `Metadata.extra` allows custom fields without breaking changes
+//! - **Type safety**: Enums use `#[non_exhaustive]` for future-proofing
+//!
+//! ## Testing
+//!
+//! ```bash
+//! # Run all tests
+//! cargo test -p cai-core
+//!
+//! # Run with coverage
+//! cargo llvm-cov -p cai-core
+//! ```
 
 #![warn(missing_docs, unused_crate_dependencies)]
 
@@ -47,9 +132,21 @@ pub struct Metadata {
     pub commit_hash: Option<String>,
     /// Optional language/technology
     pub language: Option<String>,
-    /// Additional custom fields
-    #[serde(flatten)]
-    pub extra: Vec<(String, String)>,
+    /// Additional custom fields (as key-value pairs)
+    #[serde(default)]
+    pub extra: std::collections::HashMap<String, String>,
+}
+
+impl Default for Metadata {
+    fn default() -> Self {
+        Self {
+            file_path: None,
+            repo_url: None,
+            commit_hash: None,
+            language: None,
+            extra: std::collections::HashMap::new(),
+        }
+    }
 }
 
 /// Result type for CAI operations

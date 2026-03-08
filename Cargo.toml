@@ -10,6 +10,7 @@ members = [
     "crates/cai-web",
     "crates/cai-cli",
     "crates/cai-plugin",
+    "tests",
 ]
 
 [workspace.package]
@@ -39,6 +40,9 @@ clap = { version = "4.5", features = ["derive", "env"] }
 rusqlite = { version = "0.32", features = ["bundled", "functions"] }
 sqlparser = "0.54"
 
+# Async
+async-trait = "0.1"
+
 # Git operations
 git2 = "0.19"
 
@@ -57,6 +61,10 @@ tokio-tungstenite = "0.26"
 # Testing
 rstest = "0.24"
 proptest = "1.5"
+
+# Benchmarking
+divan = "0.1"
+criterion = "0.5"
 
 # Logging
 tracing = "0.1"

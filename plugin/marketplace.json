@@ -1,0 +1,59 @@
+{
+  "$schema": "https://claude.ai/claude-code/schemas/marketplace-v1.json",
+  "name": "cai",
+  "version": "0.1.0",
+  "displayName": "Coding Agent Insights",
+  "description": "Query and analyze AI coding history from Claude, Codex, Git, and more. SQL-like queries with multi-format outputs.",
+  "author": "cai-project",
+  "license": "MIT",
+  "repository": "https://github.com/yourusername/coding-agent-insights",
+  "homepage": "https://github.com/yourusername/coding-agent-insights#readme",
+  "keywords": [
+    "analytics",
+    "sql",
+    "history",
+    "query",
+    "claude",
+    "codex",
+    "git"
+  ],
+  "categories": [
+    "developer-tools",
+    "analytics"
+  ],
+  "capabilities": {
+    "skills": [
+      "cai.query",
+      "cai.ingest",
+      "cai.stats",
+      "cai.tui",
+      "cai.web"
+    ],
+    "commands": [
+      "cai.query",
+      "cai.ingest",
+      "cai.stats",
+      "cai.tui",
+      "cai.web"
+    ],
+    "hooks": {
+      "session": {
+        "onStart": true,
+        "onEnd": true
+      }
+    },
+    "mcp": []
+  },
+  "runtime": {
+    "type": "wasm",
+    "entry": "target/wasm32-wasi/release/cai_plugin.wasm",
+    "alternate_binary": "cai"
+  },
+  "installation": {
+    "npm": "@cai/cli",
+    "cargo": "cai-cli"
+  },
+  "requires": {
+    "claude-code": ">=1.0.0"
+  }
+}

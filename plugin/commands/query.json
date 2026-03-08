@@ -1,0 +1,32 @@
+{
+  "name": "cai.query",
+  "aliases": ["q", "cai-q"],
+  "description": "Execute SQL-like query on coding history",
+  "handler": "wasm",
+  "schema": {
+    "type": "object",
+    "properties": {
+      "sql": {
+        "type": "string",
+        "description": "SQL query to execute"
+      },
+      "output": {
+        "type": "string",
+        "enum": ["table", "json", "jsonl", "csv", "ai"],
+        "default": "table",
+        "description": "Output format"
+      },
+      "save": {
+        "type": "string",
+        "description": "Save results to file"
+      },
+      "storage": {
+        "type": "string",
+        "enum": ["memory", "sqlite", "json"],
+        "default": "sqlite",
+        "description": "Storage backend"
+      }
+    },
+    "required": ["sql"]
+  }
+}

@@ -1,0 +1,27 @@
+[alias]
+# Test aliases
+t = "test --workspace"
+ti = "test --workspace --ignored"
+tw = "test --workspace -- --nocapture"
+tl = "test --workspace -- --list"
+
+# Coverage
+cov = "llvm-cov --all-features --workspace"
+cov-html = "llvm-cov --all-features --workspace --html"
+
+# Benchmark aliases
+bench = "divan --workspace"
+bench-crit = "divan --workspace -- --save-baseline main"
+
+# Development
+dev = "check --workspace --all-targets --all-features"
+lint = "clippy --workspace --all-targets --all-features -- -D warnings"
+fmt = "fmt --all"
+
+# Build aliases
+b = "build --workspace"
+br = "build --workspace --release"
+
+# Documentation
+doc = "doc --no-deps --all-features --workspace"
+doc-open = "doc --no-deps --all-features --workspace --open"

@@ -1,0 +1,40 @@
+# Source files
+src/
+test/
+tests/
+
+# Build artifacts
+*.o
+*.a
+*.so
+*.dylib
+*.dll
+
+# Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Git
+.git/
+.gitignore
+
+# CI/CD
+.github/
+.gitlab-ci.yml
+.travis.yml
+
+# Docs (already in README)
+*.md
+!README.md
+
+# NPM internal
+.npmrc
+package-lock.json
+yarn.lock

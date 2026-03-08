@@ -68,12 +68,18 @@ async fn main() -> cai_core::Result<()> {
             Ok(())
         }
         Commands::Tui => {
-            println!("{}", "TUI not yet implemented".yellow());
-            Ok(())
+            // Initialize in-memory storage for now
+            let storage = std::sync::Arc::new(cai_storage::MemoryStorage::new());
+            cai_tui::run(storage).await
         }
         Commands::Web { port } => {
-            println!("{} {}", "Web server on port:".green(), port);
-            Ok(())
+            let storage = std::sync::Arc::new(cai_storage::MemoryStorage::new());
+            let config = cai_web::Config {
+                port,
+                host: "127.0.0.1".to_string(),
+            };
+            println!("{} {}", "Starting web server on port:".green(), port);
+            cai_web::run(storage, config).await
         }
     }
 }

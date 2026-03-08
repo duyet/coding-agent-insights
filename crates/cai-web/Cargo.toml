@@ -11,6 +11,7 @@ rust-version.workspace = true
 cai-core = { path = "../cai-core" }
 cai-query = { path = "../cai-query" }
 cai-output = { path = "../cai-output" }
+cai-storage = { path = "../cai-storage" }
 
 thiserror = { workspace = true }
 anyhow = { workspace = true }
