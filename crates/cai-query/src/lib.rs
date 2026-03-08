@@ -2,8 +2,8 @@
 //!
 //! Provides SQL-like query interface for CAI entries with support for:
 //! - SELECT with WHERE, ORDER BY, LIMIT, GROUP BY
-//! - Aggregate functions: COUNT, SUM, AVG, MIN, MAX
-//! - Date functions: date_range, time_bucket
+//! - Built-in functions: date_format, concat, length, upper, lower, substring, coalesce, now
+//! - Function registry for extensible SQL functions
 //!
 //! # Example
 //!
@@ -34,7 +34,7 @@ mod eval;
 pub use error::{QueryError, QueryResult};
 pub use executor::QueryEngine;
 pub use parser::parse;
-pub use functions::{date_range, time_bucket};
+pub use functions::{FunctionRegistry, FunctionArg};
 
 /// Convenience function to execute a SQL query
 ///

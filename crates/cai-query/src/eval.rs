@@ -1,6 +1,6 @@
 //! Expression evaluation - stub implementation
 
-use crate::error::{QueryError, QueryResult};
+use crate::error::QueryResult;
 use cai_core::Entry;
 
 /// Evaluate a WHERE expression against an entry (stub)

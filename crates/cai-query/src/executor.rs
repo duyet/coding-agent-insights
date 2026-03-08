@@ -23,6 +23,11 @@ impl QueryEngine {
         }
     }
 
+    /// Create a new query engine from an Arc<dyn Storage>
+    pub fn from_arc(storage: Arc<dyn Storage>) -> Self {
+        Self { storage }
+    }
+
     /// Execute a SQL query and return matching entries
     pub async fn execute(&self, sql: &str) -> QueryResult<Vec<Entry>> {
         let parsed = crate::parse(sql)?;
