@@ -1,10 +1,10 @@
 # cai-query
 
-SQL-like query language and execution engine for CAI entries.
+SQL-like query engine for CAI entries.
 
 ## Overview
 
-`cai-query` provides a powerful query interface with SQL-like syntax, optimized for querying AI coding history.
+`cai-query` provides a SQL parser and execution engine for querying AI coding interactions stored via `cai-storage`. Supports SELECT statements with WHERE, ORDER BY, LIMIT, and custom aggregate functions.
 
 ## Usage
 

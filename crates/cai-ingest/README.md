@@ -1,44 +1,56 @@
 # cai-ingest
 
-Data ingestion from various AI coding sources.
+Data ingestion from AI coding platforms.
 
 ## Overview
 
-`cai-ingest` provides parsers and scanners for extracting AI coding interactions from different platforms and formats.
+`cai-ingest` provides parsers and scanners for extracting AI coding interactions from various sources including Claude Code conversations, Codex CLI history, and Git commit history.
 
-## Supported Sources
+## Key Features
 
-- **Claude Code**: Parse conversation JSON files
-- **Codex CLI**: Parse history JSONL files
-- **Git**: Scan repository commits
+- **Claude Code parser** - Parse conversation JSON files
+- **Codex CLI parser** - Parse Codex command history
+- **Git scanner** - Extract commits as entries
+- **Unified API** - Single `Ingestor` for all sources
+- **Extensible** - Easy to add new parsers
 
 ## Usage
 
-### Claude Code Parser
+### Using Ingestor
 
 ```rust
-use cai_ingest::claude::ClaudeParser;
+use cai_ingest::{Ingestor, IngestConfig};
+use cai_storage::MemoryStorage;
 
-let parser = ClaudeParser::new();
-let entries = parser.parse_file("conversation.json")?;
+#[tokio::main]
+async fn main() -> cai_core::Result<()> {
+    let storage = MemoryStorage::new();
+
+    // Default configuration (Claude + Codex)
+    let ingestor = Ingestor::with_defaults();
+    let count = ingestor.ingest_all(&storage).await?;
+
+    println!("Ingested {} entries", count);
+    Ok(())
+}
 ```
 
-### Codex CLI Parser
+### Individual Parsers
 
 ```rust
-use cai_ingest::codex::CodexParser;
+use cai_ingest::{ClaudeParser, CodexParser, GitScanner};
 
-let parser = CodexParser::new();
-let entries = parser.parse_file("history.jsonl")?;
-```
+// Parse Claude conversations
+let claude_parser = ClaudeParser::with_default_path()?;
+let entries = claude_parser.parse_all()?;
 
-### Git Scanner
+// Parse Codex history
+let codex_parser = CodexParser::with_default_path()?;
+let entries = codex_parser.parse_all()?;
 
-```rust
-use cai_ingest::git::GitScanner;
-
-let scanner = GitScanner::new();
-let entries = scanner.scan("/path/to/repo")?;
+// Scan Git repository
+let git_scanner = GitScanner::new("~/my-project");
+let entries = git_scanner.scan()?;
 ```
 
 ## Data Format
