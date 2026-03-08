@@ -3,8 +3,17 @@
 use std::sync::Arc;
 use cai_core::Entry;
 use cai_storage::Storage;
-use crate::error::{QueryError, QueryResult};
-use crate::parser::ParsedQuery;
+use crate::error::{QueryError, QueryResult, ColumnInfo, SchemaInfo, SchemaQueryType};
+use crate::parser::{ParsedQuery, QueryType};
+
+/// Query result type - can be either entries or schema information
+#[derive(Debug, Clone)]
+pub enum QueryResultData {
+    /// Standard entry query results
+    Entries(Vec<Entry>),
+    /// Schema query results (SHOW TABLES, DESCRIBE)
+    Schema(SchemaInfo),
+}
 
 /// Query engine for executing SQL queries against storage
 #[derive(Clone)]
@@ -32,15 +41,101 @@ impl QueryEngine {
     pub async fn execute(&self, sql: &str) -> QueryResult<Vec<Entry>> {
         let parsed = crate::parse(sql)?;
 
-        // Validate table name
-        if parsed.table.as_ref().is_some_and(|t| t.to_lowercase() != "entries") {
-            if let Some(table) = parsed.table {
-                return Err(QueryError::InvalidTable(table));
+        // Handle schema queries
+        match &parsed.query_type {
+            QueryType::ShowTables => {
+                // For backward compatibility, return empty vec for SHOW TABLES
+                // Users should use execute_schema for schema queries
+                Ok(vec![])
+            }
+            QueryType::DescribeTable(_) => {
+                // For backward compatibility, return empty vec for DESCRIBE
+                // Users should use execute_schema for schema queries
+                Ok(vec![])
+            }
+            QueryType::Select => {
+                // Validate table name
+                if parsed.table.as_ref().is_some_and(|t| t.to_lowercase() != "entries") {
+                    if let Some(table) = parsed.table {
+                        return Err(QueryError::InvalidTable(table));
+                    }
+                }
+
+                // For now, handle simple cases
+                self.execute_simple_query(&parsed).await
             }
         }
+    }
 
-        // For now, handle simple cases
-        self.execute_simple_query(&parsed).await
+    /// Execute a SQL query and return full query result data (including schema)
+    pub async fn execute_full(&self, sql: &str) -> QueryResult<QueryResultData> {
+        let parsed = crate::parse(sql)?;
+
+        match &parsed.query_type {
+            QueryType::ShowTables => {
+                Ok(QueryResultData::Schema(SchemaInfo {
+                    query_type: SchemaQueryType::ShowTables,
+                    table_name: None,
+                    tables: vec!["entries".to_string()],
+                    columns: vec![],
+                }))
+            }
+            QueryType::DescribeTable(table_name) => {
+                Ok(QueryResultData::Schema(SchemaInfo {
+                    query_type: SchemaQueryType::DescribeTable,
+                    table_name: Some(table_name.clone()),
+                    tables: vec![],
+                    columns: Self::get_entry_columns(),
+                }))
+            }
+            QueryType::Select => {
+                // Validate table name
+                if parsed.table.as_ref().is_some_and(|t| t.to_lowercase() != "entries") {
+                    if let Some(table) = parsed.table.clone() {
+                        return Err(QueryError::InvalidTable(table));
+                    }
+                }
+
+                let entries = self.execute_simple_query(&parsed).await?;
+                Ok(QueryResultData::Entries(entries))
+            }
+        }
+    }
+
+    /// Get column information for the entries table
+    fn get_entry_columns() -> Vec<ColumnInfo> {
+        vec![
+            ColumnInfo {
+                name: "id".to_string(),
+                data_type: "TEXT".to_string(),
+                description: "Unique identifier".to_string(),
+            },
+            ColumnInfo {
+                name: "source".to_string(),
+                data_type: "TEXT".to_string(),
+                description: "Source system (Claude, Codex, Git, Other)".to_string(),
+            },
+            ColumnInfo {
+                name: "timestamp".to_string(),
+                data_type: "TIMESTAMP".to_string(),
+                description: "Interaction timestamp (UTC)".to_string(),
+            },
+            ColumnInfo {
+                name: "prompt".to_string(),
+                data_type: "TEXT".to_string(),
+                description: "User prompt/input".to_string(),
+            },
+            ColumnInfo {
+                name: "response".to_string(),
+                data_type: "TEXT".to_string(),
+                description: "AI response/output".to_string(),
+            },
+            ColumnInfo {
+                name: "metadata".to_string(),
+                data_type: "JSON".to_string(),
+                description: "Additional metadata (file_path, language, etc.)".to_string(),
+            },
+        ]
     }
 
     async fn execute_simple_query(&self, parsed: &ParsedQuery) -> QueryResult<Vec<Entry>> {

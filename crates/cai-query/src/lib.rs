@@ -2,6 +2,8 @@
 //!
 //! Provides SQL-like query interface for CAI entries with support for:
 //! - SELECT with WHERE, ORDER BY, LIMIT, GROUP BY
+//! - SHOW TABLES - list available tables
+//! - DESCRIBE table_name - show table schema
 //! - Built-in functions: date_format, concat, length, upper, lower, substring, coalesce, now
 //! - Function registry for extensible SQL functions
 //!
@@ -17,6 +19,12 @@
 //!
 //! // Simple SELECT
 //! let _results = engine.execute("SELECT * FROM entries LIMIT 10").await?;
+//!
+//! // Show tables
+//! let _results = engine.execute("SHOW TABLES").await?;
+//!
+//! // Describe table
+//! let _results = engine.execute("DESCRIBE entries").await?;
 //! # Ok(())
 //! # }
 //! ```
@@ -31,9 +39,9 @@ mod executor;
 mod functions;
 mod eval;
 
-pub use error::{QueryError, QueryResult};
-pub use executor::QueryEngine;
-pub use parser::parse;
+pub use error::{QueryError, QueryResult, SchemaInfo, ColumnInfo, SchemaQueryType};
+pub use executor::{QueryEngine, QueryResultData};
+pub use parser::{parse, QueryType};
 pub use functions::{FunctionRegistry, FunctionArg};
 
 /// Convenience function to execute a SQL query
