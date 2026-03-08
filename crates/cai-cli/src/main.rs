@@ -3,9 +3,90 @@
 #![warn(missing_docs, unused_crate_dependencies)]
 
 use clap::{Parser, Subcommand};
+use cai_core::{Entry, Metadata, Source};
 use cai_ingest::{IngestConfig, Ingestor};
+use cai_output::Formatter;
+use cai_storage::Storage;
+use chrono::{Duration, Utc};
 use colored::Colorize;
 use std::path::PathBuf;
+use std::sync::Arc;
+
+/// Create storage with mock data for testing
+async fn create_storage_with_mock_data() -> cai_storage::MemoryStorage {
+    let storage = cai_storage::MemoryStorage::new();
+
+    let mock_entries = vec![
+        Entry {
+            id: "1".to_string(),
+            source: Source::Claude,
+            timestamp: Utc::now() - Duration::hours(2),
+            prompt: "Help me refactor this Rust function to be more idiomatic".to_string(),
+            response: "Here's a more idiomatic version using iterators and pattern matching...".to_string(),
+            metadata: Metadata {
+                file_path: Some("src/main.rs".to_string()),
+                language: Some("Rust".to_string()),
+                ..Default::default()
+            },
+        },
+        Entry {
+            id: "2".to_string(),
+            source: Source::Claude,
+            timestamp: Utc::now() - Duration::hours(4),
+            prompt: "Write a unit test for this module".to_string(),
+            response: "Here are comprehensive unit tests using rstest...".to_string(),
+            metadata: Metadata {
+                file_path: Some("src/storage.rs".to_string()),
+                language: Some("Rust".to_string()),
+                ..Default::default()
+            },
+        },
+        Entry {
+            id: "3".to_string(),
+            source: Source::Git,
+            timestamp: Utc::now() - Duration::days(1),
+            prompt: "feat: add user authentication".to_string(),
+            response: "Implemented OAuth2 flow with session management".to_string(),
+            metadata: Metadata {
+                commit_hash: Some("abc123def456".to_string()),
+                ..Default::default()
+            },
+        },
+        Entry {
+            id: "4".to_string(),
+            source: Source::Codex,
+            timestamp: Utc::now() - Duration::days(2),
+            prompt: "Generate a function to parse JSON".to_string(),
+            response: "Here's a JSON parsing function using serde_json...".to_string(),
+            metadata: Metadata {
+                file_path: Some("src/parser.rs".to_string()),
+                language: Some("Rust".to_string()),
+                ..Default::default()
+            },
+        },
+    ];
+
+    for entry in mock_entries {
+        if let Err(e) = storage.store(&entry).await {
+            tracing::warn!("Failed to store mock entry {}: {}", entry.id, e);
+        }
+    }
+
+    storage
+}
+
+/// Generic helper to format results using any formatter
+fn format_with_formatter<F: Formatter>(
+    results: &[Entry],
+    formatter: F,
+    format_name: &str,
+) -> cai_core::Result<String> {
+    let mut buffer = Vec::new();
+    formatter.format(results, &mut buffer)?;
+    String::from_utf8(buffer).map_err(|e| {
+        cai_core::Error::Message(format!("Invalid UTF-8 in {} output: {}", format_name, e))
+    })
+}
 
 /// Coding Agent Insights - Query AI coding history
 #[derive(Parser, Clone)]
@@ -98,6 +179,46 @@ async fn execute_ingest(source: &str, path: Option<&str>) -> cai_core::Result<()
     Ok(())
 }
 
+/// Execute a SQL query and display results
+async fn execute_query(query: &str, output_format: &str) -> cai_core::Result<()> {
+    println!("{} {}", "Executing query:".green(), query.dimmed());
+
+    // TODO: Use persistent storage from config instead of mock data
+    let storage = create_storage_with_mock_data().await;
+
+    // Parse and execute query
+    let query_engine = cai_query::QueryEngine::new(storage);
+    let results = query_engine.execute(query).await
+        .map_err(|e| cai_core::Error::Message(format!("Query execution failed: {}", e)))?;
+
+    // Display results count
+    println!("\n{} {} results", "Found:".cyan(), results.len());
+
+    if results.is_empty() {
+        println!("\n{}", "No results found.".dimmed());
+        return Ok(());
+    }
+
+    // Format and display output
+    let output = match output_format.to_lowercase().as_str() {
+        "json" => format_with_formatter(&results, cai_output::JsonFormatter::default(), "json")?,
+        "jsonl" => format_with_formatter(&results, cai_output::JsonlFormatter::default(), "jsonl")?,
+        "csv" => format_with_formatter(&results, cai_output::CsvFormatter::default(), "csv")?,
+        "table" => format_with_formatter(&results, cai_output::TableFormatter::default(), "table")?,
+        "ai" => format_with_formatter(&results, cai_output::AiFormatter::default(), "ai")?,
+        "stats" => format_with_formatter(&results, cai_output::StatsFormatter::default(), "stats")?,
+        _ => {
+            return Err(cai_core::Error::Message(format!(
+                "Unknown output format: '{}'. Valid options: json, jsonl, csv, table, ai, stats",
+                output_format
+            )));
+        }
+    };
+
+    println!("\n{}", output);
+    Ok(())
+}
+
 #[tokio::main]
 async fn main() -> cai_core::Result<()> {
     tracing_subscriber::fmt()
@@ -111,22 +232,19 @@ async fn main() -> cai_core::Result<()> {
 
     match cli.command {
         Commands::Query { query, output } => {
-            println!("{} {}", "Querying:".green(), query);
-            println!("{} {}", "Output:".cyan(), output);
-            println!("\n{}", "[Data results would appear here]".dimmed());
-            Ok(())
+            execute_query(&query, &output).await
         }
         Commands::Ingest { source, path } => {
             execute_ingest(&source, path.as_deref()).await
         }
         Commands::Tui => {
-            // Initialize in-memory storage with mock data for testing
-            let storage = std::sync::Arc::new(cai_storage::MemoryStorage::with_mock_data());
+            // TODO: Use persistent storage from config
+            let storage = Arc::new(create_storage_with_mock_data().await);
             cai_tui::run(storage).await
         }
         #[cfg(feature = "web")]
         Commands::Web { port } => {
-            let storage = std::sync::Arc::new(cai_storage::MemoryStorage::new());
+            let storage = Arc::new(cai_storage::MemoryStorage::new());
             let config = cai_web::Config {
                 port,
                 host: "127.0.0.1".to_string(),
@@ -137,7 +255,7 @@ async fn main() -> cai_core::Result<()> {
         #[cfg(not(feature = "web"))]
         Commands::Web { .. } => {
             eprintln!("{}", "Web feature not enabled. Build with --features web.".red());
-            std::process::exit(1);
+            Err(cai_core::Error::Message("Web feature not enabled".to_string()))
         }
     }
 }
