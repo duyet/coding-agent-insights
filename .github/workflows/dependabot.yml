@@ -1,0 +1,49 @@
+name: Dependabot Automation
+
+on:
+  pull_request:
+    branches: [main, develop]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  dependabot-automerge:
+    name: Dependabot Auto-Merge
+    runs-on: ubuntu-latest
+    if: github.actor == 'dependabot[bot]'
+    steps:
+      - name: Check for security updates only
+        id: security_check
+        run: |
+          PR_TITLE="${{ github.event.pull_request.title }}"
+          if [[ "$PR_TITLE" =~ .*security.* ]]; then
+            echo "auto_merge=true" >> $GITHUB_OUTPUT
+          else
+            echo "auto_merge=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Approve and merge security PRs
+        if: steps.security_check.outputs.auto_merge == 'true'
+        run: |
+          gh pr review --approve "$PR_URL"
+          gh pr merge --auto --merge "$PR_URL"
+        env:
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Comment on dependency PRs
+        if: steps.security_check.outputs.auto_merge == 'false'
+        run: |
+          gh pr comment "$PR_URL" << 'EOF'
+          This PR updates dependencies. Please review:
+          - Check for breaking changes
+          - Run tests locally
+          - Verify compatibility
+
+          Once approved, this will be merged automatically.
+          EOF
+        env:
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

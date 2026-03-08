@@ -1,0 +1,135 @@
+# Conventional Commits configuration for CAI project
+# See: https://www.conventionalcommits.org/
+
+extends:
+  - '@commitlint/config-conventional'
+
+# Parser configuration
+parserPreset:
+  caseSensitive: true
+
+# Rule configurations
+rules:
+  # Type must be one of the allowed types
+  type-enum:
+    - 2
+    - always
+    - feat:     # New feature
+      fix:      # Bug fix
+      docs:     # Documentation only
+      style:    # Code style changes (formatting, etc.)
+      refactor: # Code refactoring
+      perf:     # Performance improvements
+      test:     # Adding or updating tests
+      chore:    # Maintenance tasks
+      ci:       # CI/CD changes
+      build:    # Build system changes
+      revert:   # Revert a previous commit
+
+  # Type is required
+  type-empty:
+    - 2
+    - always
+
+  # Type must be lowercase
+  type-case:
+    - 2
+    - always
+    - lower-case
+
+  # Scope is optional
+  scope-empty:
+    - 0
+    - always
+
+  # Scope must be lowercase if provided
+  scope-case:
+    - 2
+    - always
+    - lower-case
+
+  # Scope must be one of the allowed scopes (if provided)
+  scope-enum:
+    - 2
+    - always
+    - core:      # Core functionality
+      ingest:    # Data ingestion
+      query:     # Query engine
+      storage:   # Storage layer
+      output:    # Output formatting
+      tui:       # Terminal UI
+      web:       # Web interface
+      cli:       # Command-line interface
+      plugin:    # Plugin system
+      tests:     # Test infrastructure
+      ci:        # CI/CD
+      docs:      # Documentation
+      release:   # Release management
+
+  # Subject is required
+  subject-empty:
+    - 2
+    - always
+
+  # Subject must not end with a period
+  subject-full-stop:
+    - 2
+    - never
+    - '.'
+
+  # Subject must be lowercase
+  subject-case:
+    - 2
+    - never
+    - [upper-case]
+
+  # Subject must not be empty
+  subject-min-length:
+    - 2
+    - always
+    - 3
+
+  # Subject must not be too long
+  subject-max-length:
+    - 2
+    - always
+    - 72
+
+  # Body line length
+  body-max-line-length:
+    - 2
+    - always
+    - 100
+
+  # Footer line length
+  footer-max-line-length:
+    - 2
+    - always
+    - 100
+
+# Custom configuration
+helpMessage: |
+  ⚠️  Commit message does not follow Conventional Commits specification
+
+  Format: <type>[(scope)]: <subject>
+
+  Types:
+    feat     - New feature
+    fix      - Bug fix
+    docs     - Documentation only
+    style    - Code style changes
+    refactor - Code refactoring
+    perf     - Performance improvements
+    test     - Adding or updating tests
+    chore    - Maintenance tasks
+    ci       - CI/CD changes
+    build    - Build system changes
+    revert   - Revert a previous commit
+
+  Scopes: core, ingest, query, storage, output, tui, web, cli, plugin, tests, ci, docs, release
+
+  Examples:
+    feat(query): add GROUP BY support
+    fix(storage): prevent data race in SQLite backend
+    docs: update README with installation instructions
+    test(cli): add integration tests for ingest command
