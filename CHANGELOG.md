@@ -8,6 +8,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Performance benchmark suite (divan) for output formatting
+- E2E test framework with CLI testing support
+
+### Fixed
+- Divan benchmark compilation errors (types -> args)
+- DynFormatter enum missing documentation
 - Core data structures (Entry, Source, Metadata)
 - Storage abstraction with MemoryStorage implementation
 - SQL-like query engine with parser and executor
@@ -16,9 +22,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Testing infrastructure (62 tests, 80%+ coverage target)
 - CI/CD pipeline with multi-platform testing
 - Comprehensive documentation
+- DevOps automation:
+  - Release script with version bumping
+  - Pull request templates and issue templates
+  - Automated labeling workflow
+  - Stale issue/PR management
+  - Dependabot configuration
+  - Codeowners for review assignment
+  - Security policy and code of conduct
+  - Funding configuration
+  - Git workflow documentation
+  - DevOps infrastructure documentation
 
 ### Changed
 - Updated Metadata to use HashMap for extensibility
+- Enhanced Makefile with release targets
 
 ## [0.1.0] - TBD
 
@@ -52,22 +70,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - [x] Table output
 - [x] AI-optimized output
 
-### Phase 5: Interactive UI 🚧
-- [x] TUI scaffolding
-- [ ] Real-time updates
-- [ ] Web UI with Axum
-- [ ] Dashboard views
+### Phase 5: Interactive UI ✅
+- [x] TUI scaffolding with ratatui
+- [x] Web UI with Axum
+- [x] Dashboard views with real-time updates
 
-### Phase 6: Plugin Integration 📋
+### Phase 6: Plugin Integration ✅
 - [x] Claude Code plugin structure
-- [ ] NPM package for npx/bunx
-- [ ] Skill definitions
+- [x] NPM package for npx/bunx
+- [x] Skill definitions
 
-### Phase 7: Testing & Polish ✅
-- [x] Unit tests (62 tests passing)
+### Phase 7: Testing & Polish 🚧
+- [x] Unit tests (34/40 passing, 85% pass rate)
 - [x] Integration tests
 - [x] CI/CD pipeline
-- [ ] Performance benchmarks
+- [x] Performance benchmarks (divan)
 
 ### Phase 8: Documentation & Release 🚧
 - [x] README and docs
@@ -75,5 +92,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - [ ] Homebrew formula
 - [ ] NPM publish
 
-[Unreleased]: https://github.com/cai-dev/coding-agent-insights/compare/v0.1.0...HEAD
-[0.1.0]: https://github.com/cai-dev/coding-agent-insights/releases/tag/v0.1.0
+[Unreleased]: https://github.com/duyet/coding-agent-insights/compare/v0.1.0...HEAD
+[0.1.0]: https://github.com/duyet/coding-agent-insights/releases/tag/v0.1.0
