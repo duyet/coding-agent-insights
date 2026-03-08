@@ -48,7 +48,7 @@ async-trait = "0.1"
 git2 = "0.19"
 
 # Output formatting
-tabled = "0.17"
+tabled = "0.20"
 colored = "3.0"
 
 # TUI
