@@ -13,6 +13,4 @@ crate-type = ["cdylib", "rlib"]
 [dependencies]
 cai-core = { path = "../cai-core" }
 
-serde = { workspace = true }
 serde_json = { workspace = true }
-wit-bindgen = "0.36"

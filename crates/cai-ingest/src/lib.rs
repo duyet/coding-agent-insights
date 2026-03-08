@@ -4,6 +4,11 @@
 
 pub use cai_core::Result;
 
+// Tokio is used in tests via #[tokio::test]
+// This import suppresses the unused_crate_dependencies lint
+#[allow(unused_imports)]
+use tokio;
+
 mod claude;
 mod codex;
 mod git;
