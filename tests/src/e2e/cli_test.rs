@@ -116,7 +116,7 @@ mod cli_tests {
         }
 
         let output = Command::new(&bin_path)
-            .args(["query", "SELECT *", "--output", "json"])
+            .args(["query", "SELECT * FROM entries", "--output", "json"])
             .stdout(Stdio::piped())
             .stderr(Stdio::piped())
             .output()
@@ -124,7 +124,7 @@ mod cli_tests {
 
         // Should not crash even with placeholder implementation
         // Just verify it runs without error
-        assert!(output.status.success() || String::from_utf8_lossy(&output.stderr).contains("Querying:"));
+        assert!(output.status.success() || String::from_utf8_lossy(&output.stdout).contains("Executing query:"));
     }
 
     /// Test ingest command with source
@@ -200,15 +200,18 @@ mod cli_tests {
 
         for format in formats {
             let output = Command::new(&bin_path)
-                .args(["query", "SELECT *", "--output", format])
+                .args(["query", "SELECT * FROM entries", "--output", format])
                 .stdout(Stdio::piped())
                 .stderr(Stdio::piped())
                 .output()
                 .expect(&format!("Failed to execute cai query with --output {}", format));
 
             // Should accept all standard formats
-            assert!(output.status.success() || String::from_utf8_lossy(&output.stdout).contains("Output:"),
-                "Format {} should be accepted", format);
+            assert!(output.status.success() || String::from_utf8_lossy(&output.stdout).contains("results"),
+                "Format {} should be accepted. stdout={}, stderr={}",
+                format,
+                String::from_utf8_lossy(&output.stdout),
+                String::from_utf8_lossy(&output.stderr));
         }
     }
 
