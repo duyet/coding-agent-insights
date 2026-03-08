@@ -8,6 +8,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Comprehensive documentation and release tooling**
+  - DEVOPS.md for DevOps practices and workflows
+  - GIT_WORKFLOW.md for git branch and PR workflow
+  - RELEASE.md for release process documentation
+  - Release automation scripts (bump-version, gen-release-notes, release.sh)
+  - CLAUDE.md crate documentation for all major crates
+  - E2E test fixtures for Claude, Codex, and Git formats
 - **SQLite storage backend** (`cai-storage` with `sqlite` feature)
   - Persistent storage using SQLite database
   - File-based and in-memory storage modes
