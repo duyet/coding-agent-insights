@@ -1,0 +1,18 @@
+[package]
+name = "cai-query"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+cai-core = { path = "../cai-core" }
+cai-storage = { path = "../cai-storage" }
+
+thiserror = { workspace = true }
+anyhow = { workspace = true }
+serde = { workspace = true }
+sqlparser = { workspace = true }
+tracing = { workspace = true }

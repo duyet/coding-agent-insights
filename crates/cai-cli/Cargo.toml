@@ -1,0 +1,29 @@
+[package]
+name = "cai-cli"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+
+[[bin]]
+name = "cai"
+path = "src/main.rs"
+
+[dependencies]
+cai-core = { path = "../cai-core" }
+cai-ingest = { path = "../cai-ingest" }
+cai-query = { path = "../cai-query" }
+cai-storage = { path = "../cai-storage" }
+cai-output = { path = "../cai-output" }
+cai-tui = { path = "../cai-tui" }
+cai-web = { path = "../cai-web" }
+
+thiserror = { workspace = true }
+anyhow = { workspace = true }
+clap = { workspace = true }
+tokio = { workspace = true }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
+colored = { workspace = true }
