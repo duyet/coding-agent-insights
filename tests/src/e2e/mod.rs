@@ -3,6 +3,6 @@
 //! This module contains end-to-end tests that verify complete workflows
 //! including ingestion, querying, and output formatting.
 
+mod cli_test;
 mod ingest_test;
 mod query_test;
-mod cli_test;

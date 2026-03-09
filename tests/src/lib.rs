@@ -1,9 +1,9 @@
 //! CAI integration tests
 
-mod integration;
-mod helpers;
-mod fixtures;
 pub mod e2e;
+mod fixtures;
+mod helpers;
+mod integration;
 
-pub use helpers::*;
 pub use fixtures::*;
+pub use helpers::*;

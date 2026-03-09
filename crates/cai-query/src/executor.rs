@@ -1,10 +1,10 @@
 //! Query execution engine
 
-use std::sync::Arc;
+use crate::error::{ColumnInfo, QueryError, QueryResult, SchemaInfo, SchemaQueryType};
+use crate::parser::{ParsedQuery, QueryType};
 use cai_core::Entry;
 use cai_storage::Storage;
-use crate::error::{QueryError, QueryResult, ColumnInfo, SchemaInfo, SchemaQueryType};
-use crate::parser::{ParsedQuery, QueryType};
+use std::sync::Arc;
 
 /// Query result type - can be either entries or schema information
 #[derive(Debug, Clone)]
@@ -55,7 +55,11 @@ impl QueryEngine {
             }
             QueryType::Select => {
                 // Validate table name
-                if parsed.table.as_ref().is_some_and(|t| t.to_lowercase() != "entries") {
+                if parsed
+                    .table
+                    .as_ref()
+                    .is_some_and(|t| t.to_lowercase() != "entries")
+                {
                     if let Some(table) = parsed.table {
                         return Err(QueryError::InvalidTable(table));
                     }
@@ -72,25 +76,25 @@ impl QueryEngine {
         let parsed = crate::parse(sql)?;
 
         match &parsed.query_type {
-            QueryType::ShowTables => {
-                Ok(QueryResultData::Schema(SchemaInfo {
-                    query_type: SchemaQueryType::ShowTables,
-                    table_name: None,
-                    tables: vec!["entries".to_string()],
-                    columns: vec![],
-                }))
-            }
-            QueryType::DescribeTable(table_name) => {
-                Ok(QueryResultData::Schema(SchemaInfo {
-                    query_type: SchemaQueryType::DescribeTable,
-                    table_name: Some(table_name.clone()),
-                    tables: vec![],
-                    columns: Self::get_entry_columns(),
-                }))
-            }
+            QueryType::ShowTables => Ok(QueryResultData::Schema(SchemaInfo {
+                query_type: SchemaQueryType::ShowTables,
+                table_name: None,
+                tables: vec!["entries".to_string()],
+                columns: vec![],
+            })),
+            QueryType::DescribeTable(table_name) => Ok(QueryResultData::Schema(SchemaInfo {
+                query_type: SchemaQueryType::DescribeTable,
+                table_name: Some(table_name.clone()),
+                tables: vec![],
+                columns: Self::get_entry_columns(),
+            })),
             QueryType::Select => {
                 // Validate table name
-                if parsed.table.as_ref().is_some_and(|t| t.to_lowercase() != "entries") {
+                if parsed
+                    .table
+                    .as_ref()
+                    .is_some_and(|t| t.to_lowercase() != "entries")
+                {
                     if let Some(table) = parsed.table.clone() {
                         return Err(QueryError::InvalidTable(table));
                     }
@@ -164,25 +168,31 @@ impl QueryEngine {
         let where_upper = where_sql.to_uppercase();
 
         // Extract values once to avoid lifetime issues
-        let expected_source = if where_upper.contains("SOURCE =") || where_upper.contains("SOURCE=") {
+        let expected_source = if where_upper.contains("SOURCE =") || where_upper.contains("SOURCE=")
+        {
             extract_quoted_string(where_sql)
         } else {
             None
         };
 
-        let expected_ts_gt = if where_upper.contains("TIMESTAMP >") || where_upper.contains("TIMESTAMP>") {
-            extract_timestamp(where_sql).and_then(|s| s.parse::<chrono::DateTime<chrono::Utc>>().ok())
-        } else {
-            None
-        };
+        let expected_ts_gt =
+            if where_upper.contains("TIMESTAMP >") || where_upper.contains("TIMESTAMP>") {
+                extract_timestamp(where_sql)
+                    .and_then(|s| s.parse::<chrono::DateTime<chrono::Utc>>().ok())
+            } else {
+                None
+            };
 
-        let expected_ts_lt = if where_upper.contains("TIMESTAMP <") || where_upper.contains("TIMESTAMP<") {
-            extract_timestamp(where_sql).and_then(|s| s.parse::<chrono::DateTime<chrono::Utc>>().ok())
-        } else {
-            None
-        };
+        let expected_ts_lt =
+            if where_upper.contains("TIMESTAMP <") || where_upper.contains("TIMESTAMP<") {
+                extract_timestamp(where_sql)
+                    .and_then(|s| s.parse::<chrono::DateTime<chrono::Utc>>().ok())
+            } else {
+                None
+            };
 
-        Ok(entries.into_iter()
+        Ok(entries
+            .into_iter()
             .filter(|entry| {
                 if let Some(ref source) = expected_source {
                     if format!("{:?}", entry.source) != *source {
@@ -204,7 +214,11 @@ impl QueryEngine {
             .collect::<Vec<_>>())
     }
 
-    fn apply_order_by(&self, mut entries: Vec<Entry>, order_by: &[(String, bool)]) -> QueryResult<Vec<Entry>> {
+    fn apply_order_by(
+        &self,
+        mut entries: Vec<Entry>,
+        order_by: &[(String, bool)],
+    ) -> QueryResult<Vec<Entry>> {
         entries.sort_by(|a, b| {
             for (col, asc) in order_by {
                 let cmp = match col.to_lowercase().as_str() {
@@ -243,8 +257,8 @@ fn extract_quoted_string(sql: &str) -> Option<String> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use cai_storage::MemoryStorage;
     use cai_core::Source;
+    use cai_storage::MemoryStorage;
     use chrono::Utc;
 
     fn make_test_entries() -> (MemoryStorage, Vec<Entry>) {
@@ -254,7 +268,9 @@ mod tests {
             Entry {
                 id: "1".to_string(),
                 source: Source::Claude,
-                timestamp: chrono::DateTime::parse_from_rfc3339("2024-01-15T10:00:00Z").unwrap().with_timezone(&Utc),
+                timestamp: chrono::DateTime::parse_from_rfc3339("2024-01-15T10:00:00Z")
+                    .unwrap()
+                    .with_timezone(&Utc),
                 prompt: "hello".to_string(),
                 response: "world".to_string(),
                 metadata: cai_core::Metadata {
@@ -268,7 +284,9 @@ mod tests {
             Entry {
                 id: "2".to_string(),
                 source: Source::Git,
-                timestamp: chrono::DateTime::parse_from_rfc3339("2024-01-16T11:00:00Z").unwrap().with_timezone(&Utc),
+                timestamp: chrono::DateTime::parse_from_rfc3339("2024-01-16T11:00:00Z")
+                    .unwrap()
+                    .with_timezone(&Utc),
                 prompt: "commit".to_string(),
                 response: "message".to_string(),
                 metadata: cai_core::Metadata {
@@ -305,7 +323,10 @@ mod tests {
         }
 
         let engine = QueryEngine::new(storage);
-        let results = engine.execute("SELECT * FROM entries LIMIT 1").await.unwrap();
+        let results = engine
+            .execute("SELECT * FROM entries LIMIT 1")
+            .await
+            .unwrap();
 
         assert_eq!(results.len(), 1);
     }
@@ -318,7 +339,10 @@ mod tests {
         }
 
         let engine = QueryEngine::new(storage);
-        let results = engine.execute("SELECT * FROM entries WHERE source = 'Claude'").await.unwrap();
+        let results = engine
+            .execute("SELECT * FROM entries WHERE source = 'Claude'")
+            .await
+            .unwrap();
 
         assert_eq!(results.len(), 1);
         assert_eq!(results[0].source, Source::Claude);
@@ -333,7 +357,10 @@ mod tests {
 
         let engine = QueryEngine::new(storage);
         // Note: ORDER BY parsing not implemented in simple parser yet
-        let results = engine.execute("SELECT * FROM entries ORDER BY timestamp DESC").await.unwrap();
+        let results = engine
+            .execute("SELECT * FROM entries ORDER BY timestamp DESC")
+            .await
+            .unwrap();
 
         assert_eq!(results.len(), 2);
         // For now, just verify we get results (ordering not implemented yet)

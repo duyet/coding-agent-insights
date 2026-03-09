@@ -2,10 +2,10 @@
 //!
 //! Benchmarks for output formatting operations.
 
-use divan::black_box;
-use cai_core::{Entry, Source, Metadata};
-use cai_output::{JsonFormatter, JsonlFormatter, Formatter};
+use cai_core::{Entry, Metadata, Source};
+use cai_output::{Formatter, JsonFormatter, JsonlFormatter};
 use chrono::Utc;
+use divan::black_box;
 use std::io::Cursor;
 
 fn generate_entries(count: usize) -> Vec<Entry> {
@@ -216,7 +216,10 @@ mod benchmarks {
             .map(|i| {
                 let mut extra = std::collections::HashMap::new();
                 for j in 0..10 {
-                    extra.insert(format!("key_{}", j), format!("value_{}_with_longer_string_content", j));
+                    extra.insert(
+                        format!("key_{}", j),
+                        format!("value_{}_with_longer_string_content", j),
+                    );
                 }
                 Entry {
                     id: format!("complex-{}", i),

@@ -10,12 +10,12 @@ use tokio as _;
 
 mod claude;
 mod codex;
-mod git;
 mod error;
+mod git;
 mod ingest;
 
 pub use claude::ClaudeParser;
 pub use codex::CodexParser;
-pub use git::GitScanner;
 pub use error::IngestError;
-pub use ingest::{Ingestor, IngestConfig};
+pub use git::GitScanner;
+pub use ingest::{IngestConfig, Ingestor};

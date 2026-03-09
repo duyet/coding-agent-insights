@@ -10,7 +10,9 @@ pub mod formatter;
 pub use formatter::{Formatter, FormatterConfig};
 
 /// Re-export formatters
-pub use formats::{JsonFormatter, JsonlFormatter, CsvFormatter, TableFormatter, AiFormatter, StatsFormatter};
+pub use formats::{
+    AiFormatter, CsvFormatter, JsonFormatter, JsonlFormatter, StatsFormatter, TableFormatter,
+};
 
 /// Output format options
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

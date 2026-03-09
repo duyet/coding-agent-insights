@@ -80,7 +80,8 @@ impl MemoryStorage {
                 source: Source::Claude,
                 timestamp: Utc::now() - chrono::Duration::hours(2),
                 prompt: "Help me refactor this Rust function to be more idiomatic".to_string(),
-                response: "Here's a more idiomatic version using iterators and pattern matching...".to_string(),
+                response: "Here's a more idiomatic version using iterators and pattern matching..."
+                    .to_string(),
                 metadata: Metadata {
                     file_path: Some("src/main.rs".to_string()),
                     language: Some("Rust".to_string()),
@@ -115,7 +116,8 @@ impl MemoryStorage {
                 source: Source::Codex,
                 timestamp: Utc::now() - chrono::Duration::hours(8),
                 prompt: "Implement a binary search function".to_string(),
-                response: "fn binary_search(arr: &[i32], target: i32) -> Option<usize> { ... }".to_string(),
+                response: "fn binary_search(arr: &[i32], target: i32) -> Option<usize> { ... }"
+                    .to_string(),
                 metadata: Metadata {
                     language: Some("Rust".to_string()),
                     ..Default::default()

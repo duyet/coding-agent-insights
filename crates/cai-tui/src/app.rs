@@ -155,7 +155,9 @@ where
         self.entries.retain(|entry| {
             entry.prompt.to_lowercase().contains(&query)
                 || entry.response.to_lowercase().contains(&query)
-                || format!("{:?}", entry.source).to_lowercase().contains(&query)
+                || format!("{:?}", entry.source)
+                    .to_lowercase()
+                    .contains(&query)
         });
 
         self.selected = 0;

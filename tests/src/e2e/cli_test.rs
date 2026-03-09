@@ -21,7 +21,10 @@ mod cli_tests {
 
         // Check if binary exists; if not, skip test during development
         if !bin_path.exists() {
-            println!("Binary not found at {}. Run 'cargo build' first.", bin_path.display());
+            println!(
+                "Binary not found at {}. Run 'cargo build' first.",
+                bin_path.display()
+            );
             return;
         }
 
@@ -34,11 +37,26 @@ mod cli_tests {
 
         assert!(output.status.success(), "cai --help should succeed");
         let help_text = String::from_utf8_lossy(&output.stdout);
-        assert!(help_text.contains("AI coding history") || help_text.contains("Coding Agent Insights"), "Should show app name");
-        assert!(help_text.contains("query") || help_text.contains("Query"), "Should show query command");
-        assert!(help_text.contains("ingest") || help_text.contains("Ingest"), "Should show ingest command");
-        assert!(help_text.contains("tui") || help_text.contains("Tui") || help_text.contains("TUI"), "Should show tui command");
-        assert!(help_text.contains("web") || help_text.contains("Web"), "Should show web command");
+        assert!(
+            help_text.contains("AI coding history") || help_text.contains("Coding Agent Insights"),
+            "Should show app name"
+        );
+        assert!(
+            help_text.contains("query") || help_text.contains("Query"),
+            "Should show query command"
+        );
+        assert!(
+            help_text.contains("ingest") || help_text.contains("Ingest"),
+            "Should show ingest command"
+        );
+        assert!(
+            help_text.contains("tui") || help_text.contains("Tui") || help_text.contains("TUI"),
+            "Should show tui command"
+        );
+        assert!(
+            help_text.contains("web") || help_text.contains("Web"),
+            "Should show web command"
+        );
     }
 
     /// Test query command help
@@ -60,7 +78,10 @@ mod cli_tests {
         assert!(output.status.success(), "cai query --help should succeed");
         let help_text = String::from_utf8_lossy(&output.stdout);
         assert!(help_text.contains("query"), "Should show query argument");
-        assert!(help_text.contains("output"), "Should show output format option");
+        assert!(
+            help_text.contains("output"),
+            "Should show output format option"
+        );
     }
 
     /// Test ingest command help
@@ -124,7 +145,10 @@ mod cli_tests {
 
         // Should not crash even with placeholder implementation
         // Just verify it runs without error
-        assert!(output.status.success() || String::from_utf8_lossy(&output.stdout).contains("Executing query:"));
+        assert!(
+            output.status.success()
+                || String::from_utf8_lossy(&output.stdout).contains("Executing query:")
+        );
     }
 
     /// Test ingest command with source
@@ -144,7 +168,10 @@ mod cli_tests {
             .expect("Failed to execute cai ingest");
 
         // Should not crash even with placeholder implementation
-        assert!(output.status.success() || String::from_utf8_lossy(&output.stdout).contains("Ingesting from:"));
+        assert!(
+            output.status.success()
+                || String::from_utf8_lossy(&output.stdout).contains("Ingesting from:")
+        );
     }
 
     /// Test invalid command
@@ -182,9 +209,15 @@ mod cli_tests {
             .output()
             .expect("Failed to execute cai query");
 
-        assert!(!output.status.success(), "Query without argument should fail");
+        assert!(
+            !output.status.success(),
+            "Query without argument should fail"
+        );
         let stderr = String::from_utf8_lossy(&output.stderr);
-        assert!(stderr.contains("required") || stderr.contains("QUERY"), "Should indicate required argument");
+        assert!(
+            stderr.contains("required") || stderr.contains("QUERY"),
+            "Should indicate required argument"
+        );
     }
 
     /// Test output format validation
@@ -207,11 +240,14 @@ mod cli_tests {
                 .unwrap_or_else(|_| panic!("Failed to execute cai query with --output {}", format));
 
             // Should accept all standard formats
-            assert!(output.status.success() || String::from_utf8_lossy(&output.stdout).contains("results"),
+            assert!(
+                output.status.success()
+                    || String::from_utf8_lossy(&output.stdout).contains("results"),
                 "Format {} should be accepted. stdout={}, stderr={}",
                 format,
                 String::from_utf8_lossy(&output.stdout),
-                String::from_utf8_lossy(&output.stderr));
+                String::from_utf8_lossy(&output.stderr)
+            );
         }
     }
 
@@ -233,7 +269,10 @@ mod cli_tests {
 
         assert!(output.status.success(), "cai --version should succeed");
         let version_text = String::from_utf8_lossy(&output.stdout);
-        assert!(version_text.contains("cai") || !version_text.is_empty(), "Should show version info");
+        assert!(
+            version_text.contains("cai") || !version_text.is_empty(),
+            "Should show version info"
+        );
     }
 
     /// Test concurrent CLI invocations
@@ -262,7 +301,10 @@ mod cli_tests {
         // All should succeed
         for handle in handles {
             let output = handle.join().unwrap().expect("Failed to execute cai");
-            assert!(output.status.success(), "Concurrent invocation should succeed");
+            assert!(
+                output.status.success(),
+                "Concurrent invocation should succeed"
+            );
         }
     }
 
@@ -286,6 +328,9 @@ mod cli_tests {
         let stdout = String::from_utf8_lossy(&output.stdout);
 
         // Should have some output (either error or placeholder)
-        assert!(!stderr.is_empty() || !stdout.is_empty(), "Should produce output");
+        assert!(
+            !stderr.is_empty() || !stdout.is_empty(),
+            "Should produce output"
+        );
     }
 }

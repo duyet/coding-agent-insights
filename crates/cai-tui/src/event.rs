@@ -61,7 +61,6 @@ impl EventHandler {
     /// 1. Key events (highest priority)
     /// 2. Tick events (lowest priority)
     pub async fn next(&mut self) -> Event {
-
         // Check for key events with timeout
         let key_event = tokio::task::spawn_blocking(move || {
             if event::poll(Duration::from_millis(10)).ok()? {

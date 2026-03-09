@@ -42,7 +42,12 @@ impl Truncate for FormatterConfig {
         if limit == 0 || text.len() <= limit {
             text.to_string()
         } else {
-            format!("{}...", text.chars().take(limit.saturating_sub(3)).collect::<String>())
+            format!(
+                "{}...",
+                text.chars()
+                    .take(limit.saturating_sub(3))
+                    .collect::<String>()
+            )
         }
     }
 }

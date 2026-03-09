@@ -51,7 +51,11 @@ pub fn parse(sql: &str) -> QueryResult<ParsedQuery> {
 
     // Handle DESCRIBE table
     if sql_upper.starts_with("DESCRIBE ") || sql_upper.starts_with("DESC ") {
-        let keyword = if sql_upper.starts_with("DESCRIBE ") { "DESCRIBE " } else { "DESC " };
+        let keyword = if sql_upper.starts_with("DESCRIBE ") {
+            "DESCRIBE "
+        } else {
+            "DESC "
+        };
         let table_name = sql[keyword.len()..].trim().to_string();
         let table_name = table_name.trim_end_matches(';').trim().to_string();
 
@@ -86,7 +90,9 @@ pub fn parse(sql: &str) -> QueryResult<ParsedQuery> {
 
     // Validate it's a SELECT statement
     if !sql_upper.starts_with("SELECT") {
-        return Err(QueryError::ParseError("Only SELECT, SHOW TABLES, and DESCRIBE statements are supported".to_string()));
+        return Err(QueryError::ParseError(
+            "Only SELECT, SHOW TABLES, and DESCRIBE statements are supported".to_string(),
+        ));
     }
 
     // Check for FROM entries
@@ -101,7 +107,8 @@ pub fn parse(sql: &str) -> QueryResult<ParsedQuery> {
         // Try to find what comes after FROM
         let from_idx = sql_upper.find("FROM ").unwrap() + 5;
         let table_part = &sql[from_idx..];
-        let table_end = table_part.find(|c: char| c.is_whitespace())
+        let table_end = table_part
+            .find(|c: char| c.is_whitespace())
             .or_else(|| table_part.find(';'))
             .unwrap_or(table_part.len());
         let table_name = table_part[..table_end].trim().to_string();
@@ -115,7 +122,8 @@ pub fn parse(sql: &str) -> QueryResult<ParsedQuery> {
     // Check for LIMIT
     let limit = if let Some(limit_idx) = sql_upper.find("LIMIT ") {
         let limit_str = &sql[limit_idx + 6..];
-        let limit_end = limit_str.find(|c: char| c.is_whitespace())
+        let limit_end = limit_str
+            .find(|c: char| c.is_whitespace())
             .or_else(|| limit_str.find(';'))
             .unwrap_or(limit_str.len());
         limit_str[..limit_end].trim().parse::<usize>().ok()
@@ -126,7 +134,8 @@ pub fn parse(sql: &str) -> QueryResult<ParsedQuery> {
     // Check for WHERE
     let where_sql = if sql_upper.contains("WHERE ") {
         let where_idx = sql_upper.find("WHERE ").unwrap() + 6;
-        let where_end = sql_upper[where_idx..].find(" GROUP BY")
+        let where_end = sql_upper[where_idx..]
+            .find(" GROUP BY")
             .or_else(|| sql_upper[where_idx..].find(" ORDER BY"))
             .or_else(|| sql_upper[where_idx..].find(" LIMIT"))
             .or_else(|| sql_upper[where_idx..].find(';'))
@@ -203,7 +212,10 @@ mod tests {
         let result = parse("DESCRIBE entries");
         assert!(result.is_ok());
         let parsed = result.unwrap();
-        assert_eq!(parsed.query_type, QueryType::DescribeTable("entries".to_string()));
+        assert_eq!(
+            parsed.query_type,
+            QueryType::DescribeTable("entries".to_string())
+        );
     }
 
     #[test]
@@ -211,7 +223,10 @@ mod tests {
         let result = parse("DESC entries");
         assert!(result.is_ok());
         let parsed = result.unwrap();
-        assert_eq!(parsed.query_type, QueryType::DescribeTable("entries".to_string()));
+        assert_eq!(
+            parsed.query_type,
+            QueryType::DescribeTable("entries".to_string())
+        );
     }
 
     #[test]
@@ -219,7 +234,10 @@ mod tests {
         let result = parse("PRAGMA table_info(entries)");
         assert!(result.is_ok());
         let parsed = result.unwrap();
-        assert_eq!(parsed.query_type, QueryType::DescribeTable("entries".to_string()));
+        assert_eq!(
+            parsed.query_type,
+            QueryType::DescribeTable("entries".to_string())
+        );
     }
 
     #[test]

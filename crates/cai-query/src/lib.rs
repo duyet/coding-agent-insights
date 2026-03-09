@@ -34,15 +34,15 @@
 pub use cai_core::Result;
 
 mod error;
-mod parser;
+mod eval;
 mod executor;
 mod functions;
-mod eval;
+mod parser;
 
-pub use error::{QueryError, QueryResult, SchemaInfo, ColumnInfo, SchemaQueryType};
+pub use error::{ColumnInfo, QueryError, QueryResult, SchemaInfo, SchemaQueryType};
 pub use executor::{QueryEngine, QueryResultData};
+pub use functions::{FunctionArg, FunctionRegistry};
 pub use parser::{parse, QueryType};
-pub use functions::{FunctionRegistry, FunctionArg};
 
 /// Convenience function to execute a SQL query
 ///

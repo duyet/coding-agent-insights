@@ -25,8 +25,8 @@
 pub use cai_core::Result;
 
 mod api;
-mod server;
 mod handlers;
+mod server;
 
 pub use server::run;
 

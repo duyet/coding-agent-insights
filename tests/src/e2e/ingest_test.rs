@@ -22,12 +22,11 @@ mod ingest_tests {
         let fixture_path = super::fixture_path("claude_conversation.json");
         assert!(fixture_path.exists(), "Fixture file should exist");
 
-        let content = fs::read_to_string(&fixture_path)
-            .expect("Should read fixture file");
+        let content = fs::read_to_string(&fixture_path).expect("Should read fixture file");
 
         // Verify JSON structure
-        let json: serde_json::Value = serde_json::from_str(&content)
-            .expect("Should parse valid JSON");
+        let json: serde_json::Value =
+            serde_json::from_str(&content).expect("Should parse valid JSON");
 
         assert_eq!(json["version"], "1.0");
         assert_eq!(json["api"], "anthropic");
@@ -45,16 +44,15 @@ mod ingest_tests {
         let fixture_path = super::fixture_path("codex_history.jsonl");
         assert!(fixture_path.exists(), "Fixture file should exist");
 
-        let content = fs::read_to_string(&fixture_path)
-            .expect("Should read fixture file");
+        let content = fs::read_to_string(&fixture_path).expect("Should read fixture file");
 
         // Verify JSONL structure - each line is valid JSON
         let lines: Vec<&str> = content.lines().collect();
         assert!(lines.len() >= 3, "Should have at least 3 entries");
 
         for line in lines {
-            let json: serde_json::Value = serde_json::from_str(line)
-                .expect("Each line should be valid JSON");
+            let json: serde_json::Value =
+                serde_json::from_str(line).expect("Each line should be valid JSON");
 
             assert!(json.get("timestamp").is_some());
             assert!(json.get("prompt").is_some());
@@ -68,8 +66,7 @@ mod ingest_tests {
         let fixture_path = super::fixture_path("git_log.txt");
         assert!(fixture_path.exists(), "Fixture file should exist");
 
-        let content = fs::read_to_string(&fixture_path)
-            .expect("Should read fixture file");
+        let content = fs::read_to_string(&fixture_path).expect("Should read fixture file");
 
         // Verify git log format: hash|timestamp|name|email|message
         let lines: Vec<&str> = content.lines().collect();
@@ -77,13 +74,22 @@ mod ingest_tests {
 
         for line in lines {
             let parts: Vec<&str> = line.split('|').collect();
-            assert_eq!(parts.len(), 5, "Each line should have 5 pipe-delimited fields");
+            assert_eq!(
+                parts.len(),
+                5,
+                "Each line should have 5 pipe-delimited fields"
+            );
 
             // Verify hash format (short git hash is 7-15 chars)
-            assert!(parts[0].len() >= 7 && parts[0].len() <= 40, "Commit hash should be 7-40 chars, got {}", parts[0].len());
+            assert!(
+                parts[0].len() >= 7 && parts[0].len() <= 40,
+                "Commit hash should be 7-40 chars, got {}",
+                parts[0].len()
+            );
 
             // Verify timestamp is ISO 8601
-            parts[1].parse::<chrono::DateTime<chrono::Utc>>()
+            parts[1]
+                .parse::<chrono::DateTime<chrono::Utc>>()
                 .expect("Timestamp should be valid ISO 8601");
         }
     }
@@ -137,7 +143,8 @@ mod ingest_tests {
 invalid-format-commit
 def456|invalid-timestamp|Name|email@example.com|Invalid timestamp"#;
 
-        let valid_count = malformed_log.lines()
+        let valid_count = malformed_log
+            .lines()
             .filter(|line| {
                 let parts: Vec<&str> = line.split('|').collect();
                 if parts.len() != 5 {
@@ -153,7 +160,7 @@ def456|invalid-timestamp|Name|email@example.com|Invalid timestamp"#;
 
 #[cfg(test)]
 mod integration {
-    use cai_core::{Entry, Source, Metadata};
+    use cai_core::{Entry, Metadata, Source};
     use cai_storage::{MemoryStorage, Storage};
 
     /// Test full ingestion workflow with storage
@@ -172,16 +179,22 @@ mod integration {
         };
 
         // Store entry
-        storage.store(&entry).await
+        storage
+            .store(&entry)
+            .await
             .expect("Should store entry successfully");
 
         // Verify storage count
-        let count = storage.count().await
+        let count = storage
+            .count()
+            .await
             .expect("Should get count successfully");
         assert_eq!(count, 1, "Should have 1 entry");
 
         // Retrieve entry
-        let retrieved = storage.get("e2e-test-1").await
+        let retrieved = storage
+            .get("e2e-test-1")
+            .await
             .expect("Should get entry successfully");
         assert!(retrieved.is_some(), "Should find stored entry");
         assert_eq!(retrieved.unwrap().id, "e2e-test-1");
@@ -192,29 +205,28 @@ mod integration {
     async fn test_batch_ingestion_workflow() {
         let storage = MemoryStorage::new();
 
-        let entries: Vec<Entry> = (0..10).map(|i| Entry {
-            id: format!("batch-entry-{}", i),
-            source: Source::Codex,
-            timestamp: chrono::Utc::now(),
-            prompt: format!("Prompt {}", i),
-            response: format!("Response {}", i),
-            metadata: Metadata::default(),
-        }).collect();
+        let entries: Vec<Entry> = (0..10)
+            .map(|i| Entry {
+                id: format!("batch-entry-{}", i),
+                source: Source::Codex,
+                timestamp: chrono::Utc::now(),
+                prompt: format!("Prompt {}", i),
+                response: format!("Response {}", i),
+                metadata: Metadata::default(),
+            })
+            .collect();
 
         // Store all entries
         for entry in &entries {
-            storage.store(entry).await
-                .expect("Should store each entry");
+            storage.store(entry).await.expect("Should store each entry");
         }
 
         // Verify all stored
-        let count = storage.count().await
-            .expect("Should get count");
+        let count = storage.count().await.expect("Should get count");
         assert_eq!(count, 10, "Should have 10 entries");
 
         // Query all
-        let all = storage.query(None).await
-            .expect("Should query all entries");
+        let all = storage.query(None).await.expect("Should query all entries");
         assert_eq!(all.len(), 10);
     }
 }

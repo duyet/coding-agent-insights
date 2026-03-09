@@ -1,10 +1,7 @@
 //! REST API types and router
 
-use axum::{
-    routing::get,
-    Router,
-};
 use super::handlers;
+use axum::{routing::get, Router};
 
 /// Statistics response
 #[derive(Debug, serde::Serialize)]

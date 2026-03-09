@@ -27,21 +27,21 @@ impl GitScanner {
 
     /// Scan repository and convert commits to entries
     pub fn scan(&self) -> Result<Vec<Entry>, IngestError> {
-        let repo = Repository::open(&self.repo_path)
-            .map_err(IngestError::GitError)?;
+        let repo = Repository::open(&self.repo_path).map_err(IngestError::GitError)?;
 
         // Get repo URL if available
         let repo_url = get_remote_url(&repo);
 
-        let mut revwalk = repo.revwalk()
-            .map_err(IngestError::GitError)?;
+        let mut revwalk = repo.revwalk().map_err(IngestError::GitError)?;
 
         // Try to push HEAD - this will fail on empty repositories
         match revwalk.push_head() {
-            Ok(_) => {},
+            Ok(_) => {}
             Err(_) => {
                 // Empty repository or unborn HEAD
-                return Err(IngestError::NoFilesFound(self.repo_path.display().to_string()));
+                return Err(IngestError::NoFilesFound(
+                    self.repo_path.display().to_string(),
+                ));
             }
         }
 
@@ -49,8 +49,7 @@ impl GitScanner {
 
         for oid in revwalk {
             let oid = oid.map_err(IngestError::GitError)?;
-            let commit = repo.find_commit(oid)
-                .map_err(IngestError::GitError)?;
+            let commit = repo.find_commit(oid).map_err(IngestError::GitError)?;
 
             debug!("Scanning commit: {}", commit.id());
 
@@ -59,7 +58,9 @@ impl GitScanner {
         }
 
         if entries.is_empty() {
-            return Err(IngestError::NoFilesFound(self.repo_path.display().to_string()));
+            return Err(IngestError::NoFilesFound(
+                self.repo_path.display().to_string(),
+            ));
         }
 
         Ok(entries)
@@ -94,10 +95,22 @@ impl GitScanner {
         let response = commit.message().unwrap_or("").to_string();
 
         let mut extra = HashMap::new();
-        extra.insert("author_name".to_string(), commit.author().name().unwrap_or("").to_string());
-        extra.insert("author_email".to_string(), commit.author().email().unwrap_or("").to_string());
-        extra.insert("committer_name".to_string(), commit.committer().name().unwrap_or("").to_string());
-        extra.insert("committer_email".to_string(), commit.committer().email().unwrap_or("").to_string());
+        extra.insert(
+            "author_name".to_string(),
+            commit.author().name().unwrap_or("").to_string(),
+        );
+        extra.insert(
+            "author_email".to_string(),
+            commit.author().email().unwrap_or("").to_string(),
+        );
+        extra.insert(
+            "committer_name".to_string(),
+            commit.committer().name().unwrap_or("").to_string(),
+        );
+        extra.insert(
+            "committer_email".to_string(),
+            commit.committer().email().unwrap_or("").to_string(),
+        );
 
         // Add parent commit IDs
         if let Ok(parent_id) = commit.parent_id(0) {
@@ -130,8 +143,7 @@ fn get_remote_url(repo: &Repository) -> Option<String> {
 
 /// Convert git2 Time to DateTime<Utc>
 fn git_time_to_datetime(time: Time) -> DateTime<Utc> {
-    DateTime::from_timestamp(time.seconds(), 0)
-        .unwrap_or_else(Utc::now)
+    DateTime::from_timestamp(time.seconds(), 0).unwrap_or_else(Utc::now)
 }
 
 #[cfg(test)]
@@ -160,14 +172,16 @@ mod tests {
         let tree = repo.find_tree(tree_id).unwrap();
 
         let sig = git2::Signature::now("Test User", "test@example.com").unwrap();
-        let oid = repo.commit(
-            Some("HEAD"),
-            &sig,
-            &sig,
-            "Test commit message\n\nThis is a test commit with more details.",
-            &tree,
-            &[],
-        ).unwrap();
+        let oid = repo
+            .commit(
+                Some("HEAD"),
+                &sig,
+                &sig,
+                "Test commit message\n\nThis is a test commit with more details.",
+                &tree,
+                &[],
+            )
+            .unwrap();
 
         // Scan the repo
         let scanner = GitScanner::new(repo_path);

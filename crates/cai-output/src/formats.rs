@@ -1,9 +1,9 @@
 //! Output format implementations
 
-use crate::{Formatter, FormatterConfig};
 use crate::formatter::Truncate;
-use cai_core::Result;
+use crate::{Formatter, FormatterConfig};
 use cai_core::Entry;
+use cai_core::Result;
 use std::io::Write;
 
 /// JSON array formatter
@@ -148,16 +148,34 @@ impl Formatter for TableFormatter {
     fn format<W: Write>(&self, entries: &[Entry], writer: &mut W) -> Result<()> {
         // Simple table format for now
         for entry in entries {
-            writeln!(writer, "[{}] {:?}", entry.timestamp.format("%Y-%m-%d %H:%M:%S"), entry.source)?;
-            writeln!(writer, "  Prompt: {}", self.config.truncate_text(&entry.prompt, 80))?;
+            writeln!(
+                writer,
+                "[{}] {:?}",
+                entry.timestamp.format("%Y-%m-%d %H:%M:%S"),
+                entry.source
+            )?;
+            writeln!(
+                writer,
+                "  Prompt: {}",
+                self.config.truncate_text(&entry.prompt, 80)
+            )?;
             writeln!(writer)?;
         }
         Ok(())
     }
 
     fn format_one<W: Write>(&self, entry: &Entry, writer: &mut W) -> Result<()> {
-        writeln!(writer, "[{}] {:?}", entry.timestamp.format("%Y-%m-%d %H:%M:%S"), entry.source)?;
-        writeln!(writer, "  Prompt: {}", self.config.truncate_text(&entry.prompt, 80))?;
+        writeln!(
+            writer,
+            "[{}] {:?}",
+            entry.timestamp.format("%Y-%m-%d %H:%M:%S"),
+            entry.source
+        )?;
+        writeln!(
+            writer,
+            "  Prompt: {}",
+            self.config.truncate_text(&entry.prompt, 80)
+        )?;
         writeln!(writer)?;
         Ok(())
     }
@@ -194,7 +212,11 @@ impl Formatter for AiFormatter {
                 entry.source,
                 self.config.truncate_text(&entry.prompt, 60)
             )?;
-            writeln!(writer, "  -> {}", self.config.truncate_text(&entry.response, 100))?;
+            writeln!(
+                writer,
+                "  -> {}",
+                self.config.truncate_text(&entry.response, 100)
+            )?;
             writeln!(writer)?;
         }
         Ok(())
@@ -208,7 +230,11 @@ impl Formatter for AiFormatter {
             entry.source,
             self.config.truncate_text(&entry.prompt, 60)
         )?;
-        writeln!(writer, "  -> {}", self.config.truncate_text(&entry.response, 100))?;
+        writeln!(
+            writer,
+            "  -> {}",
+            self.config.truncate_text(&entry.response, 100)
+        )?;
         writeln!(writer)?;
         Ok(())
     }
@@ -254,7 +280,12 @@ impl Formatter for StatsFormatter {
     }
 
     fn format_one<W: Write>(&self, entry: &Entry, writer: &mut W) -> Result<()> {
-        writeln!(writer, "[{}] {:?}", entry.timestamp.format("%Y-%m-%d %H:%M:%S"), entry.source)?;
+        writeln!(
+            writer,
+            "[{}] {:?}",
+            entry.timestamp.format("%Y-%m-%d %H:%M:%S"),
+            entry.source
+        )?;
         Ok(())
     }
 
@@ -332,7 +363,10 @@ mod tests {
     fn test_csv_escape() {
         assert_eq!(CsvFormatter::escape_field("simple"), "simple");
         assert_eq!(CsvFormatter::escape_field("with, comma"), "\"with, comma\"");
-        assert_eq!(CsvFormatter::escape_field("with\"quote"), "\"with\"\"quote\"");
+        assert_eq!(
+            CsvFormatter::escape_field("with\"quote"),
+            "\"with\"\"quote\""
+        );
     }
 
     #[test]

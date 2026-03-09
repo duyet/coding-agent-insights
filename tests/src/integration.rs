@@ -1,7 +1,7 @@
 //! Integration tests for CAI
 
 #[cfg(test)]
-use cai_core::{Entry, Source, Metadata};
+use cai_core::{Entry, Metadata, Source};
 #[cfg(test)]
 use chrono::{DateTime, Utc};
 
@@ -21,7 +21,10 @@ fn setup_test_data() -> Vec<Entry> {
                 repo_url: Some("https://github.com/example/app".to_string()),
                 commit_hash: Some("a1b2c3".to_string()),
                 language: Some("Rust".to_string()),
-                extra: std::collections::HashMap::from([("complexity".to_string(), "low".to_string())]),
+                extra: std::collections::HashMap::from([(
+                    "complexity".to_string(),
+                    "low".to_string(),
+                )]),
             },
         },
         Entry {
@@ -37,7 +40,10 @@ fn setup_test_data() -> Vec<Entry> {
                 repo_url: Some("https://github.com/example/app".to_string()),
                 commit_hash: Some("g7h8i9".to_string()),
                 language: Some("Rust".to_string()),
-                extra: std::collections::HashMap::from([("complexity".to_string(), "high".to_string())]),
+                extra: std::collections::HashMap::from([(
+                    "complexity".to_string(),
+                    "high".to_string(),
+                )]),
             },
         },
         Entry {
@@ -53,7 +59,10 @@ fn setup_test_data() -> Vec<Entry> {
                 repo_url: Some("https://github.com/example/app".to_string()),
                 commit_hash: Some("jkl012".to_string()),
                 language: Some("Rust".to_string()),
-                extra: std::collections::HashMap::from([("complexity".to_string(), "medium".to_string())]),
+                extra: std::collections::HashMap::from([(
+                    "complexity".to_string(),
+                    "medium".to_string(),
+                )]),
             },
         },
     ]
@@ -62,10 +71,10 @@ fn setup_test_data() -> Vec<Entry> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use cai_storage::{MemoryStorage, Storage, Filter};
-    use cai_output::{JsonFormatter, JsonlFormatter, Formatter};
-    use std::io::Cursor;
+    use cai_output::{Formatter, JsonFormatter, JsonlFormatter};
+    use cai_storage::{Filter, MemoryStorage, Storage};
     use chrono::Utc;
+    use std::io::Cursor;
 
     #[tokio::test]
     async fn test_storage_and_query_integration() {
@@ -134,7 +143,9 @@ mod tests {
         let claude_entries = storage.query(Some(&filter)).await.unwrap();
 
         assert_eq!(claude_entries.len(), 2);
-        assert!(claude_entries.iter().all(|e| matches!(e.source, Source::Claude)));
+        assert!(claude_entries
+            .iter()
+            .all(|e| matches!(e.source, Source::Claude)));
 
         // Format filtered results
         let mut buffer = Cursor::new(Vec::new());
@@ -159,9 +170,11 @@ mod tests {
         // Query entries after a specific date
         let filter = Filter {
             source: None,
-            after: Some(DateTime::parse_from_rfc3339("2024-01-02T00:00:00Z")
-                .unwrap()
-                .with_timezone(&Utc)),
+            after: Some(
+                DateTime::parse_from_rfc3339("2024-01-02T00:00:00Z")
+                    .unwrap()
+                    .with_timezone(&Utc),
+            ),
             before: None,
         };
         let recent = storage.query(Some(&filter)).await.unwrap();
@@ -182,12 +195,16 @@ mod tests {
         // Complex filter: Claude source + date range
         let filter = Filter {
             source: Some("Claude".to_string()),
-            after: Some(DateTime::parse_from_rfc3339("2024-01-01T00:00:00Z")
-                .unwrap()
-                .with_timezone(&Utc)),
-            before: Some(DateTime::parse_from_rfc3339("2024-01-02T23:59:59Z")
-                .unwrap()
-                .with_timezone(&Utc)),
+            after: Some(
+                DateTime::parse_from_rfc3339("2024-01-01T00:00:00Z")
+                    .unwrap()
+                    .with_timezone(&Utc),
+            ),
+            before: Some(
+                DateTime::parse_from_rfc3339("2024-01-02T23:59:59Z")
+                    .unwrap()
+                    .with_timezone(&Utc),
+            ),
         };
         let results = storage.query(Some(&filter)).await.unwrap();
 
@@ -240,9 +257,7 @@ mod tests {
         for entry in &entries {
             let storage_clone = storage.clone();
             let entry_clone = entry.clone();
-            let handle = tokio::spawn(async move {
-                storage_clone.store(&entry_clone).await
-            });
+            let handle = tokio::spawn(async move { storage_clone.store(&entry_clone).await });
             handles.push(handle);
         }
 
@@ -257,9 +272,7 @@ mod tests {
         let mut query_handles = Vec::new();
         for _ in 0..5 {
             let storage_clone = storage.clone();
-            let handle = tokio::spawn(async move {
-                storage_clone.query(None).await
-            });
+            let handle = tokio::spawn(async move { storage_clone.query(None).await });
             query_handles.push(handle);
         }
 

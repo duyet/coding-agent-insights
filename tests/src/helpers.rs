@@ -1,6 +1,6 @@
 //! Test helpers and utilities for CAI testing
 
-use cai_core::{Entry, Source, Metadata};
+use cai_core::{Entry, Metadata, Source};
 use chrono::{DateTime, Utc};
 
 /// Create a test entry with default values
@@ -44,7 +44,9 @@ pub fn make_entry_with_timestamp(id: &str, timestamp: DateTime<Utc>) -> Entry {
 
 /// Create multiple test entries
 pub fn make_entries(count: usize) -> Vec<Entry> {
-    (0..count).map(|i| make_entry(&format!("entry-{}", i))).collect()
+    (0..count)
+        .map(|i| make_entry(&format!("entry-{}", i)))
+        .collect()
 }
 
 /// Assert that two entries are equal

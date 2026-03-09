@@ -3,9 +3,9 @@
 //! These tests verify complete query flows from various sources.
 
 #[cfg(test)]
-use chrono::{DateTime, Utc};
+use cai_core::{Entry, Metadata, Source};
 #[cfg(test)]
-use cai_core::{Entry, Source, Metadata};
+use chrono::{DateTime, Utc};
 
 #[cfg(test)]
 fn setup_test_entries() -> Vec<Entry> {
@@ -14,7 +14,8 @@ fn setup_test_entries() -> Vec<Entry> {
             id: "query-test-1".to_string(),
             source: Source::Claude,
             timestamp: DateTime::parse_from_rfc3339("2024-01-01T10:00:00Z")
-                .unwrap().with_timezone(&Utc),
+                .unwrap()
+                .with_timezone(&Utc),
             prompt: "Write a function".to_string(),
             response: "fn test() {}".to_string(),
             metadata: Metadata {
@@ -29,7 +30,8 @@ fn setup_test_entries() -> Vec<Entry> {
             id: "query-test-2".to_string(),
             source: Source::Codex,
             timestamp: DateTime::parse_from_rfc3339("2024-01-02T14:30:00Z")
-                .unwrap().with_timezone(&Utc),
+                .unwrap()
+                .with_timezone(&Utc),
             prompt: "Add error handling".to_string(),
             response: "Result<T, E>".to_string(),
             metadata: Metadata {
@@ -44,7 +46,8 @@ fn setup_test_entries() -> Vec<Entry> {
             id: "query-test-3".to_string(),
             source: Source::Git,
             timestamp: DateTime::parse_from_rfc3339("2024-01-03T09:15:00Z")
-                .unwrap().with_timezone(&Utc),
+                .unwrap()
+                .with_timezone(&Utc),
             prompt: "Commit changes".to_string(),
             response: "Changes committed".to_string(),
             metadata: Metadata {
@@ -59,7 +62,8 @@ fn setup_test_entries() -> Vec<Entry> {
             id: "query-test-4".to_string(),
             source: Source::Claude,
             timestamp: DateTime::parse_from_rfc3339("2024-01-04T16:45:00Z")
-                .unwrap().with_timezone(&Utc),
+                .unwrap()
+                .with_timezone(&Utc),
             prompt: "Implement trait".to_string(),
             response: "trait Trait {}".to_string(),
             metadata: Metadata {
@@ -67,9 +71,10 @@ fn setup_test_entries() -> Vec<Entry> {
                 repo_url: Some("https://github.com/test/repo".to_string()),
                 commit_hash: Some("jkl012".to_string()),
                 language: Some("Rust".to_string()),
-                extra: std::collections::HashMap::from([
-                    ("complexity".to_string(), "high".to_string()),
-                ]),
+                extra: std::collections::HashMap::from([(
+                    "complexity".to_string(),
+                    "high".to_string(),
+                )]),
             },
         },
     ]
@@ -77,8 +82,8 @@ fn setup_test_entries() -> Vec<Entry> {
 
 #[cfg(test)]
 mod basic_query_tests {
-    use cai_storage::{MemoryStorage, Storage, Filter};
     use cai_core::Source;
+    use cai_storage::{Filter, MemoryStorage, Storage};
     use chrono::{DateTime, Utc};
 
     /// Test simple SELECT all query
@@ -129,8 +134,11 @@ mod basic_query_tests {
         // Query entries after Jan 2, 2024
         let filter = Filter {
             source: None,
-            after: Some(DateTime::parse_from_rfc3339("2024-01-02T00:00:00Z")
-                .unwrap().with_timezone(&Utc)),
+            after: Some(
+                DateTime::parse_from_rfc3339("2024-01-02T00:00:00Z")
+                    .unwrap()
+                    .with_timezone(&Utc),
+            ),
             before: None,
         };
         let results = storage.query(Some(&filter)).await.unwrap();
@@ -151,8 +159,11 @@ mod basic_query_tests {
         let filter = Filter {
             source: None,
             after: None,
-            before: Some(DateTime::parse_from_rfc3339("2024-01-03T00:00:00Z")
-                .unwrap().with_timezone(&Utc)),
+            before: Some(
+                DateTime::parse_from_rfc3339("2024-01-03T00:00:00Z")
+                    .unwrap()
+                    .with_timezone(&Utc),
+            ),
         };
         let results = storage.query(Some(&filter)).await.unwrap();
         assert_eq!(results.len(), 2, "Should find 2 entries before Jan 3");
@@ -171,21 +182,28 @@ mod basic_query_tests {
         // Query Claude entries after Jan 1
         let filter = Filter {
             source: Some("Claude".to_string()),
-            after: Some(DateTime::parse_from_rfc3339("2024-01-01T12:00:00Z")
-                .unwrap().with_timezone(&Utc)),
+            after: Some(
+                DateTime::parse_from_rfc3339("2024-01-01T12:00:00Z")
+                    .unwrap()
+                    .with_timezone(&Utc),
+            ),
             before: None,
         };
         let results = storage.query(Some(&filter)).await.unwrap();
-        assert_eq!(results.len(), 1, "Should find 1 Claude entry after midday Jan 1");
+        assert_eq!(
+            results.len(),
+            1,
+            "Should find 1 Claude entry after midday Jan 1"
+        );
         assert_eq!(results[0].id, "query-test-4");
     }
 }
 
 #[cfg(test)]
 mod output_format_tests {
+    use cai_output::{Formatter, JsonFormatter, JsonlFormatter};
     use cai_storage::{MemoryStorage, Storage};
     use std::io::Cursor;
-    use cai_output::{JsonFormatter, JsonlFormatter, Formatter};
 
     /// Test JSON output format
     #[tokio::test]
@@ -259,7 +277,7 @@ mod output_format_tests {
 
 #[cfg(test)]
 mod edge_case_tests {
-    use cai_storage::{MemoryStorage, Storage, Filter};
+    use cai_storage::{Filter, MemoryStorage, Storage};
     use chrono::{DateTime, Utc};
 
     /// Test query with no matches
@@ -295,8 +313,11 @@ mod edge_case_tests {
         // Query for dates far in the future
         let filter = Filter {
             source: None,
-            after: Some(DateTime::parse_from_rfc3339("2099-01-01T00:00:00Z")
-                .unwrap().with_timezone(&Utc)),
+            after: Some(
+                DateTime::parse_from_rfc3339("2099-01-01T00:00:00Z")
+                    .unwrap()
+                    .with_timezone(&Utc),
+            ),
             before: None,
         };
         let results = storage.query(Some(&filter)).await.unwrap();
@@ -326,7 +347,11 @@ mod edge_case_tests {
     async fn test_count() {
         let storage = MemoryStorage::new();
 
-        assert_eq!(storage.count().await.unwrap(), 0, "Initial count should be 0");
+        assert_eq!(
+            storage.count().await.unwrap(),
+            0,
+            "Initial count should be 0"
+        );
 
         let entries = super::setup_test_entries();
         for entry in &entries {

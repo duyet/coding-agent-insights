@@ -4,12 +4,12 @@
 
 mod config;
 
-use clap::{Parser, Subcommand};
 use cai_core::{Entry, Metadata, Source};
 use cai_ingest::{IngestConfig, Ingestor};
 use cai_output::{Formatter, StatsFormatter};
 use cai_storage::Storage;
 use chrono::{Duration, Utc};
+use clap::{Parser, Subcommand};
 use colored::Colorize;
 use config::load_config;
 use std::path::PathBuf;
@@ -25,7 +25,8 @@ async fn create_storage_with_mock_data() -> cai_storage::MemoryStorage {
             source: Source::Claude,
             timestamp: Utc::now() - Duration::hours(2),
             prompt: "Help me refactor this Rust function to be more idiomatic".to_string(),
-            response: "Here's a more idiomatic version using iterators and pattern matching...".to_string(),
+            response: "Here's a more idiomatic version using iterators and pattern matching..."
+                .to_string(),
             metadata: Metadata {
                 file_path: Some("src/main.rs".to_string()),
                 language: Some("Rust".to_string()),
@@ -234,16 +235,40 @@ async fn execute_schema(table: Option<&str>) -> cai_core::Result<()> {
     if let Some(table_name) = table {
         if table_name.to_lowercase() == "entries" {
             println!("\n{}", format!("Table: {}", table_name).bold().green());
-            println!("{}", "────────────────────────────────────────────────────────────────────");
+            println!(
+                "{}",
+                "────────────────────────────────────────────────────────────────────"
+            );
             println!("{:<20} {:<20} {:<40}", "Column", "Type", "Description");
-            println!("{}", "────────────────────────────────────────────────────────────────────");
+            println!(
+                "{}",
+                "────────────────────────────────────────────────────────────────────"
+            );
             println!("{:<20} {:<20} {:<40}", "id", "TEXT", "Unique identifier");
-            println!("{:<20} {:<20} {:<40}", "source", "TEXT", "Source system (Claude, Codex, Git, Other)");
-            println!("{:<20} {:<20} {:<40}", "timestamp", "TIMESTAMP", "Interaction timestamp (UTC)");
-            println!("{:<20} {:<20} {:<40}", "prompt", "TEXT", "User prompt/input");
-            println!("{:<20} {:<20} {:<40}", "response", "TEXT", "AI response/output");
-            println!("{:<20} {:<20} {:<40}", "metadata", "JSON", "Additional metadata (file_path, language, etc.)");
-            println!("{}", "────────────────────────────────────────────────────────────────────");
+            println!(
+                "{:<20} {:<20} {:<40}",
+                "source", "TEXT", "Source system (Claude, Codex, Git, Other)"
+            );
+            println!(
+                "{:<20} {:<20} {:<40}",
+                "timestamp", "TIMESTAMP", "Interaction timestamp (UTC)"
+            );
+            println!(
+                "{:<20} {:<20} {:<40}",
+                "prompt", "TEXT", "User prompt/input"
+            );
+            println!(
+                "{:<20} {:<20} {:<40}",
+                "response", "TEXT", "AI response/output"
+            );
+            println!(
+                "{:<20} {:<20} {:<40}",
+                "metadata", "JSON", "Additional metadata (file_path, language, etc.)"
+            );
+            println!(
+                "{}",
+                "────────────────────────────────────────────────────────────────────"
+            );
         } else {
             return Err(cai_core::Error::Message(format!(
                 "Unknown table: '{}'. Available tables: entries",
@@ -279,7 +304,9 @@ async fn execute_query(query: &str, output_format: &str) -> cai_core::Result<()>
 
     // Parse and execute query
     let query_engine = cai_query::QueryEngine::new(storage);
-    let results = query_engine.execute(query).await
+    let results = query_engine
+        .execute(query)
+        .await
         .map_err(|e| cai_core::Error::Message(format!("Query execution failed: {}", e)))?;
 
     // Display results count
@@ -321,23 +348,18 @@ async fn main() -> cai_core::Result<()> {
 
     // Load configuration
     let app_config = load_config();
-    tracing::debug!("Loaded config: storage type = {}", app_config.storage.r#type);
+    tracing::debug!(
+        "Loaded config: storage type = {}",
+        app_config.storage.r#type
+    );
 
     let cli = Cli::parse();
 
     match cli.command {
-        Commands::Query { query, output } => {
-            execute_query(&query, &output).await
-        }
-        Commands::Ingest { source, path } => {
-            execute_ingest(&source, path.as_deref()).await
-        }
-        Commands::Stats => {
-            execute_stats().await
-        }
-        Commands::Schema { table } => {
-            execute_schema(table.as_deref()).await
-        }
+        Commands::Query { query, output } => execute_query(&query, &output).await,
+        Commands::Ingest { source, path } => execute_ingest(&source, path.as_deref()).await,
+        Commands::Stats => execute_stats().await,
+        Commands::Schema { table } => execute_schema(table.as_deref()).await,
         Commands::Tui => {
             // TODO: Use SQLite storage when config.storage.r#type == "sqlite"
             let storage = Arc::new(create_storage_with_mock_data().await);
@@ -356,8 +378,13 @@ async fn main() -> cai_core::Result<()> {
         }
         #[cfg(not(feature = "web"))]
         Commands::Web { .. } => {
-            eprintln!("{}", "Web feature not enabled. Build with --features web.".red());
-            Err(cai_core::Error::Message("Web feature not enabled".to_string()))
+            eprintln!(
+                "{}",
+                "Web feature not enabled. Build with --features web.".red()
+            );
+            Err(cai_core::Error::Message(
+                "Web feature not enabled".to_string(),
+            ))
         }
     }
 }

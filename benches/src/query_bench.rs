@@ -2,10 +2,10 @@
 //!
 //! Benchmarks for query operations on large datasets.
 
-use divan::black_box;
-use cai_core::{Entry, Source, Metadata};
-use cai_storage::{MemoryStorage, Storage, Filter};
+use cai_core::{Entry, Metadata, Source};
+use cai_storage::{Filter, MemoryStorage, Storage};
 use chrono::Utc;
+use divan::black_box;
 
 fn generate_entries(count: usize) -> Vec<Entry> {
     (0..count)
@@ -18,13 +18,28 @@ fn generate_entries(count: usize) -> Vec<Entry> {
                 _ => Source::Other(format!("source-{}", i % 10)),
             },
             timestamp: Utc::now() - chrono::Duration::seconds(i as i64),
-            prompt: format!("Benchmark prompt number {} with some text to make it realistic", i),
-            response: format!("Benchmark response number {} with content that represents a typical AI response", i),
+            prompt: format!(
+                "Benchmark prompt number {} with some text to make it realistic",
+                i
+            ),
+            response: format!(
+                "Benchmark response number {} with content that represents a typical AI response",
+                i
+            ),
             metadata: Metadata {
                 file_path: Some(format!("src/file{}.rs", i % 100)),
                 repo_url: Some(format!("https://github.com/repo-{}", i % 10)),
                 commit_hash: Some(format!("commit-{:040x}", i)),
-                language: Some(if i % 3 == 0 { "Rust" } else if i % 3 == 1 { "Python" } else { "JavaScript" }.to_string()),
+                language: Some(
+                    if i % 3 == 0 {
+                        "Rust"
+                    } else if i % 3 == 1 {
+                        "Python"
+                    } else {
+                        "JavaScript"
+                    }
+                    .to_string(),
+                ),
                 extra: {
                     let mut map = std::collections::HashMap::new();
                     if i % 2 == 0 {
@@ -101,11 +116,9 @@ mod benchmarks {
         let rt = tokio::runtime::Runtime::new().unwrap();
         let storage = setup_storage(count);
 
-        bencher.counter(count).bench(|| {
-            rt.block_on(async {
-                black_box(storage.query(None).await.unwrap())
-            })
-        });
+        bencher
+            .counter(count)
+            .bench(|| rt.block_on(async { black_box(storage.query(None).await.unwrap()) }));
     }
 
     /// Benchmark query all entries (large dataset)
@@ -114,11 +127,9 @@ mod benchmarks {
         let rt = tokio::runtime::Runtime::new().unwrap();
         let storage = setup_storage(count);
 
-        bencher.counter(count).bench(|| {
-            rt.block_on(async {
-                black_box(storage.query(None).await.unwrap())
-            })
-        });
+        bencher
+            .counter(count)
+            .bench(|| rt.block_on(async { black_box(storage.query(None).await.unwrap()) }));
     }
 
     /// Benchmark query by source filter
@@ -134,9 +145,7 @@ mod benchmarks {
         };
 
         bencher.counter(count).bench(|| {
-            rt.block_on(async {
-                black_box(storage.query(Some(&filter)).await.unwrap())
-            })
+            rt.block_on(async { black_box(storage.query(Some(&filter)).await.unwrap()) })
         });
     }
 
@@ -153,9 +162,7 @@ mod benchmarks {
         };
 
         bencher.counter(count).bench(|| {
-            rt.block_on(async {
-                black_box(storage.query(Some(&filter)).await.unwrap())
-            })
+            rt.block_on(async { black_box(storage.query(Some(&filter)).await.unwrap()) })
         });
     }
 
@@ -172,9 +179,7 @@ mod benchmarks {
         };
 
         bencher.counter(count).bench(|| {
-            rt.block_on(async {
-                black_box(storage.query(Some(&filter)).await.unwrap())
-            })
+            rt.block_on(async { black_box(storage.query(Some(&filter)).await.unwrap()) })
         });
     }
 
@@ -185,9 +190,7 @@ mod benchmarks {
         let storage = setup_storage(count);
 
         bencher.bench(|| {
-            rt.block_on(async {
-                black_box(storage.get("bench-entry-42").await.unwrap())
-            })
+            rt.block_on(async { black_box(storage.get("bench-entry-42").await.unwrap()) })
         });
     }
 
@@ -197,11 +200,9 @@ mod benchmarks {
         let rt = tokio::runtime::Runtime::new().unwrap();
         let storage = setup_storage(count);
 
-        bencher.counter(count).bench(|| {
-            rt.block_on(async {
-                black_box(storage.count().await.unwrap())
-            })
-        });
+        bencher
+            .counter(count)
+            .bench(|| rt.block_on(async { black_box(storage.count().await.unwrap()) }));
     }
 
     /// Benchmark concurrent queries
@@ -215,9 +216,9 @@ mod benchmarks {
                 let mut handles = Vec::new();
                 for _ in 0..10 {
                     let storage = storage.clone();
-                    handles.push(tokio::spawn(async move {
-                        storage.query(None).await.unwrap()
-                    }));
+                    handles.push(tokio::spawn(
+                        async move { storage.query(None).await.unwrap() },
+                    ));
                 }
                 for handle in handles {
                     handle.await.unwrap();
