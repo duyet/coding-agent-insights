@@ -91,7 +91,12 @@ impl SqliteStorage {
     fn row_to_entry(row: &rusqlite::Row) -> Result<Entry> {
         use cai_core::Source;
 
-        let source_str: String = row.get("source")?;
+        let get_or_err = |column: &str| -> Result<String> {
+            row.get(column)
+                .map_err(|e| crate::Error::Message(format!("Failed to get {}: {}", column, e)))
+        };
+
+        let source_str = get_or_err("source")?;
         let source = match source_str.as_str() {
             "Claude" => Source::Claude,
             "Codex" => Source::Codex,
@@ -99,7 +104,7 @@ impl SqliteStorage {
             _ => Source::Other(source_str),
         };
 
-        let timestamp_str: String = row.get("timestamp")?;
+        let timestamp_str = get_or_err("timestamp")?;
         let timestamp = timestamp_str
             .parse::<DateTime<Utc>>()
             .map_err(|e| crate::Error::Message(format!("Invalid timestamp: {}", e)))?;
@@ -121,11 +126,11 @@ impl SqliteStorage {
         // TODO: Parse metadata_json for extra fields
 
         Ok(Entry {
-            id: row.get("id")?,
+            id: get_or_err("id")?,
             source,
             timestamp,
-            prompt: row.get("prompt")?,
-            response: row.get("response")?,
+            prompt: get_or_err("prompt")?,
+            response: get_or_err("response")?,
             metadata,
         })
     }
@@ -231,7 +236,7 @@ impl Storage for SqliteStorage {
                 Self::row_to_entry(row)
             })
             .collect::<Result<Vec<_>, _>>()
-            .map_err(|e| crate::Error::Message(format!("Failed to execute query: {}", e)))??;
+            .map_err(|e| crate::Error::Message(format!("Failed to execute query: {}", e)))?;
 
         Ok(entries)
     }
