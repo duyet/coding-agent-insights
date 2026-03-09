@@ -181,7 +181,7 @@ jobs:
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
         with:
-          toolchain: "1.80.0"
+          toolchain: "1.85.0"
 
       - name: Check MSRV
         run: cargo check --all-features --workspace
