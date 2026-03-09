@@ -65,6 +65,7 @@ rules:
       ci:        # CI/CD
       docs:      # Documentation
       release:   # Release management
+      deps:      # Dependencies (Renovate)
 
   # Subject is required
   subject-empty:
@@ -126,7 +127,7 @@ helpMessage: |
     build    - Build system changes
     revert   - Revert a previous commit
 
-  Scopes: core, ingest, query, storage, output, tui, web, cli, plugin, tests, ci, docs, release
+  Scopes: core, ingest, query, storage, output, tui, web, cli, plugin, tests, ci, docs, release, deps
 
   Examples:
     feat(query): add GROUP BY support
