@@ -19,12 +19,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Windows x86_64, aarch64
   - MUSL targets provide static Linux binaries
 - **npm publishing** - Automated npm publish in release workflow
+- **Cross-compilation support** - Vendored libgit2 and OpenSSL
+  - Enables building on different host architectures
+  - Simplified binary distribution
+
+### Changed
+- Updated git2 dependency to use vendored libgit2 and OpenSSL
+  - Resolves cross-compilation issues
+  - Eliminates system OpenSSL dependency
+- CI workflow improvements
+  - Removed beta Rust channel from test matrix
+  - Set codecov fail_ci_if_error to false
+  - Replaced deprecated actions-rs/audit-check with rustsec/audit-check
+- Added workflow_dispatch triggers for CI and Release workflows
+  - Enables manual workflow execution via GitHub Actions UI
 
 ### Fixed
 - Merge conflicts in main.rs after dependency updates
 - CLI test assertions for new output format
 - DCO signatures for all commits (Signed-off-by)
 - Cargo.toml syntax error (invalid comment)
+- CI YAML indentation error in check-docs job (line 170)
 
 ## [Unreleased]
 
