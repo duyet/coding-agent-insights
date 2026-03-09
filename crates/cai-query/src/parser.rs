@@ -21,17 +21,74 @@ pub struct ParsedQuery {
     pub limit: Option<usize>,
     /// Has aggregate functions
     pub has_aggregates: bool,
+    /// Query type for schema queries
+    pub query_type: QueryType,
+}
+
+/// Type of SQL query
+#[derive(Debug, Clone, Default, PartialEq)]
+pub enum QueryType {
+    /// Standard SELECT query
+    #[default]
+    Select,
+    /// SHOW TABLES query
+    ShowTables,
+    /// DESCRIBE table query
+    DescribeTable(String),
 }
 
 /// Parse a SQL query string
 pub fn parse(sql: &str) -> QueryResult<ParsedQuery> {
-    let sql_upper = sql.to_uppercase();
-    
-    // Validate it's a SELECT statement
-    if !sql_upper.trim().starts_with("SELECT") {
-        return Err(QueryError::ParseError("Only SELECT statements are supported".to_string()));
+    let sql_upper = sql.trim().to_uppercase();
+
+    // Handle SHOW TABLES
+    if sql_upper == "SHOW TABLES" || sql_upper.starts_with("SHOW TABLES;") {
+        return Ok(ParsedQuery {
+            query_type: QueryType::ShowTables,
+            ..Default::default()
+        });
     }
-    
+
+    // Handle DESCRIBE table
+    if sql_upper.starts_with("DESCRIBE ") || sql_upper.starts_with("DESC ") {
+        let keyword = if sql_upper.starts_with("DESCRIBE ") { "DESCRIBE " } else { "DESC " };
+        let table_name = sql[keyword.len()..].trim().to_string();
+        let table_name = table_name.trim_end_matches(';').trim().to_string();
+
+        if table_name.to_lowercase() != "entries" {
+            return Err(QueryError::InvalidTable(table_name));
+        }
+
+        return Ok(ParsedQuery {
+            query_type: QueryType::DescribeTable("entries".to_string()),
+            table: Some("entries".to_string()),
+            ..Default::default()
+        });
+    }
+
+    // Handle PRAGMA table_info (SQLite-style)
+    if sql_upper.starts_with("PRAGMA TABLE_INFO(") {
+        // Extract table name from PRAGMA table_info(entries)
+        let start = sql_upper.find('(').unwrap() + 1;
+        let end = sql_upper.find(')').unwrap();
+        let table_name = sql[start..end].trim().to_string();
+
+        if table_name.to_lowercase() != "entries" {
+            return Err(QueryError::InvalidTable(table_name));
+        }
+
+        return Ok(ParsedQuery {
+            query_type: QueryType::DescribeTable("entries".to_string()),
+            table: Some("entries".to_string()),
+            ..Default::default()
+        });
+    }
+
+    // Validate it's a SELECT statement
+    if !sql_upper.starts_with("SELECT") {
+        return Err(QueryError::ParseError("Only SELECT, SHOW TABLES, and DESCRIBE statements are supported".to_string()));
+    }
+
     // Check for FROM entries
     if !sql_upper.contains("FROM") {
         return Err(QueryError::ParseError("Missing FROM clause".to_string()));
@@ -54,7 +111,7 @@ pub fn parse(sql: &str) -> QueryResult<ParsedQuery> {
         }
         Some("entries".to_string())
     };
-    
+
     // Check for LIMIT
     let limit = if let Some(limit_idx) = sql_upper.find("LIMIT ") {
         let limit_str = &sql[limit_idx + 6..];
@@ -65,7 +122,7 @@ pub fn parse(sql: &str) -> QueryResult<ParsedQuery> {
     } else {
         None
     };
-    
+
     // Check for WHERE
     let where_sql = if sql_upper.contains("WHERE ") {
         let where_idx = sql_upper.find("WHERE ").unwrap() + 6;
@@ -78,10 +135,10 @@ pub fn parse(sql: &str) -> QueryResult<ParsedQuery> {
     } else {
         None
     };
-    
+
     // Check for wildcard
     let select_wildcard = sql_upper.contains("SELECT *");
-    
+
     Ok(ParsedQuery {
         select_wildcard,
         columns: vec![],
@@ -91,6 +148,7 @@ pub fn parse(sql: &str) -> QueryResult<ParsedQuery> {
         order_by: vec![],
         limit,
         has_aggregates: false,
+        query_type: QueryType::Select,
     })
 }
 
@@ -105,6 +163,7 @@ mod tests {
         let parsed = result.unwrap();
         assert!(parsed.select_wildcard);
         assert_eq!(parsed.table, Some("entries".to_string()));
+        assert_eq!(parsed.query_type, QueryType::Select);
     }
 
     #[test]
@@ -121,5 +180,52 @@ mod tests {
         assert!(result.is_ok());
         let parsed = result.unwrap();
         assert!(parsed.where_sql.is_some());
+    }
+
+    #[test]
+    fn test_parse_show_tables() {
+        let result = parse("SHOW TABLES");
+        assert!(result.is_ok());
+        let parsed = result.unwrap();
+        assert_eq!(parsed.query_type, QueryType::ShowTables);
+    }
+
+    #[test]
+    fn test_parse_show_tables_with_semicolon() {
+        let result = parse("SHOW TABLES;");
+        assert!(result.is_ok());
+        let parsed = result.unwrap();
+        assert_eq!(parsed.query_type, QueryType::ShowTables);
+    }
+
+    #[test]
+    fn test_parse_describe_entries() {
+        let result = parse("DESCRIBE entries");
+        assert!(result.is_ok());
+        let parsed = result.unwrap();
+        assert_eq!(parsed.query_type, QueryType::DescribeTable("entries".to_string()));
+    }
+
+    #[test]
+    fn test_parse_desc_entries() {
+        let result = parse("DESC entries");
+        assert!(result.is_ok());
+        let parsed = result.unwrap();
+        assert_eq!(parsed.query_type, QueryType::DescribeTable("entries".to_string()));
+    }
+
+    #[test]
+    fn test_parse_pragma_table_info() {
+        let result = parse("PRAGMA table_info(entries)");
+        assert!(result.is_ok());
+        let parsed = result.unwrap();
+        assert_eq!(parsed.query_type, QueryType::DescribeTable("entries".to_string()));
+    }
+
+    #[test]
+    fn test_parse_describe_invalid_table() {
+        let result = parse("DESCRIBE invalid_table");
+        assert!(result.is_err());
+        assert!(matches!(result.unwrap_err(), QueryError::InvalidTable(_)));
     }
 }
