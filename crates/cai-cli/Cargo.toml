@@ -28,7 +28,7 @@ colored = { workspace = true }
 chrono = { workspace = true }
 config = "0.15"
 dirs = "5.0"
-toml = "0.9"
+toml = "1.0"
 serde = { workspace = true }
 
 [features]
