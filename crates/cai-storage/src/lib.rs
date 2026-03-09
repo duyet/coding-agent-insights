@@ -7,11 +7,12 @@ pub use cai_core::{Error, Result};
 use async_trait::async_trait;
 use cai_core::Entry;
 
-#[cfg(feature = "sqlite")]
-pub mod sqlite;
-
-#[cfg(feature = "sqlite")]
-pub use sqlite::SqliteStorage;
+// SQLite storage temporarily disabled due to async/sync mismatch
+// #[cfg(feature = "sqlite")]
+// pub mod sqlite;
+//
+// #[cfg(feature = "sqlite")]
+// pub use sqlite::SqliteStorage;
 
 /// Storage backend trait
 #[async_trait]
