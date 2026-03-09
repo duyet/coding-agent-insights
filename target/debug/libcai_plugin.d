@@ -1,1 +1,1 @@
-/Users/duet/project/coding-agent-insights/target/debug/libcai_plugin.dylib: /Users/duet/project/coding-agent-insights/crates/cai-core/src/lib.rs /Users/duet/project/coding-agent-insights/crates/cai-plugin/src/lib.rs
+/Users/duet/project/coding-agent-insights/target/debug/libcai_plugin.rlib: /Users/duet/project/coding-agent-insights/crates/cai-core/src/lib.rs /Users/duet/project/coding-agent-insights/crates/cai-plugin/src/lib.rs
