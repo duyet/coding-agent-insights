@@ -23,7 +23,7 @@ impl SqliteStorage {
     /// * `path` - Path to the SQLite database file (will be created if it doesn't exist)
     pub fn new<P: AsRef<Path>>(path: P) -> Result<Self> {
         let conn = Connection::open(path)
-            .map_err(|e| crate::Error::Storage(format!("Failed to open database: {}", e)))?;
+            .map_err(|e| Error::Message(format!("Failed to open database: {}", e)))?;
 
         let storage = Self {
             conn: Arc::new(Mutex::new(conn)),
@@ -36,7 +36,7 @@ impl SqliteStorage {
     /// Create in-memory SQLite storage (useful for testing)
     pub fn in_memory() -> Result<Self> {
         let conn = Connection::open_in_memory().map_err(|e| {
-            crate::Error::Storage(format!("Failed to open in-memory database: {}", e))
+            Error::Message(format!("Failed to open in-memory database: {}", e))
         })?;
 
         let storage = Self {
@@ -52,7 +52,7 @@ impl SqliteStorage {
         let conn = self
             .conn
             .lock()
-            .map_err(|e| crate::Error::Storage(format!("Failed to lock connection: {}", e)))?;
+            .map_err(|e| Error::Message(format!("Failed to lock connection: {}", e)))?;
 
         conn.execute(
             "CREATE TABLE IF NOT EXISTS entries (
@@ -69,20 +69,20 @@ impl SqliteStorage {
             )",
             [],
         )
-        .map_err(|e| crate::Error::Storage(format!("Failed to create table: {}", e)))?;
+        .map_err(|e| Error::Message(format!("Failed to create table: {}", e)))?;
 
         // Create indexes for common queries
         conn.execute(
             "CREATE INDEX IF NOT EXISTS idx_source ON entries(source)",
             [],
         )
-        .map_err(|e| crate::Error::Storage(format!("Failed to create index: {}", e)))?;
+        .map_err(|e| Error::Message(format!("Failed to create index: {}", e)))?;
 
         conn.execute(
             "CREATE INDEX IF NOT EXISTS idx_timestamp ON entries(timestamp)",
             [],
         )
-        .map_err(|e| crate::Error::Storage(format!("Failed to create index: {}", e)))?;
+        .map_err(|e| Error::Message(format!("Failed to create index: {}", e)))?;
 
         Ok(())
     }
@@ -102,7 +102,7 @@ impl SqliteStorage {
         let timestamp_str: String = row.get("timestamp")?;
         let timestamp = timestamp_str
             .parse::<DateTime<Utc>>()
-            .map_err(|e| crate::Error::Storage(format!("Invalid timestamp: {}", e)))?;
+            .map_err(|e| Error::Message(format!("Invalid timestamp: {}", e)))?;
 
         let mut metadata = cai_core::Metadata::default();
         if let Ok(Some(fp)) = row.get::<_, Option<String>>("file_path") {
@@ -137,7 +137,7 @@ impl Storage for SqliteStorage {
         let conn = self
             .conn
             .lock()
-            .map_err(|e| crate::Error::Storage(format!("Failed to lock connection: {}", e)))?;
+            .map_err(|e| Error::Message(format!("Failed to lock connection: {}", e)))?;
 
         let source_str = format!("{:?}", entry.source);
         let timestamp_str = entry
@@ -162,7 +162,7 @@ impl Storage for SqliteStorage {
                 entry.metadata.language,
             ],
         )
-        .map_err(|e| crate::Error::Storage(format!("Failed to insert entry: {}", e)))?;
+        .map_err(|e| Error::Message(format!("Failed to insert entry: {}", e)))?;
 
         Ok(())
     }
@@ -171,16 +171,16 @@ impl Storage for SqliteStorage {
         let conn = self
             .conn
             .lock()
-            .map_err(|e| crate::Error::Storage(format!("Failed to lock connection: {}", e)))?;
+            .map_err(|e| Error::Message(format!("Failed to lock connection: {}", e)))?;
 
         let mut stmt = conn
             .prepare("SELECT * FROM entries WHERE id = ?1")
-            .map_err(|e| crate::Error::Storage(format!("Failed to prepare query: {}", e)))?;
+            .map_err(|e| Error::Message(format!("Failed to prepare query: {}", e)))?;
 
         let entry = stmt
             .query_row(params![id], |row| Self::row_to_entry(row))
             .optional()
-            .map_err(|e| crate::Error::Storage(format!("Failed to query entry: {}", e)))?;
+            .map_err(|e| Error::Message(format!("Failed to query entry: {}", e)))?;
 
         Ok(entry)
     }
@@ -189,7 +189,7 @@ impl Storage for SqliteStorage {
         let conn = self
             .conn
             .lock()
-            .map_err(|e| crate::Error::Storage(format!("Failed to lock connection: {}", e)))?;
+            .map_err(|e| Error::Message(format!("Failed to lock connection: {}", e)))?;
 
         let (sql, params) = if let Some(f) = filter {
             let mut conditions = Vec::new();
@@ -223,7 +223,7 @@ impl Storage for SqliteStorage {
 
         let mut stmt = conn
             .prepare(&sql)
-            .map_err(|e| crate::Error::Storage(format!("Failed to prepare query: {}", e)))?;
+            .map_err(|e| Error::Message(format!("Failed to prepare query: {}", e)))?;
 
         let params_refs: Vec<_> = params.iter().map(|s| s.as_str()).collect();
         let entries = stmt
@@ -231,7 +231,7 @@ impl Storage for SqliteStorage {
                 Self::row_to_entry(row)
             })
             .collect::<Result<Vec<_>, _>>()
-            .map_err(|e| crate::Error::Storage(format!("Failed to execute query: {}", e)))??;
+            .map_err(|e| Error::Message(format!("Failed to execute query: {}", e)))??;
 
         Ok(entries)
     }
@@ -240,11 +240,11 @@ impl Storage for SqliteStorage {
         let conn = self
             .conn
             .lock()
-            .map_err(|e| crate::Error::Storage(format!("Failed to lock connection: {}", e)))?;
+            .map_err(|e| Error::Message(format!("Failed to lock connection: {}", e)))?;
 
         let count: i64 = conn
             .query_row("SELECT COUNT(*) FROM entries", [], |row| row.get(0))
-            .map_err(|e| crate::Error::Storage(format!("Failed to count entries: {}", e)))?;
+            .map_err(|e| Error::Message(format!("Failed to count entries: {}", e)))?;
 
         Ok(count as usize)
     }
