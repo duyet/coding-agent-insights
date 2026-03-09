@@ -81,7 +81,7 @@ jobs:
           token: ${{ secrets.CODECOV_TOKEN }}
 
       - name: Generate coverage summary
-        run: cargo llvm-cov --workspace --summary
+        run: cargo llvm-cov --workspace --summary-only --output -
 
   security:
     name: Security Audit
