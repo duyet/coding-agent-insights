@@ -48,3 +48,4 @@ tests/fixtures/temp/
 CACHEDIR.TAG
 .rustc_info.json
 .rustdoc_fingerprint.json
+node_modules/

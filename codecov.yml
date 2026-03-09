@@ -1,0 +1,42 @@
+# Codecov Configuration for CAI Project
+# https://docs.codecov.com/docs/codecov-yaml
+
+coverage:
+  status:
+    project:
+      default:
+        target: 80%
+        threshold: 1%
+        informational: false
+        if_ci_failed: error
+    patch:
+      default:
+        target: 75%
+        threshold: 5%
+        informational: true
+
+comment:
+  layout: "header, diff, changes, files"
+  behavior: default
+  require_changes: false
+  require_base: false
+  require_head: true
+
+ignore:
+  - "*/tests/*"
+  - "*/benches/*"
+  - "/*_test.rs"
+  - "tests/*"
+  - "**/examples/*"
+
+github_checks:
+  annotations: true
+
+flags:
+  unittests:
+    paths:
+      - crates/
+    carryforward: true
+
+codecov:
+  token: ${{ secrets.CODECOV_TOKEN }}
