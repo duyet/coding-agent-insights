@@ -167,7 +167,7 @@ jobs:
       - name: Check documentation
         run: |
           cargo doc --no-deps --all-features --workspace
-         cargo doc --no-deps --all-features --workspace --document-private-items
+          cargo doc --no-deps --all-features --workspace --document-private-items
 
   msrv:
     name: MSRV Check
