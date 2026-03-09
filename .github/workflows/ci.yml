@@ -152,7 +152,7 @@ jobs:
         run: cargo build --release --workspace
 
       - name: Run E2E tests
-        run: cargo test --test e2e --ignored
+        run: cargo test --test e2e -- --ignored
 
   check-docs:
     name: Documentation
