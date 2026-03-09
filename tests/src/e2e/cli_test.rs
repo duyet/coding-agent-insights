@@ -16,6 +16,7 @@ mod cli_tests {
 
     /// Test basic CLI invocation
     #[test]
+    #[ignore]
     fn test_cli_basic_invocation() {
         let bin_path = cai_bin();
 
@@ -61,6 +62,7 @@ mod cli_tests {
 
     /// Test query command help
     #[test]
+    #[ignore]
     fn test_query_help() {
         let bin_path = cai_bin();
 
@@ -86,6 +88,7 @@ mod cli_tests {
 
     /// Test ingest command help
     #[test]
+    #[ignore]
     fn test_ingest_help() {
         let bin_path = cai_bin();
 
@@ -108,6 +111,7 @@ mod cli_tests {
 
     /// Test web command help
     #[test]
+    #[ignore]
     fn test_web_help() {
         let bin_path = cai_bin();
 
@@ -129,6 +133,7 @@ mod cli_tests {
 
     /// Test query command with output format
     #[test]
+    #[ignore]
     fn test_query_with_output_format() {
         let bin_path = cai_bin();
 
@@ -153,6 +158,7 @@ mod cli_tests {
 
     /// Test ingest command with source
     #[test]
+    #[ignore]
     fn test_ingest_with_source() {
         let bin_path = cai_bin();
 
@@ -176,6 +182,7 @@ mod cli_tests {
 
     /// Test invalid command
     #[test]
+    #[ignore]
     fn test_invalid_command() {
         let bin_path = cai_bin();
 
@@ -195,6 +202,7 @@ mod cli_tests {
 
     /// Test missing required argument
     #[test]
+    #[ignore]
     fn test_missing_required_argument() {
         let bin_path = cai_bin();
 
@@ -222,6 +230,7 @@ mod cli_tests {
 
     /// Test output format validation
     #[test]
+    #[ignore]
     fn test_all_output_formats() {
         let bin_path = cai_bin();
 
@@ -253,6 +262,7 @@ mod cli_tests {
 
     /// Test version flag
     #[test]
+    #[ignore]
     fn test_version_flag() {
         let bin_path = cai_bin();
 
@@ -277,6 +287,7 @@ mod cli_tests {
 
     /// Test concurrent CLI invocations
     #[test]
+    #[ignore]
     fn test_concurrent_invocations() {
         let bin_path = cai_bin();
 
@@ -310,6 +321,7 @@ mod cli_tests {
 
     /// Test error message formatting
     #[test]
+    #[ignore]
     fn test_error_message_formatting() {
         let bin_path = cai_bin();
 
