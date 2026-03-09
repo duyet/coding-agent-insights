@@ -20,7 +20,7 @@ edition = "2021"
 license = "MIT OR Apache-2.0"
 authors = ["cai Contributors"]
 repository = "https://github.com/cai-dev/coding-agent-insights"
-rust-version = "1.85"
+rust-version = "1.88"
 
 [workspace.dependencies]
 # Core utilities
