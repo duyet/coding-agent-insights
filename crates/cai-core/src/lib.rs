@@ -87,8 +87,8 @@
 
 #![warn(missing_docs, unused_crate_dependencies)]
 
-use serde::{Deserialize, Serialize};
 use chrono::{DateTime, Utc};
+use serde::{Deserialize, Serialize};
 
 /// Core entry representing a single AI coding interaction
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]

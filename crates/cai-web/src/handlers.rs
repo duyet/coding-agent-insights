@@ -3,7 +3,10 @@
 use super::api::StatsResponse;
 use super::AppState;
 use axum::{
-    extract::{ws::{Message, WebSocket, WebSocketUpgrade}, Query as AxumQuery, State},
+    extract::{
+        ws::{Message, WebSocket, WebSocketUpgrade},
+        Query as AxumQuery, State,
+    },
     response::{Html, IntoResponse, Json, Response},
 };
 use cai_core::{Result, Source};
@@ -75,10 +78,7 @@ pub async fn stats_handler(State(state): State<AppState>) -> Json<StatsResponse>
 }
 
 /// WebSocket handler for real-time updates
-pub async fn websocket_handler(
-    State(state): State<AppState>,
-    ws: WebSocketUpgrade,
-) -> Response {
+pub async fn websocket_handler(State(state): State<AppState>, ws: WebSocketUpgrade) -> Response {
     ws.on_upgrade(move |socket| handle_socket(socket, state))
 }
 
@@ -108,12 +108,15 @@ async fn handle_socket(mut socket: WebSocket, state: AppState) {
                                     "by_source": stats.by_source,
                                     "date_range": stats.date_range
                                 });
-                                let _ = socket.send(Message::Text(response.to_string().into())).await;
+                                let _ = socket
+                                    .send(Message::Text(response.to_string().into()))
+                                    .await;
                             }
                         }
                         "query" => {
                             if let Some(query) = msg.query {
-                                let engine = cai_query::QueryEngine::from_arc(state.storage.clone());
+                                let engine =
+                                    cai_query::QueryEngine::from_arc(state.storage.clone());
                                 match engine.execute(&query).await {
                                     Ok(entries) => {
                                         let _ = socket
@@ -165,7 +168,9 @@ async fn handle_socket(mut socket: WebSocket, state: AppState) {
 }
 
 /// Get statistics
-async fn get_stats(storage: &std::sync::Arc<dyn cai_storage::Storage + Send + Sync>) -> Result<StatsResponse> {
+async fn get_stats(
+    storage: &std::sync::Arc<dyn cai_storage::Storage + Send + Sync>,
+) -> Result<StatsResponse> {
     let all_entries = storage.query(None).await?;
 
     let mut by_source = std::collections::HashMap::new();
@@ -249,11 +254,7 @@ pub async fn export_csv_handler(
                     entry.id, entry.timestamp, entry.source, prompt, response
                 ));
             }
-            (
-                [(axum::http::header::CONTENT_TYPE, "text/csv")],
-                csv,
-            )
-                .into_response()
+            ([(axum::http::header::CONTENT_TYPE, "text/csv")], csv).into_response()
         }
         Err(e) => {
             tracing::error!("Query error: {:?}", e);

@@ -4,7 +4,7 @@ use crate::{ClaudeParser, CodexParser, GitScanner};
 use cai_core::Result;
 use cai_storage::Storage;
 use std::path::{Path, PathBuf};
-use tracing::{info, debug};
+use tracing::{debug, info};
 
 /// Configuration for ingestion
 #[derive(Debug, Clone)]
@@ -80,7 +80,11 @@ impl Ingestor {
             info!("Scanning Git repositories");
             for repo_path in &self.config.git_repos {
                 let git_entries = self.scan_git(repo_path).await?;
-                debug!("Found {} Git entries in {}", git_entries.len(), repo_path.display());
+                debug!(
+                    "Found {} Git entries in {}",
+                    git_entries.len(),
+                    repo_path.display()
+                );
                 for entry in git_entries {
                     storage.store(&entry).await?;
                     total_count += 1;
@@ -99,7 +103,8 @@ impl Ingestor {
                 .map_err(|e| cai_core::Error::Message(e.to_string()))?
         };
 
-        parser.parse_all()
+        parser
+            .parse_all()
             .map_err(|e| cai_core::Error::Message(e.to_string()))
     }
 
@@ -107,17 +112,18 @@ impl Ingestor {
         let parser = if let Some(ref file) = self.config.codex_file {
             CodexParser::new(file)
         } else {
-            CodexParser::with_default_path()
-                .map_err(|e| cai_core::Error::Message(e.to_string()))?
+            CodexParser::with_default_path().map_err(|e| cai_core::Error::Message(e.to_string()))?
         };
 
-        parser.parse_all()
+        parser
+            .parse_all()
             .map_err(|e| cai_core::Error::Message(e.to_string()))
     }
 
     async fn scan_git(&self, repo_path: &Path) -> Result<Vec<cai_core::Entry>> {
         let scanner = GitScanner::new(repo_path);
-        scanner.scan()
+        scanner
+            .scan()
             .map_err(|e| cai_core::Error::Message(e.to_string()))
     }
 }
@@ -161,14 +167,8 @@ mod tests {
         let tree = repo.find_tree(tree_id).unwrap();
         let sig = git2::Signature::now("Test", "test@test.com").unwrap();
 
-        repo.commit(
-            Some("HEAD"),
-            &sig,
-            &sig,
-            "Test commit",
-            &tree,
-            &[],
-        ).unwrap();
+        repo.commit(Some("HEAD"), &sig, &sig, "Test commit", &tree, &[])
+            .unwrap();
 
         let config = IngestConfig {
             parse_claude: false,

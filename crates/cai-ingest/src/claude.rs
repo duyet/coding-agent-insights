@@ -5,8 +5,8 @@ use cai_core::{Entry, Metadata, Source};
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use std::path::{Path, PathBuf};
 use std::fs;
+use std::path::{Path, PathBuf};
 use tracing::debug;
 
 /// Claude Code conversation file format
@@ -68,13 +68,15 @@ impl ClaudeParser {
 
     /// Parse all conversations from the directory
     pub fn parse_all(&self) -> Result<Vec<Entry>, IngestError> {
-        let entries = fs::read_dir(&self.conversations_dir)
-            .map_err(|e| IngestError::PathNotFound(format!("{}: {}", self.conversations_dir.display(), e)))?;
+        let entries = fs::read_dir(&self.conversations_dir).map_err(|e| {
+            IngestError::PathNotFound(format!("{}: {}", self.conversations_dir.display(), e))
+        })?;
 
         let mut results = Vec::new();
 
         for entry in entries {
-            let entry = entry.map_err(|e| IngestError::PermissionDenied(format!("read dir: {}", e)))?;
+            let entry =
+                entry.map_err(|e| IngestError::PermissionDenied(format!("read dir: {}", e)))?;
             let path = entry.path();
 
             if path.extension().and_then(|s| s.to_str()) != Some("json") {
@@ -93,7 +95,9 @@ impl ClaudeParser {
         }
 
         if results.is_empty() {
-            return Err(IngestError::NoFilesFound(self.conversations_dir.display().to_string()));
+            return Err(IngestError::NoFilesFound(
+                self.conversations_dir.display().to_string(),
+            ));
         }
 
         Ok(results)
@@ -147,24 +151,28 @@ impl ClaudeParser {
                     String::new()
                 };
 
-                let meta = metadata.as_ref().map(|m| Metadata {
-                    file_path: Some(m.project_path.clone().unwrap_or_default()),
-                    repo_url: m.repo_url.clone(),
-                    commit_hash: None,
-                    language: None,
-                    extra: HashMap::from([
-                        ("conversation_id".to_string(), conversation_id.to_string()),
-                        ("message_index".to_string(), i.to_string()),
-                    ]),
-                }).unwrap_or_else(|| Metadata {
-                    file_path: None,
-                    repo_url: None,
-                    commit_hash: None,
-                    language: None,
-                    extra: HashMap::from([
-                        ("conversation_id".to_string(), conversation_id.to_string()),
-                    ]),
-                });
+                let meta = metadata
+                    .as_ref()
+                    .map(|m| Metadata {
+                        file_path: Some(m.project_path.clone().unwrap_or_default()),
+                        repo_url: m.repo_url.clone(),
+                        commit_hash: None,
+                        language: None,
+                        extra: HashMap::from([
+                            ("conversation_id".to_string(), conversation_id.to_string()),
+                            ("message_index".to_string(), i.to_string()),
+                        ]),
+                    })
+                    .unwrap_or_else(|| Metadata {
+                        file_path: None,
+                        repo_url: None,
+                        commit_hash: None,
+                        language: None,
+                        extra: HashMap::from([(
+                            "conversation_id".to_string(),
+                            conversation_id.to_string(),
+                        )]),
+                    });
 
                 entries.push(Entry {
                     id: format!("claude-{}-{}", conversation_id, i),
@@ -229,7 +237,10 @@ mod tests {
         assert_eq!(entry.source, Source::Claude);
         assert_eq!(entry.prompt, "help me write a function");
         assert_eq!(entry.response, "Here's how to write a function...");
-        assert_eq!(entry.metadata.file_path, Some("/Users/user/project".to_string()));
+        assert_eq!(
+            entry.metadata.file_path,
+            Some("/Users/user/project".to_string())
+        );
     }
 
     #[test]

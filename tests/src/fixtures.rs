@@ -1,6 +1,6 @@
 //! Test fixtures for CAI testing
 
-use cai_core::{Entry, Source, Metadata};
+use cai_core::{Entry, Metadata, Source};
 use chrono::{DateTime, Utc};
 use serde_json::json;
 
@@ -83,7 +83,13 @@ pub fn benchmark_entries(count: usize) -> Vec<Entry> {
     (0..count)
         .map(|i| Entry {
             id: format!("bench-entry-{}", i),
-            source: if i % 3 == 0 { Source::Claude } else if i % 3 == 1 { Source::Codex } else { Source::Git },
+            source: if i % 3 == 0 {
+                Source::Claude
+            } else if i % 3 == 1 {
+                Source::Codex
+            } else {
+                Source::Git
+            },
             timestamp: Utc::now() - chrono::Duration::seconds(i as i64),
             prompt: format!("Benchmark prompt {}", i),
             response: format!("Benchmark response {}", i),
@@ -120,5 +126,6 @@ pub fn sample_claude_json() -> serde_json::Value {
 pub fn sample_git_log() -> String {
     r#"abc123def|2024-01-01T12:00:00Z|John Doe|john@example.com|Add new feature
 def456ghi|2024-01-02T14:30:00Z|Jane Smith|jane@example.com|Fix bug in parser
-ghi789jkl|2024-01-03T09:15:00Z|Bob Wilson|bob@example.com|Update documentation"#.to_string()
+ghi789jkl|2024-01-03T09:15:00Z|Bob Wilson|bob@example.com|Update documentation"#
+        .to_string()
 }

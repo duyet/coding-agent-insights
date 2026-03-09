@@ -35,8 +35,9 @@ impl SqliteStorage {
 
     /// Create in-memory SQLite storage (useful for testing)
     pub fn in_memory() -> Result<Self> {
-        let conn = Connection::open_in_memory()
-            .map_err(|e| crate::Error::Storage(format!("Failed to open in-memory database: {}", e)))?;
+        let conn = Connection::open_in_memory().map_err(|e| {
+            crate::Error::Storage(format!("Failed to open in-memory database: {}", e))
+        })?;
 
         let storage = Self {
             conn: Arc::new(Mutex::new(conn)),
@@ -48,7 +49,9 @@ impl SqliteStorage {
 
     /// Initialize the database schema
     fn init_schema(&self) -> Result<()> {
-        let conn = self.conn.lock()
+        let conn = self
+            .conn
+            .lock()
             .map_err(|e| crate::Error::Storage(format!("Failed to lock connection: {}", e)))?;
 
         conn.execute(
@@ -65,18 +68,21 @@ impl SqliteStorage {
                 metadata_json TEXT
             )",
             [],
-        ).map_err(|e| crate::Error::Storage(format!("Failed to create table: {}", e)))?;
+        )
+        .map_err(|e| crate::Error::Storage(format!("Failed to create table: {}", e)))?;
 
         // Create indexes for common queries
         conn.execute(
             "CREATE INDEX IF NOT EXISTS idx_source ON entries(source)",
             [],
-        ).map_err(|e| crate::Error::Storage(format!("Failed to create index: {}", e)))?;
+        )
+        .map_err(|e| crate::Error::Storage(format!("Failed to create index: {}", e)))?;
 
         conn.execute(
             "CREATE INDEX IF NOT EXISTS idx_timestamp ON entries(timestamp)",
             [],
-        ).map_err(|e| crate::Error::Storage(format!("Failed to create index: {}", e)))?;
+        )
+        .map_err(|e| crate::Error::Storage(format!("Failed to create index: {}", e)))?;
 
         Ok(())
     }
@@ -94,7 +100,8 @@ impl SqliteStorage {
         };
 
         let timestamp_str: String = row.get("timestamp")?;
-        let timestamp = timestamp_str.parse::<DateTime<Utc>>()
+        let timestamp = timestamp_str
+            .parse::<DateTime<Utc>>()
             .map_err(|e| crate::Error::Storage(format!("Invalid timestamp: {}", e)))?;
 
         let mut metadata = cai_core::Metadata::default();
@@ -127,11 +134,16 @@ impl SqliteStorage {
 #[async_trait::async_trait]
 impl Storage for SqliteStorage {
     async fn store(&self, entry: &Entry) -> Result<()> {
-        let conn = self.conn.lock()
+        let conn = self
+            .conn
+            .lock()
             .map_err(|e| crate::Error::Storage(format!("Failed to lock connection: {}", e)))?;
 
         let source_str = format!("{:?}", entry.source);
-        let timestamp_str = entry.timestamp.format("%Y-%m-%dT%H:%M:%S%.6f%:z").to_string();
+        let timestamp_str = entry
+            .timestamp
+            .format("%Y-%m-%dT%H:%M:%S%.6f%:z")
+            .to_string();
 
         conn.execute(
             "INSERT OR REPLACE INTO entries (
@@ -149,19 +161,24 @@ impl Storage for SqliteStorage {
                 entry.metadata.commit_hash,
                 entry.metadata.language,
             ],
-        ).map_err(|e| crate::Error::Storage(format!("Failed to insert entry: {}", e)))?;
+        )
+        .map_err(|e| crate::Error::Storage(format!("Failed to insert entry: {}", e)))?;
 
         Ok(())
     }
 
     async fn get(&self, id: &str) -> Result<Option<Entry>> {
-        let conn = self.conn.lock()
+        let conn = self
+            .conn
+            .lock()
             .map_err(|e| crate::Error::Storage(format!("Failed to lock connection: {}", e)))?;
 
-        let mut stmt = conn.prepare("SELECT * FROM entries WHERE id = ?1")
+        let mut stmt = conn
+            .prepare("SELECT * FROM entries WHERE id = ?1")
             .map_err(|e| crate::Error::Storage(format!("Failed to prepare query: {}", e)))?;
 
-        let entry = stmt.query_row(params![id], |row| Self::row_to_entry(row))
+        let entry = stmt
+            .query_row(params![id], |row| Self::row_to_entry(row))
             .optional()
             .map_err(|e| crate::Error::Storage(format!("Failed to query entry: {}", e)))?;
 
@@ -169,7 +186,9 @@ impl Storage for SqliteStorage {
     }
 
     async fn query(&self, filter: Option<&Filter>) -> Result<Vec<Entry>> {
-        let conn = self.conn.lock()
+        let conn = self
+            .conn
+            .lock()
             .map_err(|e| crate::Error::Storage(format!("Failed to lock connection: {}", e)))?;
 
         let (sql, params) = if let Some(f) = filter {
@@ -202,24 +221,29 @@ impl Storage for SqliteStorage {
             ("SELECT * FROM entries".to_string(), Vec::new())
         };
 
-        let mut stmt = conn.prepare(&sql)
+        let mut stmt = conn
+            .prepare(&sql)
             .map_err(|e| crate::Error::Storage(format!("Failed to prepare query: {}", e)))?;
 
         let params_refs: Vec<_> = params.iter().map(|s| s.as_str()).collect();
-        let entries = stmt.query_map(rusqlite::params_from_iter(params_refs), |row| {
-            Self::row_to_entry(row)
-        })
-        .collect::<Result<Vec<_>, _>>()
-        .map_err(|e| crate::Error::Storage(format!("Failed to execute query: {}", e)))??;
+        let entries = stmt
+            .query_map(rusqlite::params_from_iter(params_refs), |row| {
+                Self::row_to_entry(row)
+            })
+            .collect::<Result<Vec<_>, _>>()
+            .map_err(|e| crate::Error::Storage(format!("Failed to execute query: {}", e)))??;
 
         Ok(entries)
     }
 
     async fn count(&self) -> Result<usize> {
-        let conn = self.conn.lock()
+        let conn = self
+            .conn
+            .lock()
             .map_err(|e| crate::Error::Storage(format!("Failed to lock connection: {}", e)))?;
 
-        let count: i64 = conn.query_row("SELECT COUNT(*) FROM entries", [], |row| row.get(0))
+        let count: i64 = conn
+            .query_row("SELECT COUNT(*) FROM entries", [], |row| row.get(0))
             .map_err(|e| crate::Error::Storage(format!("Failed to count entries: {}", e)))?;
 
         Ok(count as usize)
@@ -303,8 +327,5 @@ mod tests {
 
         storage.store(&entry).await.unwrap();
         assert_eq!(storage.count().await.unwrap(), 1);
-    }
-}
-
     }
 }

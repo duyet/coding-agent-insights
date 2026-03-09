@@ -112,7 +112,10 @@ impl Plugin for CaiPlugin {
             "cai.stats" => self.handle_stats(params),
             "cai.tui" => self.handle_tui(params),
             "cai.web" => self.handle_web(params),
-            _ => Err(cai_core::Error::Message(format!("Unknown skill: {}", skill))),
+            _ => Err(cai_core::Error::Message(format!(
+                "Unknown skill: {}",
+                skill
+            ))),
         }
     }
 
@@ -122,7 +125,10 @@ impl Plugin for CaiPlugin {
             "cai.query" | "cai.ingest" | "cai.stats" | "cai.tui" | "cai.web" => {
                 Ok(format!("Command delegated: {} {:?}", cmd, args))
             }
-            _ => Err(cai_core::Error::Message(format!("Unknown command: {}", cmd))),
+            _ => Err(cai_core::Error::Message(format!(
+                "Unknown command: {}",
+                cmd
+            ))),
         }
     }
 

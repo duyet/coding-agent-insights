@@ -25,8 +25,8 @@
 pub use cai_core::Result;
 
 mod app;
-mod ui;
 mod event;
+mod ui;
 
 pub use app::{App, AppState, Column, Mode, SortOrder};
 pub use event::{Event, EventHandler};

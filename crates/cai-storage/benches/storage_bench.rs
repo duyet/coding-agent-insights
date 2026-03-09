@@ -1,8 +1,8 @@
 //! Benchmark tests for CAI storage
 
-use cai_storage::{MemoryStorage, Storage, Filter};
-use cai_core::{Entry, Source, Metadata};
-use chrono::{Utc, Duration};
+use cai_core::{Entry, Metadata, Source};
+use cai_storage::{Filter, MemoryStorage, Storage};
+use chrono::{Duration, Utc};
 use std::collections::HashMap;
 
 fn create_benchmark_entry(id: usize) -> Entry {
@@ -35,26 +35,18 @@ fn main() {
     divan::main();
 }
 
-#[divan::bench(
-    sample_count = 100,
-    sample_size = 10
-)]
+#[divan::bench(sample_count = 100, sample_size = 10)]
 fn bench_store_single_entry(b: divan::Bencher) {
     let storage = MemoryStorage::new();
     let entry = create_benchmark_entry(1);
 
     b.bench(|| {
         let rt = tokio::runtime::Runtime::new().unwrap();
-        rt.block_on(async {
-            storage.store(&entry).await
-        }).unwrap()
+        rt.block_on(async { storage.store(&entry).await }).unwrap()
     });
 }
 
-#[divan::bench(
-    sample_count = 50,
-    sample_size = 10
-)]
+#[divan::bench(sample_count = 50, sample_size = 10)]
 fn bench_store_100_entries(b: divan::Bencher) {
     b.bench_local(|| {
         let rt = tokio::runtime::Runtime::new().unwrap();
@@ -68,10 +60,7 @@ fn bench_store_100_entries(b: divan::Bencher) {
     });
 }
 
-#[divan::bench(
-    sample_count = 50,
-    sample_size = 10
-)]
+#[divan::bench(sample_count = 50, sample_size = 10)]
 fn bench_store_1000_entries(b: divan::Bencher) {
     b.bench_local(|| {
         let rt = tokio::runtime::Runtime::new().unwrap();
@@ -85,10 +74,7 @@ fn bench_store_1000_entries(b: divan::Bencher) {
     });
 }
 
-#[divan::bench(
-    sample_count = 100,
-    sample_size = 10
-)]
+#[divan::bench(sample_count = 100, sample_size = 10)]
 fn bench_get_by_id(b: divan::Bencher) {
     let rt = tokio::runtime::Runtime::new().unwrap();
     let storage = rt.block_on(async {
@@ -102,16 +88,11 @@ fn bench_get_by_id(b: divan::Bencher) {
 
     b.bench(|| {
         let rt = tokio::runtime::Runtime::new().unwrap();
-        let _ = rt.block_on(async {
-            storage.get("bench-entry-50").await
-        });
+        let _ = rt.block_on(async { storage.get("bench-entry-50").await });
     });
 }
 
-#[divan::bench(
-    sample_count = 100,
-    sample_size = 10
-)]
+#[divan::bench(sample_count = 100, sample_size = 10)]
 fn bench_query_all_small(b: divan::Bencher) {
     let rt = tokio::runtime::Runtime::new().unwrap();
     let storage = rt.block_on(async {
@@ -125,16 +106,11 @@ fn bench_query_all_small(b: divan::Bencher) {
 
     b.bench(|| {
         let rt = tokio::runtime::Runtime::new().unwrap();
-        let _ = rt.block_on(async {
-            storage.query(None).await
-        });
+        let _ = rt.block_on(async { storage.query(None).await });
     });
 }
 
-#[divan::bench(
-    sample_count = 50,
-    sample_size = 10
-)]
+#[divan::bench(sample_count = 50, sample_size = 10)]
 fn bench_query_all_large(b: divan::Bencher) {
     let rt = tokio::runtime::Runtime::new().unwrap();
     let storage = rt.block_on(async {
@@ -148,16 +124,11 @@ fn bench_query_all_large(b: divan::Bencher) {
 
     b.bench(|| {
         let rt = tokio::runtime::Runtime::new().unwrap();
-        let _ = rt.block_on(async {
-            storage.query(None).await
-        });
+        let _ = rt.block_on(async { storage.query(None).await });
     });
 }
 
-#[divan::bench(
-    sample_count = 50,
-    sample_size = 10
-)]
+#[divan::bench(sample_count = 50, sample_size = 10)]
 fn bench_query_with_filter(b: divan::Bencher) {
     let rt = tokio::runtime::Runtime::new().unwrap();
     let storage = rt.block_on(async {
@@ -177,16 +148,11 @@ fn bench_query_with_filter(b: divan::Bencher) {
 
     b.bench(|| {
         let rt = tokio::runtime::Runtime::new().unwrap();
-        let _ = rt.block_on(async {
-            storage.query(Some(&filter)).await
-        });
+        let _ = rt.block_on(async { storage.query(Some(&filter)).await });
     });
 }
 
-#[divan::bench(
-    sample_count = 100,
-    sample_size = 10
-)]
+#[divan::bench(sample_count = 100, sample_size = 10)]
 fn bench_count(b: divan::Bencher) {
     let rt = tokio::runtime::Runtime::new().unwrap();
     let storage = rt.block_on(async {
@@ -200,16 +166,11 @@ fn bench_count(b: divan::Bencher) {
 
     b.bench(|| {
         let rt = tokio::runtime::Runtime::new().unwrap();
-        let _ = rt.block_on(async {
-            storage.count().await
-        });
+        let _ = rt.block_on(async { storage.count().await });
     });
 }
 
-#[divan::bench(
-    sample_count = 50,
-    sample_size = 10
-)]
+#[divan::bench(sample_count = 50, sample_size = 10)]
 fn bench_concurrent_stores(b: divan::Bencher) {
     b.bench_local(|| {
         let rt = tokio::runtime::Runtime::new().unwrap();
@@ -233,10 +194,7 @@ fn bench_concurrent_stores(b: divan::Bencher) {
     });
 }
 
-#[divan::bench(
-    sample_count = 50,
-    sample_size = 10
-)]
+#[divan::bench(sample_count = 50, sample_size = 10)]
 fn bench_concurrent_queries(b: divan::Bencher) {
     let rt = tokio::runtime::Runtime::new().unwrap();
     let storage = rt.block_on(async {
@@ -255,9 +213,7 @@ fn bench_concurrent_queries(b: divan::Bencher) {
 
             for _ in 0..10 {
                 let storage_clone = storage.clone();
-                let handle = tokio::spawn(async move {
-                    storage_clone.query(None).await
-                });
+                let handle = tokio::spawn(async move { storage_clone.query(None).await });
                 handles.push(handle);
             }
 

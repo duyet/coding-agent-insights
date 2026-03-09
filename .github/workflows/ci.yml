@@ -119,9 +119,6 @@ jobs:
             target
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
 
-      - name: Install divan
-        run: cargo install divan
-
       - name: Run benchmarks
         run: cargo divan --workspace --bench
 

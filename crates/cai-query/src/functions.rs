@@ -45,7 +45,10 @@ impl FunctionRegistry {
     pub fn call(&self, name: &str, args: &[FunctionArg]) -> QueryResult<FunctionArg> {
         match self.functions.get(&name.to_lowercase()) {
             Some(func) => func(args),
-            None => Err(QueryError::ParseError(format!("Unknown function: {}", name))),
+            None => Err(QueryError::ParseError(format!(
+                "Unknown function: {}",
+                name
+            ))),
         }
     }
 
@@ -109,18 +112,28 @@ impl From<bool> for FunctionArg {
 /// Supports formats: "iso", "date", "time", "unix", "year", "month", "day", "hour", "minute", "ymd"
 pub fn date_format(args: &[FunctionArg]) -> QueryResult<FunctionArg> {
     if args.len() != 2 {
-        return Err(QueryError::ParseError("date_format requires 2 arguments: timestamp and format".to_string()));
+        return Err(QueryError::ParseError(
+            "date_format requires 2 arguments: timestamp and format".to_string(),
+        ));
     }
 
     // For now, we'll work with string timestamps
     let timestamp_str = match &args[0] {
         FunctionArg::String(s) => s.as_str(),
-        _ => return Err(QueryError::ParseError("date_format first argument must be a string".to_string())),
+        _ => {
+            return Err(QueryError::ParseError(
+                "date_format first argument must be a string".to_string(),
+            ))
+        }
     };
 
     let format = match &args[1] {
         FunctionArg::String(s) => s.as_str(),
-        _ => return Err(QueryError::ParseError("date_format second argument must be a string".to_string())),
+        _ => {
+            return Err(QueryError::ParseError(
+                "date_format second argument must be a string".to_string(),
+            ))
+        }
     };
 
     // Parse ISO 8601 timestamp
@@ -138,7 +151,12 @@ pub fn date_format(args: &[FunctionArg]) -> QueryResult<FunctionArg> {
         "hour" => dt.format("%H").to_string(),
         "minute" => dt.format("%M").to_string(),
         "ymd" => dt.format("%Y%m%d").to_string(),
-        _ => return Err(QueryError::ParseError(format!("Unknown format: {}", format))),
+        _ => {
+            return Err(QueryError::ParseError(format!(
+                "Unknown format: {}",
+                format
+            )))
+        }
     };
 
     Ok(FunctionArg::String(result))
@@ -167,7 +185,9 @@ pub fn concat(args: &[FunctionArg]) -> QueryResult<FunctionArg> {
 /// Get string length
 pub fn length(args: &[FunctionArg]) -> QueryResult<FunctionArg> {
     if args.len() != 1 {
-        return Err(QueryError::ParseError("length requires 1 argument".to_string()));
+        return Err(QueryError::ParseError(
+            "length requires 1 argument".to_string(),
+        ));
     }
 
     let len = match &args[0] {
@@ -184,7 +204,9 @@ pub fn length(args: &[FunctionArg]) -> QueryResult<FunctionArg> {
 /// Convert string to uppercase
 pub fn upper(args: &[FunctionArg]) -> QueryResult<FunctionArg> {
     if args.len() != 1 {
-        return Err(QueryError::ParseError("upper requires 1 argument".to_string()));
+        return Err(QueryError::ParseError(
+            "upper requires 1 argument".to_string(),
+        ));
     }
 
     let result = match &args[0] {
@@ -201,7 +223,9 @@ pub fn upper(args: &[FunctionArg]) -> QueryResult<FunctionArg> {
 /// Convert string to lowercase
 pub fn lower(args: &[FunctionArg]) -> QueryResult<FunctionArg> {
     if args.len() != 1 {
-        return Err(QueryError::ParseError("lower requires 1 argument".to_string()));
+        return Err(QueryError::ParseError(
+            "lower requires 1 argument".to_string(),
+        ));
     }
 
     let result = match &args[0] {
@@ -218,23 +242,37 @@ pub fn lower(args: &[FunctionArg]) -> QueryResult<FunctionArg> {
 /// Extract substring (1-indexed start position)
 pub fn substring(args: &[FunctionArg]) -> QueryResult<FunctionArg> {
     if args.len() < 2 || args.len() > 3 {
-        return Err(QueryError::ParseError("substring requires 2 or 3 arguments: string, start, [length]".to_string()));
+        return Err(QueryError::ParseError(
+            "substring requires 2 or 3 arguments: string, start, [length]".to_string(),
+        ));
     }
 
     let s = match &args[0] {
         FunctionArg::String(s) => s.as_str(),
-        _ => return Err(QueryError::ParseError("substring first argument must be a string".to_string())),
+        _ => {
+            return Err(QueryError::ParseError(
+                "substring first argument must be a string".to_string(),
+            ))
+        }
     };
 
     let start = match &args[1] {
         FunctionArg::Number(n) => *n as usize,
-        _ => return Err(QueryError::ParseError("substring second argument must be a number".to_string())),
+        _ => {
+            return Err(QueryError::ParseError(
+                "substring second argument must be a number".to_string(),
+            ))
+        }
     };
 
     let result = if args.len() == 3 {
         let length = match &args[2] {
             FunctionArg::Number(n) => *n as usize,
-            _ => return Err(QueryError::ParseError("substring third argument must be a number".to_string())),
+            _ => {
+                return Err(QueryError::ParseError(
+                    "substring third argument must be a number".to_string(),
+                ))
+            }
         };
         // Convert 1-indexed to 0-indexed
         let start_idx = start.saturating_sub(1);
@@ -261,11 +299,15 @@ pub fn coalesce(args: &[FunctionArg]) -> QueryResult<FunctionArg> {
 /// Get current timestamp
 pub fn now(args: &[FunctionArg]) -> QueryResult<FunctionArg> {
     if !args.is_empty() {
-        return Err(QueryError::ParseError("now requires no arguments".to_string()));
+        return Err(QueryError::ParseError(
+            "now requires no arguments".to_string(),
+        ));
     }
 
     let now: DateTime<Utc> = Utc::now();
-    Ok(FunctionArg::String(now.format("%Y-%m-%dT%H:%M:%SZ").to_string()))
+    Ok(FunctionArg::String(
+        now.format("%Y-%m-%dT%H:%M:%SZ").to_string(),
+    ))
 }
 
 // ============================================================================
@@ -296,7 +338,10 @@ mod tests {
             FunctionArg::String("iso".to_string()),
         ];
         let result = date_format(&args).unwrap();
-        assert_eq!(result, FunctionArg::String("2024-01-15T10:30:00Z".to_string()));
+        assert_eq!(
+            result,
+            FunctionArg::String("2024-01-15T10:30:00Z".to_string())
+        );
 
         let args = vec![
             FunctionArg::String("2024-01-15T10:30:00Z".to_string()),

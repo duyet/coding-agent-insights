@@ -1,8 +1,8 @@
 //! Unit tests for cai-core
 
-use cai_core::{Entry, Source, Metadata, Error};
+use cai_core::{Entry, Error, Metadata, Source};
 use chrono::{DateTime, Utc};
-use serde_json::{json, to_value, from_value};
+use serde_json::{from_value, json, to_value};
 
 #[test]
 fn test_entry_creation() {
@@ -30,13 +30,19 @@ fn test_source_variants() {
     assert!(matches!(Source::Claude, Source::Claude));
     assert!(matches!(Source::Codex, Source::Codex));
     assert!(matches!(Source::Git, Source::Git));
-    assert!(matches!(Source::Other("custom".to_string()), Source::Other(_)));
+    assert!(matches!(
+        Source::Other("custom".to_string()),
+        Source::Other(_)
+    ));
 }
 
 #[test]
 fn test_source_equality() {
     assert_eq!(Source::Claude, Source::Claude);
-    assert_eq!(Source::Other("test".to_string()), Source::Other("test".to_string()));
+    assert_eq!(
+        Source::Other("test".to_string()),
+        Source::Other("test".to_string())
+    );
     assert_ne!(Source::Claude, Source::Codex);
 }
 
@@ -64,7 +70,10 @@ fn test_metadata_with_fields() {
     };
 
     assert_eq!(metadata.file_path, Some("src/main.rs".to_string()));
-    assert_eq!(metadata.repo_url, Some("https://github.com/test/repo".to_string()));
+    assert_eq!(
+        metadata.repo_url,
+        Some("https://github.com/test/repo".to_string())
+    );
     assert_eq!(metadata.commit_hash, Some("abc123".to_string()));
     assert_eq!(metadata.language, Some("Rust".to_string()));
     assert_eq!(metadata.extra.len(), 2);
@@ -138,7 +147,10 @@ fn test_entry_deserialization() {
 
 #[test]
 fn test_error_display() {
-    let io_error = Error::Io(std::io::Error::new(std::io::ErrorKind::NotFound, "file not found"));
+    let io_error = Error::Io(std::io::Error::new(
+        std::io::ErrorKind::NotFound,
+        "file not found",
+    ));
     assert!(io_error.to_string().contains("I/O error"));
 
     let msg_error = Error::Message("custom error".to_string());

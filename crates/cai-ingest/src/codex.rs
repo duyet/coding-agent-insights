@@ -55,8 +55,9 @@ impl CodexParser {
 
     /// Parse all entries from the history file
     pub fn parse_all(&self) -> Result<Vec<Entry>, IngestError> {
-        let file = File::open(&self.history_path)
-            .map_err(|e| IngestError::PathNotFound(format!("{}: {}", self.history_path.display(), e)))?;
+        let file = File::open(&self.history_path).map_err(|e| {
+            IngestError::PathNotFound(format!("{}: {}", self.history_path.display(), e))
+        })?;
 
         let reader = BufReader::new(file);
         let mut entries = Vec::new();
@@ -64,7 +65,9 @@ impl CodexParser {
 
         for line in reader.lines() {
             line_num += 1;
-            let line = line.map_err(|e| IngestError::InvalidFormat(format!("read line {}: {}", line_num, e)))?;
+            let line = line.map_err(|e| {
+                IngestError::InvalidFormat(format!("read line {}: {}", line_num, e))
+            })?;
 
             if line.trim().is_empty() {
                 continue;
@@ -80,7 +83,9 @@ impl CodexParser {
         }
 
         if entries.is_empty() {
-            return Err(IngestError::NoFilesFound(self.history_path.display().to_string()));
+            return Err(IngestError::NoFilesFound(
+                self.history_path.display().to_string(),
+            ));
         }
 
         Ok(entries)
@@ -91,9 +96,9 @@ impl CodexParser {
         let codex_entry: CodexEntry = serde_json::from_str(line)
             .map_err(|e| IngestError::InvalidFormat(format!("line {}: {}", line_num, e)))?;
 
-        let id = codex_entry.id.unwrap_or_else(|| {
-            format!("codex-line-{}", line_num)
-        });
+        let id = codex_entry
+            .id
+            .unwrap_or_else(|| format!("codex-line-{}", line_num));
 
         let timestamp = parse_codex_timestamp(&codex_entry.timestamp);
         let response = codex_entry.response.unwrap_or_default();

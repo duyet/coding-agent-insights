@@ -66,7 +66,8 @@ impl DuckDBStorage {
                     metadata_json VARCHAR
                 )",
                 [],
-            ).map_err(|e| Error::Message(format!("Failed to create table: {}", e)))?;
+            )
+            .map_err(|e| Error::Message(format!("Failed to create table: {}", e)))?;
 
             Ok::<(), Error>(())
         })
@@ -83,8 +84,9 @@ impl DuckDBStorage {
         };
 
         let timestamp_str: String = row.get("timestamp")?;
-        let timestamp = timestamp_str.parse::<DateTime<Utc>>()
-            .map_err(|e| duckdb::Error::InvalidParameterName(format!("Invalid timestamp: {}", e)))?;
+        let timestamp = timestamp_str.parse::<DateTime<Utc>>().map_err(|e| {
+            duckdb::Error::InvalidParameterName(format!("Invalid timestamp: {}", e))
+        })?;
 
         let mut metadata = cai_core::Metadata::default();
         if let Ok(fp) = row.get::<_, Option<String>>("file_path") {
@@ -117,12 +119,25 @@ impl Storage for DuckDBStorage {
         let conn = self.conn.lock().await;
 
         let source_str = format!("{:?}", entry.source);
-        let timestamp_str = entry.timestamp.format("%Y-%m-%dT%H:%M:%S%.6f%:z").to_string();
+        let timestamp_str = entry
+            .timestamp
+            .format("%Y-%m-%dT%H:%M:%S%.6f%:z")
+            .to_string();
 
         // Build parameters manually - convert None to empty string
-        let file_path = entry.metadata.file_path.as_deref().unwrap_or("").to_string();
+        let file_path = entry
+            .metadata
+            .file_path
+            .as_deref()
+            .unwrap_or("")
+            .to_string();
         let repo_url = entry.metadata.repo_url.as_deref().unwrap_or("").to_string();
-        let commit_hash = entry.metadata.commit_hash.as_deref().unwrap_or("").to_string();
+        let commit_hash = entry
+            .metadata
+            .commit_hash
+            .as_deref()
+            .unwrap_or("")
+            .to_string();
         let language = entry.metadata.language.as_deref().unwrap_or("").to_string();
 
         conn.execute(
@@ -138,7 +153,8 @@ impl Storage for DuckDBStorage {
                 &commit_hash,
                 &language,
             ],
-        ).map_err(|e| Error::Message(format!("Failed to insert entry: {}", e)))?;
+        )
+        .map_err(|e| Error::Message(format!("Failed to insert entry: {}", e)))?;
 
         Ok(())
     }
@@ -148,10 +164,12 @@ impl Storage for DuckDBStorage {
 
         let conn = self.conn.lock().await;
 
-        let mut stmt = conn.prepare("SELECT * FROM entries WHERE id = ?")
+        let mut stmt = conn
+            .prepare("SELECT * FROM entries WHERE id = ?")
             .map_err(|e| Error::Message(format!("Failed to prepare query: {}", e)))?;
 
-        let result = stmt.query_row([id], |row| Self::row_to_entry(row))
+        let result = stmt
+            .query_row([id], |row| Self::row_to_entry(row))
             .optional()
             .map_err(|e| Error::Message(format!("Failed to query entry: {}", e)))?;
 
@@ -191,7 +209,8 @@ impl Storage for DuckDBStorage {
             ("SELECT * FROM entries".to_string(), Vec::new())
         };
 
-        let mut stmt = conn.prepare(&sql)
+        let mut stmt = conn
+            .prepare(&sql)
             .map_err(|e| Error::Message(format!("Failed to prepare query: {}", e)))?;
 
         // For variable number of params, iterate over rows
@@ -202,28 +221,40 @@ impl Storage for DuckDBStorage {
 
         // Use query_map with the right parameters
         if params_refs.is_empty() {
-            let mut rows = stmt.query([])
+            let mut rows = stmt
+                .query([])
                 .map_err(|e| Error::Message(format!("Failed to execute query: {}", e)))?;
 
-            while let Some(row) = rows.next().map_err(|e| Error::Message(format!("Failed to fetch row: {}", e)))? {
+            while let Some(row) = rows
+                .next()
+                .map_err(|e| Error::Message(format!("Failed to fetch row: {}", e)))?
+            {
                 let entry = Self::row_to_entry(&row)
                     .map_err(|e| Error::Message(format!("Failed to parse row: {}", e)))?;
                 entries.push(entry);
             }
         } else if params_refs.len() == 1 {
-            let mut rows = stmt.query([params_refs[0]])
+            let mut rows = stmt
+                .query([params_refs[0]])
                 .map_err(|e| Error::Message(format!("Failed to execute query: {}", e)))?;
 
-            while let Some(row) = rows.next().map_err(|e| Error::Message(format!("Failed to fetch row: {}", e)))? {
+            while let Some(row) = rows
+                .next()
+                .map_err(|e| Error::Message(format!("Failed to fetch row: {}", e)))?
+            {
                 let entry = Self::row_to_entry(&row)
                     .map_err(|e| Error::Message(format!("Failed to parse row: {}", e)))?;
                 entries.push(entry);
             }
         } else if params_refs.len() == 2 {
-            let mut rows = stmt.query([params_refs[0], params_refs[1]])
+            let mut rows = stmt
+                .query([params_refs[0], params_refs[1]])
                 .map_err(|e| Error::Message(format!("Failed to execute query: {}", e)))?;
 
-            while let Some(row) = rows.next().map_err(|e| Error::Message(format!("Failed to fetch row: {}", e)))? {
+            while let Some(row) = rows
+                .next()
+                .map_err(|e| Error::Message(format!("Failed to fetch row: {}", e)))?
+            {
                 let entry = Self::row_to_entry(&row)
                     .map_err(|e| Error::Message(format!("Failed to parse row: {}", e)))?;
                 entries.push(entry);
@@ -238,7 +269,8 @@ impl Storage for DuckDBStorage {
     async fn count(&self) -> Result<usize> {
         let conn = self.conn.lock().await;
 
-        let count: i64 = conn.query_row("SELECT COUNT(*) FROM entries", [], |row| row.get(0))
+        let count: i64 = conn
+            .query_row("SELECT COUNT(*) FROM entries", [], |row| row.get(0))
             .map_err(|e| Error::Message(format!("Failed to count entries: {}", e)))?;
 
         Ok(count as usize)

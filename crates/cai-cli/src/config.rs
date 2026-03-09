@@ -130,7 +130,11 @@ pub fn load_config() -> CaiConfig {
     {
         Ok(s) => s,
         Err(e) => {
-            tracing::warn!("Failed to load config file {:?}: {:?}, using defaults", config_path, e);
+            tracing::warn!(
+                "Failed to load config file {:?}: {:?}, using defaults",
+                config_path,
+                e
+            );
             return CaiConfig::default();
         }
     };
@@ -141,7 +145,11 @@ pub fn load_config() -> CaiConfig {
             config
         }
         Err(e) => {
-            tracing::warn!("Failed to parse config file {:?}: {:?}, using defaults", config_path, e);
+            tracing::warn!(
+                "Failed to parse config file {:?}: {:?}, using defaults",
+                config_path,
+                e
+            );
             CaiConfig::default()
         }
     }
@@ -154,8 +162,9 @@ pub fn save_config(config: &CaiConfig) -> Result<()> {
 
     // Ensure config directory exists
     if let Some(parent) = config_path.parent() {
-        std::fs::create_dir_all(parent)
-            .map_err(|e| cai_core::Error::Message(format!("Failed to create config directory: {}", e)))?;
+        std::fs::create_dir_all(parent).map_err(|e| {
+            cai_core::Error::Message(format!("Failed to create config directory: {}", e))
+        })?;
     }
 
     // Serialize to TOML

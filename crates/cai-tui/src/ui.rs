@@ -48,10 +48,7 @@ pub fn init_terminal() -> Result<Term, std::io::Error> {
 /// Returns an error if terminal restoration fails
 pub fn restore_terminal(mut terminal: Term) -> Result<(), std::io::Error> {
     disable_raw_mode()?;
-    execute!(
-        terminal.backend_mut(),
-        LeaveAlternateScreen
-    )?;
+    execute!(terminal.backend_mut(), LeaveAlternateScreen)?;
     terminal.show_cursor()?;
     Ok(())
 }
@@ -131,12 +128,18 @@ where
         }
         KeyCode::Char('i') => {
             app.mode = Mode::Query;
-            app.set_status("Query mode: Enter SQL query, Esc to cancel, Enter to execute".to_string(), Color::Cyan);
+            app.set_status(
+                "Query mode: Enter SQL query, Esc to cancel, Enter to execute".to_string(),
+                Color::Cyan,
+            );
         }
         KeyCode::Char('/') => {
             app.mode = Mode::Search;
             app.search_input.clear();
-            app.set_status("Search mode: Type to filter, Esc to cancel".to_string(), Color::Cyan);
+            app.set_status(
+                "Search mode: Type to filter, Esc to cancel".to_string(),
+                Color::Cyan,
+            );
         }
         KeyCode::Char('?') => {
             app.mode = Mode::Help;
@@ -147,7 +150,10 @@ where
             if app.selected_entry().is_some() {
                 app.mode = Mode::Detail;
                 app.detail_scroll_reset();
-                app.set_status("Detail view: Press Esc or q to close, arrows to scroll".to_string(), Color::Cyan);
+                app.set_status(
+                    "Detail view: Press Esc or q to close, arrows to scroll".to_string(),
+                    Color::Cyan,
+                );
             }
         }
         KeyCode::Up | KeyCode::Char('k') => {
@@ -325,9 +331,17 @@ where
 
     // Header
     let header = vec![Line::from(vec![
-        Span::styled("CAI", Style::default().fg(Color::Green).add_modifier(Modifier::BOLD)),
+        Span::styled(
+            "CAI",
+            Style::default()
+                .fg(Color::Green)
+                .add_modifier(Modifier::BOLD),
+        ),
         Span::raw(" - "),
-        Span::styled(format!("{} entries", app.entries.len()), Style::default().fg(Color::Cyan)),
+        Span::styled(
+            format!("{} entries", app.entries.len()),
+            Style::default().fg(Color::Cyan),
+        ),
         Span::raw(" | "),
         Span::styled(
             format!("Sort: {:?} ({:?})", app.sort_column, app.sort_order),
@@ -354,16 +368,16 @@ fn render_results_table<S>(f: &mut Frame, app: &AppState<S>, area: Rect)
 where
     S: cai_storage::Storage,
 {
-    let header_cells = ["Timestamp", "Source", "Prompt"]
-        .iter()
-        .map(|h| {
-            let style = if *h == format!("{:?}", app.sort_column) {
-                Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD)
-            } else {
-                Style::default().fg(Color::Gray)
-            };
-            Cell::from(*h).style(style)
-        });
+    let header_cells = ["Timestamp", "Source", "Prompt"].iter().map(|h| {
+        let style = if *h == format!("{:?}", app.sort_column) {
+            Style::default()
+                .fg(Color::Yellow)
+                .add_modifier(Modifier::BOLD)
+        } else {
+            Style::default().fg(Color::Gray)
+        };
+        Cell::from(*h).style(style)
+    });
 
     let header = Row::new(header_cells).height(1).bottom_margin(0);
 
@@ -383,14 +397,21 @@ where
         })
         .collect();
 
-    let table = Table::new(rows, [Constraint::Length(20), Constraint::Length(10), Constraint::Min(0)])
-        .header(header)
-        .block(
-            Block::default()
-                .borders(Borders::ALL)
-                .border_style(Style::default().fg(Color::DarkGray)),
-        )
-        .row_highlight_style(Style::default().bg(Color::DarkGray));
+    let table = Table::new(
+        rows,
+        [
+            Constraint::Length(20),
+            Constraint::Length(10),
+            Constraint::Min(0),
+        ],
+    )
+    .header(header)
+    .block(
+        Block::default()
+            .borders(Borders::ALL)
+            .border_style(Style::default().fg(Color::DarkGray)),
+    )
+    .row_highlight_style(Style::default().bg(Color::DarkGray));
 
     let mut table_state = TableState::default();
     table_state.select(Some(app.selected.saturating_sub(app.scroll)));
@@ -421,7 +442,9 @@ where
                 Mode::Detail => "DETAIL",
                 Mode::Help => "HELP",
             },
-            Style::default().fg(Color::Green).add_modifier(Modifier::BOLD),
+            Style::default()
+                .fg(Color::Green)
+                .add_modifier(Modifier::BOLD),
         ),
         Span::raw(" | "),
         Span::styled(&app.status_message, Style::default().fg(app.status_color)),
@@ -557,9 +580,12 @@ where
                 Span::raw(format_timestamp(entry.timestamp)),
             ]),
             Line::from(""),
-            Line::from(vec![
-                Span::styled("Prompt:", Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD)),
-            ]),
+            Line::from(vec![Span::styled(
+                "Prompt:",
+                Style::default()
+                    .fg(Color::Yellow)
+                    .add_modifier(Modifier::BOLD),
+            )]),
             Line::from(""),
         ];
 
@@ -567,52 +593,41 @@ where
 
         // Add prompt content (split into lines)
         for line in word_wrap(&entry.prompt, 76) {
-            full_content.push(Line::from(vec![
-                Span::raw("  "),
-                Span::raw(line),
-            ]));
+            full_content.push(Line::from(vec![Span::raw("  "), Span::raw(line)]));
         }
 
         full_content.push(Line::from(""));
-        full_content.push(Line::from(vec![
-            Span::styled("Response:", Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD)),
-        ]));
+        full_content.push(Line::from(vec![Span::styled(
+            "Response:",
+            Style::default()
+                .fg(Color::Yellow)
+                .add_modifier(Modifier::BOLD),
+        )]));
         full_content.push(Line::from(""));
 
         // Add response content
         for line in word_wrap(&entry.response, 76) {
-            full_content.push(Line::from(vec![
-                Span::raw("  "),
-                Span::raw(line),
-            ]));
+            full_content.push(Line::from(vec![Span::raw("  "), Span::raw(line)]));
         }
 
         // Add metadata if present
         if entry.metadata.file_path.is_some() || entry.metadata.language.is_some() {
             full_content.push(Line::from(""));
-            full_content.push(Line::from(vec![
-                Span::styled("Metadata:", Style::default().fg(Color::Cyan)),
-            ]));
+            full_content.push(Line::from(vec![Span::styled(
+                "Metadata:",
+                Style::default().fg(Color::Cyan),
+            )]));
 
             if let Some(ref file) = entry.metadata.file_path {
-                full_content.push(Line::from(vec![
-                    Span::raw("  File: "),
-                    Span::raw(file),
-                ]));
+                full_content.push(Line::from(vec![Span::raw("  File: "), Span::raw(file)]));
             }
 
             if let Some(ref lang) = entry.metadata.language {
-                full_content.push(Line::from(vec![
-                    Span::raw("  Language: "),
-                    Span::raw(lang),
-                ]));
+                full_content.push(Line::from(vec![Span::raw("  Language: "), Span::raw(lang)]));
             }
 
             if let Some(ref repo) = entry.metadata.repo_url {
-                full_content.push(Line::from(vec![
-                    Span::raw("  Repo: "),
-                    Span::raw(repo),
-                ]));
+                full_content.push(Line::from(vec![Span::raw("  Repo: "), Span::raw(repo)]));
             }
         }
 
@@ -631,7 +646,8 @@ where
         // Render scrollbar if content overflows
         if full_content.len() > area.height as usize {
             let scrollbar = Scrollbar::new(ScrollbarOrientation::VerticalRight);
-            let mut scrollbar_state = ScrollbarState::new(full_content.len()).position(app.detail_scroll);
+            let mut scrollbar_state =
+                ScrollbarState::new(full_content.len()).position(app.detail_scroll);
             f.render_stateful_widget(
                 scrollbar,
                 area.inner(Margin::new(0, 1)),
@@ -639,13 +655,12 @@ where
             );
         }
     } else {
-        let no_entry = Paragraph::new("No entry selected")
-            .block(
-                Block::default()
-                    .borders(Borders::ALL)
-                    .border_style(Style::default().fg(Color::Cyan))
-                    .title("Entry Details"),
-            );
+        let no_entry = Paragraph::new("No entry selected").block(
+            Block::default()
+                .borders(Borders::ALL)
+                .border_style(Style::default().fg(Color::Cyan))
+                .title("Entry Details"),
+        );
         f.render_widget(no_entry, area);
     }
 }
@@ -660,13 +675,19 @@ where
     f.render_widget(Clear, area);
 
     let help_text = vec![
-        Line::from(vec![
-            Span::styled("CAI TUI - Keyboard Shortcuts", Style::default().fg(Color::Green).add_modifier(Modifier::BOLD)),
-        ]),
+        Line::from(vec![Span::styled(
+            "CAI TUI - Keyboard Shortcuts",
+            Style::default()
+                .fg(Color::Green)
+                .add_modifier(Modifier::BOLD),
+        )]),
         Line::from(""),
-        Line::from(vec![
-            Span::styled("Normal Mode:", Style::default().fg(Color::Cyan).add_modifier(Modifier::BOLD)),
-        ]),
+        Line::from(vec![Span::styled(
+            "Normal Mode:",
+            Style::default()
+                .fg(Color::Cyan)
+                .add_modifier(Modifier::BOLD),
+        )]),
         Line::from("  q          - Quit application"),
         Line::from("  i          - Enter query mode"),
         Line::from("  /          - Enter search mode"),
@@ -679,34 +700,47 @@ where
         Line::from("  p          - Sort by prompt"),
         Line::from("  r          - Refresh data"),
         Line::from(""),
-        Line::from(vec![
-            Span::styled("Query Mode:", Style::default().fg(Color::Cyan).add_modifier(Modifier::BOLD)),
-        ]),
+        Line::from(vec![Span::styled(
+            "Query Mode:",
+            Style::default()
+                .fg(Color::Cyan)
+                .add_modifier(Modifier::BOLD),
+        )]),
         Line::from("  Enter      - Execute query"),
         Line::from("  Esc        - Cancel"),
         Line::from("  Up/Down    - Navigate history"),
         Line::from(""),
-        Line::from(vec![
-            Span::styled("Search Mode:", Style::default().fg(Color::Cyan).add_modifier(Modifier::BOLD)),
-        ]),
+        Line::from(vec![Span::styled(
+            "Search Mode:",
+            Style::default()
+                .fg(Color::Cyan)
+                .add_modifier(Modifier::BOLD),
+        )]),
         Line::from("  Enter      - Apply search"),
         Line::from("  Esc        - Cancel"),
         Line::from(""),
-        Line::from(vec![
-            Span::styled("Detail View:", Style::default().fg(Color::Cyan).add_modifier(Modifier::BOLD)),
-        ]),
+        Line::from(vec![Span::styled(
+            "Detail View:",
+            Style::default()
+                .fg(Color::Cyan)
+                .add_modifier(Modifier::BOLD),
+        )]),
         Line::from("  Esc/q      - Close detail view"),
         Line::from("  Up/Down    - Scroll content"),
         Line::from(""),
-        Line::from(vec![
-            Span::styled("Help Screen:", Style::default().fg(Color::Cyan).add_modifier(Modifier::BOLD)),
-        ]),
+        Line::from(vec![Span::styled(
+            "Help Screen:",
+            Style::default()
+                .fg(Color::Cyan)
+                .add_modifier(Modifier::BOLD),
+        )]),
         Line::from("  Esc/q      - Close help"),
         Line::from("  Up/Down    - Scroll help"),
         Line::from(""),
-        Line::from(vec![
-            Span::styled("Press Esc or q to close this help screen", Style::default().fg(Color::Yellow)),
-        ]),
+        Line::from(vec![Span::styled(
+            "Press Esc or q to close this help screen",
+            Style::default().fg(Color::Yellow),
+        )]),
     ];
 
     let paragraph = Paragraph::new(help_text.clone())

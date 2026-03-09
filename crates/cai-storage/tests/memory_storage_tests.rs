@@ -1,7 +1,7 @@
 //! Unit tests for cai-storage MemoryStorage
 
-use cai_storage::{MemoryStorage, Storage, Filter};
-use cai_core::{Entry, Source, Metadata};
+use cai_core::{Entry, Metadata, Source};
+use cai_storage::{Filter, MemoryStorage, Storage};
 use chrono::{DateTime, Utc};
 use std::str::FromStr;
 
@@ -115,9 +115,18 @@ async fn test_memory_storage_query_with_source_filter() {
 async fn test_memory_storage_query_with_after_filter() {
     let storage = MemoryStorage::new();
 
-    storage.store(&create_test_entry("entry-1", "2024-01-01T12:00:00Z")).await.unwrap();
-    storage.store(&create_test_entry("entry-2", "2024-01-02T12:00:00Z")).await.unwrap();
-    storage.store(&create_test_entry("entry-3", "2024-01-03T12:00:00Z")).await.unwrap();
+    storage
+        .store(&create_test_entry("entry-1", "2024-01-01T12:00:00Z"))
+        .await
+        .unwrap();
+    storage
+        .store(&create_test_entry("entry-2", "2024-01-02T12:00:00Z"))
+        .await
+        .unwrap();
+    storage
+        .store(&create_test_entry("entry-3", "2024-01-03T12:00:00Z"))
+        .await
+        .unwrap();
 
     let filter = Filter {
         source: None,
@@ -134,9 +143,18 @@ async fn test_memory_storage_query_with_after_filter() {
 async fn test_memory_storage_query_with_before_filter() {
     let storage = MemoryStorage::new();
 
-    storage.store(&create_test_entry("entry-1", "2024-01-01T12:00:00Z")).await.unwrap();
-    storage.store(&create_test_entry("entry-2", "2024-01-02T12:00:00Z")).await.unwrap();
-    storage.store(&create_test_entry("entry-3", "2024-01-03T12:00:00Z")).await.unwrap();
+    storage
+        .store(&create_test_entry("entry-1", "2024-01-01T12:00:00Z"))
+        .await
+        .unwrap();
+    storage
+        .store(&create_test_entry("entry-2", "2024-01-02T12:00:00Z"))
+        .await
+        .unwrap();
+    storage
+        .store(&create_test_entry("entry-3", "2024-01-03T12:00:00Z"))
+        .await
+        .unwrap();
 
     let filter = Filter {
         source: None,
@@ -153,10 +171,22 @@ async fn test_memory_storage_query_with_before_filter() {
 async fn test_memory_storage_query_with_range_filter() {
     let storage = MemoryStorage::new();
 
-    storage.store(&create_test_entry("entry-1", "2024-01-01T12:00:00Z")).await.unwrap();
-    storage.store(&create_test_entry("entry-2", "2024-01-02T12:00:00Z")).await.unwrap();
-    storage.store(&create_test_entry("entry-3", "2024-01-03T12:00:00Z")).await.unwrap();
-    storage.store(&create_test_entry("entry-4", "2024-01-04T12:00:00Z")).await.unwrap();
+    storage
+        .store(&create_test_entry("entry-1", "2024-01-01T12:00:00Z"))
+        .await
+        .unwrap();
+    storage
+        .store(&create_test_entry("entry-2", "2024-01-02T12:00:00Z"))
+        .await
+        .unwrap();
+    storage
+        .store(&create_test_entry("entry-3", "2024-01-03T12:00:00Z"))
+        .await
+        .unwrap();
+    storage
+        .store(&create_test_entry("entry-4", "2024-01-04T12:00:00Z"))
+        .await
+        .unwrap();
 
     let filter = Filter {
         source: None,
@@ -166,7 +196,9 @@ async fn test_memory_storage_query_with_range_filter() {
 
     let results = storage.query(Some(&filter)).await.unwrap();
     assert_eq!(results.len(), 2);
-    assert!(results.iter().all(|e| e.id == "entry-2" || e.id == "entry-3"));
+    assert!(results
+        .iter()
+        .all(|e| e.id == "entry-2" || e.id == "entry-3"));
 }
 
 #[tokio::test]
