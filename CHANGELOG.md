@@ -5,6 +5,27 @@ All notable changes to CAI will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.1] - 2026-03-09
+
+### Added
+- **Schema commands** - `cai schema` for database schema information
+  - `cai schema` - Show all tables
+  - `cai schema --table entries` - Describe table columns
+  - SQL support: `SHOW TABLES`, `DESCRIBE entries`
+  - SchemaInfo and ColumnInfo types for JSON output
+- **Platform support** - Release workflow builds for 8 platforms
+  - Linux x86_64 (GNU + MUSL), aarch64 (GNU + MUSL)
+  - macOS x86_64, aarch64 (ARM)
+  - Windows x86_64, aarch64
+  - MUSL targets provide static Linux binaries
+- **npm publishing** - Automated npm publish in release workflow
+
+### Fixed
+- Merge conflicts in main.rs after dependency updates
+- CLI test assertions for new output format
+- DCO signatures for all commits (Signed-off-by)
+- Cargo.toml syntax error (invalid comment)
+
 ## [Unreleased]
 
 ### Added
