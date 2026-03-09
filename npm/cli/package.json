@@ -1,6 +1,6 @@
 {
   "name": "@cai/cli",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Query and analyze AI coding history from Claude, Codex, Git, and more",
   "author": "cai-project",
   "license": "MIT",
