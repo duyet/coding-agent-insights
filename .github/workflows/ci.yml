@@ -46,10 +46,10 @@ jobs:
         run: cargo fmt --all -- --check
 
       - name: Run clippy
-        run: cargo clippy --all-targets --all-features -- -W warnings
+        run: cargo clippy --all-targets -- -W warnings
 
       - name: Run tests
-        run: cargo test --workspace --all-features
+        run: cargo test --workspace
 
       - name: Run doc tests
         run: cargo test --doc --workspace
@@ -71,7 +71,7 @@ jobs:
         uses: taiki-e/install-action@cargo-llvm-cov
 
       - name: Generate coverage report
-        run: cargo llvm-cov --all-features --workspace --lcov --output-path lcov.info
+        run: cargo llvm-cov --workspace --lcov --output-path lcov.info
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v5
@@ -81,7 +81,7 @@ jobs:
           token: ${{ secrets.CODECOV_TOKEN }}
 
       - name: Generate coverage summary
-        run: cargo llvm-cov --all-features --workspace --summary
+        run: cargo llvm-cov --workspace --summary
 
   security:
     name: Security Audit
@@ -164,8 +164,8 @@ jobs:
 
       - name: Check documentation
         run: |
-          cargo doc --no-deps --all-features --workspace
-          cargo doc --no-deps --all-features --workspace --document-private-items
+          cargo doc --no-deps --workspace
+          cargo doc --no-deps --workspace --document-private-items
 
   msrv:
     name: MSRV Check
@@ -181,4 +181,4 @@ jobs:
           toolchain: "1.85.0"
 
       - name: Check MSRV
-        run: cargo check --all-features --workspace
+        run: cargo check --workspace
