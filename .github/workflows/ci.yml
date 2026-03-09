@@ -119,8 +119,8 @@ jobs:
             target
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
 
-      - name: Build CAI
-        run: cargo build --release --workspace
+      - name: Build CAI (debug for E2E tests)
+        run: cargo build --workspace --bin cai
 
       - name: Run E2E tests
         run: cargo test -p cai-tests e2e -- --ignored
