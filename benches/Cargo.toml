@@ -8,13 +8,18 @@ repository.workspace = true
 rust-version.workspace = true
 publish = false
 
-[[bin]]
-name = "query_bench"
-path = "src/query_bench.rs"
+[lib]
+doctest = false
 
-[[bin]]
+[[bench]]
+name = "query_bench"
+path = "query_bench.rs"
+harness = false
+
+[[bench]]
 name = "format_bench"
-path = "src/format_bench.rs"
+path = "format_bench.rs"
+harness = false
 
 [dependencies]
 cai-core = { path = "../crates/cai-core" }
