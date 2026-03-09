@@ -204,7 +204,7 @@ mod cli_tests {
                 .stdout(Stdio::piped())
                 .stderr(Stdio::piped())
                 .output()
-                .expect(&format!("Failed to execute cai query with --output {}", format));
+                .unwrap_or_else(|_| panic!("Failed to execute cai query with --output {}", format));
 
             // Should accept all standard formats
             assert!(output.status.success() || String::from_utf8_lossy(&output.stdout).contains("results"),
