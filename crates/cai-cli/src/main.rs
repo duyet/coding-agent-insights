@@ -148,22 +148,22 @@ async fn execute_ingest(source: &str, path: Option<&str>) -> cai_core::Result<()
             parse_claude: true,
             parse_codex: false,
             scan_git: false,
-            claude_dir: path.map(|p| PathBuf::from(p)),
+            claude_dir: path.map(PathBuf::from),
             ..Default::default()
         },
         "codex" => IngestConfig {
             parse_claude: false,
             parse_codex: true,
             scan_git: false,
-            codex_file: path.map(|p| PathBuf::from(p)),
+            codex_file: path.map(PathBuf::from),
             ..Default::default()
         },
         "all" => IngestConfig {
             parse_claude: true,
             parse_codex: true,
             scan_git: false,
-            claude_dir: path.map(|p| PathBuf::from(p)),
-            codex_file: path.map(|p| PathBuf::from(p)),
+            claude_dir: path.map(PathBuf::from),
+            codex_file: path.map(PathBuf::from),
             ..Default::default()
         },
         _ => {
@@ -235,15 +235,9 @@ async fn execute_schema(table: Option<&str>) -> cai_core::Result<()> {
     if let Some(table_name) = table {
         if table_name.to_lowercase() == "entries" {
             println!("\n{}", format!("Table: {}", table_name).bold().green());
-            println!(
-                "{}",
-                "────────────────────────────────────────────────────────────────────"
-            );
+            println!("────────────────────────────────────────────────────────────────────");
             println!("{:<20} {:<20} {:<40}", "Column", "Type", "Description");
-            println!(
-                "{}",
-                "────────────────────────────────────────────────────────────────────"
-            );
+            println!("────────────────────────────────────────────────────────────────────");
             println!("{:<20} {:<20} {:<40}", "id", "TEXT", "Unique identifier");
             println!(
                 "{:<20} {:<20} {:<40}",
@@ -265,10 +259,7 @@ async fn execute_schema(table: Option<&str>) -> cai_core::Result<()> {
                 "{:<20} {:<20} {:<40}",
                 "metadata", "JSON", "Additional metadata (file_path, language, etc.)"
             );
-            println!(
-                "{}",
-                "────────────────────────────────────────────────────────────────────"
-            );
+            println!("────────────────────────────────────────────────────────────────────");
         } else {
             return Err(cai_core::Error::Message(format!(
                 "Unknown table: '{}'. Available tables: entries",
