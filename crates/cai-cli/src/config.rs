@@ -10,7 +10,7 @@ use std::path::PathBuf;
 use config::{Config, Environment, File};
 
 /// CAI configuration structure
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct CaiConfig {
     /// Storage configuration
     #[serde(default)]
@@ -18,15 +18,6 @@ pub struct CaiConfig {
     /// Output configuration
     #[serde(default)]
     pub output: OutputConfig,
-}
-
-impl Default for CaiConfig {
-    fn default() -> Self {
-        Self {
-            storage: StorageConfig::default(),
-            output: OutputConfig::default(),
-        }
-    }
 }
 
 /// Storage backend configuration
