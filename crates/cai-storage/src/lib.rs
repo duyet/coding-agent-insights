@@ -1,6 +1,6 @@
 //! CAI Storage - Pluggable storage backends
 
-#![warn(missing_docs, unused_crate_dependencies)]
+#![warn(missing_docs)]
 
 pub use cai_core::{Error, Result};
 

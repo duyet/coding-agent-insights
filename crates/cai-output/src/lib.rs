@@ -2,7 +2,7 @@
 //!
 //! Trait-based output formatting for AI coding interaction data.
 
-#![warn(missing_docs, unused_crate_dependencies)]
+#![warn(missing_docs)]
 
 pub mod formats;
 pub mod formatter;

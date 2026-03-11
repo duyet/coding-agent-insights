@@ -85,7 +85,7 @@
 //! cargo llvm-cov -p cai-core
 //! ```
 
-#![warn(missing_docs, unused_crate_dependencies)]
+#![warn(missing_docs)]
 
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
