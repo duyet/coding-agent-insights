@@ -11,6 +11,6 @@ rust-version.workspace = true
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
-cai-core = { path = "../cai-core" }
+cai-core = { path = "../cai-core", version = "0.1.0" }
 
 serde_json = { workspace = true }

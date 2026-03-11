@@ -8,8 +8,8 @@ repository.workspace = true
 rust-version.workspace = true
 
 [dependencies]
-cai-core = { path = "../cai-core" }
-cai-storage = { path = "../cai-storage" }
+cai-core = { path = "../cai-core", version = "0.1.0" }
+cai-storage = { path = "../cai-storage", version = "0.1.0" }
 
 ratatui = { workspace = true }
 crossterm = { workspace = true }

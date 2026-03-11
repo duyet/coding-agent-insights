@@ -12,13 +12,13 @@ name = "cai"
 path = "src/main.rs"
 
 [dependencies]
-cai-core = { path = "../cai-core" }
-cai-storage = { path = "../cai-storage" }
-cai-ingest = { path = "../cai-ingest" }
-cai-query = { path = "../cai-query" }
-cai-output = { path = "../cai-output" }
-cai-tui = { path = "../cai-tui" }
-cai-web = { path = "../cai-web", optional = true }
+cai-core = { path = "../cai-core", version = "0.1.0" }
+cai-storage = { path = "../cai-storage", version = "0.1.0" }
+cai-ingest = { path = "../cai-ingest", version = "0.1.0" }
+cai-query = { path = "../cai-query", version = "0.1.0" }
+cai-output = { path = "../cai-output", version = "0.1.0" }
+cai-tui = { path = "../cai-tui", version = "0.1.0" }
+cai-web = { path = "../cai-web", version = "0.1.0", optional = true }
 
 clap = { workspace = true }
 tokio = { workspace = true }
