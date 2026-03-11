@@ -2,14 +2,15 @@
 resolver = "2"
 members = [
     "crates/cai-core",
+    "crates/cai-cli",
+    "crates/cai-files",
     "crates/cai-ingest",
+    "crates/cai-output",
+    "crates/cai-plugin",
     "crates/cai-query",
     "crates/cai-storage",
-    "crates/cai-output",
     "crates/cai-tui",
     "crates/cai-web",
-    "crates/cai-cli",
-    "crates/cai-plugin",
     "tests",
     "benches",
 ]
