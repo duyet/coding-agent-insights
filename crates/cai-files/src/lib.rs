@@ -7,10 +7,10 @@
 
 pub use cai_core::{Error, Result};
 
-mod scanner;
-mod loader;
 mod filter;
+mod loader;
+mod scanner;
 
-pub use scanner::{FileScanner, ScanFilter};
-pub use loader::{FileLoader, FormatVersion};
 pub use filter::FileFilterOps;
+pub use loader::{FileLoader, FormatVersion};
+pub use scanner::{FileScanner, ScanFilter};

@@ -36,10 +36,12 @@ impl FileLoader {
             .collect::<Vec<_>>()
             .await
             .into_iter()
-            .flat_map(|result| result.unwrap_or_else(|e| {
-                debug!("Failed to load file: {}", e);
-                Vec::new()
-            }))
+            .flat_map(|result| {
+                result.unwrap_or_else(|e| {
+                    debug!("Failed to load file: {}", e);
+                    Vec::new()
+                })
+            })
             .collect();
 
         Ok(entries)
@@ -83,10 +85,7 @@ impl FileLoader {
                         id: format!("{}-{}", path.display(), i),
                         source: Source::Claude,
                         timestamp: chrono::Utc::now(), // V1 doesn't have timestamps
-                        prompt: msg["content"]
-                            .as_str()
-                            .unwrap_or("")
-                            .to_string(),
+                        prompt: msg["content"].as_str().unwrap_or("").to_string(),
                         response: String::new(), // Would need to pair with assistant message
                         metadata: Metadata::default(),
                     });

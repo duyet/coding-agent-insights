@@ -60,13 +60,14 @@ impl FileScanner {
 
     /// Scan directory for JSON files
     fn scan_directory(&self, dir: &Path) -> Result<Vec<PathBuf>> {
-        let entries = std::fs::read_dir(dir)
-            .map_err(|e| crate::Error::Message(format!("Failed to read directory {:?}: {}", dir, e)))?;
+        let entries = std::fs::read_dir(dir).map_err(|e| {
+            crate::Error::Message(format!("Failed to read directory {:?}: {}", dir, e))
+        })?;
 
         let mut files = Vec::new();
         for entry in entries {
-            let entry = entry
-                .map_err(|e| crate::Error::Message(format!("Failed to read entry: {}", e)))?;
+            let entry =
+                entry.map_err(|e| crate::Error::Message(format!("Failed to read entry: {}", e)))?;
             let path = entry.path();
 
             // Only include JSON files
