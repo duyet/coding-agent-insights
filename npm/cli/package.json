@@ -1,5 +1,5 @@
 {
-  "name": "@cai/cli",
+  "name": "@coding-agent-insights/cli",
   "version": "0.1.1",
   "description": "Query and analyze AI coding history from Claude, Codex, Git, and more",
   "author": "cai-project",
