@@ -1,0 +1,21 @@
+[package]
+name = "cai-files"
+version.workspace = true
+edition.workspace = true
+description = "Direct file operations for CAI - no storage layer"
+license.workspace = true
+repository.workspace = true
+
+[dependencies]
+cai-core = { path = "../cai-core" }
+dirs = "5"
+futures = "0.3"
+serde = { workspace = true }
+serde_json = { workspace = true }
+chrono = { workspace = true }
+tokio = { workspace = true }
+thiserror = { workspace = true }
+tracing = { workspace = true }
+
+[dev-dependencies]
+tokio-test = "0.4"
