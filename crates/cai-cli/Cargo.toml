@@ -6,6 +6,8 @@ license.workspace = true
 authors.workspace = true
 repository.workspace = true
 rust-version.workspace = true
+description = "Command-line interface for Coding Agent Insights"
+documentation = "https://docs.rs/cai-cli"
 
 [[bin]]
 name = "cai"

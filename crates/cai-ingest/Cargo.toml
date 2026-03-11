@@ -6,6 +6,8 @@ license.workspace = true
 authors.workspace = true
 repository.workspace = true
 rust-version.workspace = true
+description = "Data ingestion parsers for Coding Agent Insights"
+documentation = "https://docs.rs/cai-ingest"
 
 [dependencies]
 cai-core = { path = "../cai-core", version = "0.1.0" }
