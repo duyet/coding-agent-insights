@@ -6,6 +6,8 @@ license.workspace = true
 authors.workspace = true
 repository.workspace = true
 rust-version.workspace = true
+description = "Claude Code plugin for Coding Agent Insights"
+documentation = "https://docs.rs/cai-plugin"
 
 [lib]
 crate-type = ["cdylib", "rlib"]

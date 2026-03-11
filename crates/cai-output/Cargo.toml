@@ -6,6 +6,8 @@ license.workspace = true
 authors.workspace = true
 repository.workspace = true
 rust-version.workspace = true
+description = "Output formatters for Coding Agent Insights"
+documentation = "https://docs.rs/cai-output"
 
 [dependencies]
 cai-core = { path = "../cai-core", version = "0.1.0" }
