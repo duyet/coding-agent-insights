@@ -58,7 +58,7 @@ crossterm = "0.29"
 
 # Web
 axum = { version = "0.8", features = ["ws"] }
-tokio-tungstenite = "0.28"
+tokio-tungstenite = "0.29"
 
 # Testing
 rstest = "0.26"
