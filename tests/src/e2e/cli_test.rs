@@ -14,6 +14,14 @@ mod cli_tests {
         path
     }
 
+    /// Get the path to test fixtures (resolved from workspace root via CARGO_MANIFEST_DIR)
+    fn fixtures_path() -> PathBuf {
+        let mut path = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+        path.pop(); // tests/ -> workspace root
+        path.push("tests/fixtures");
+        path
+    }
+
     /// Test basic CLI invocation
     #[test]
     #[ignore]
@@ -166,8 +174,15 @@ mod cli_tests {
             return;
         }
 
+        let fixture_path = fixtures_path();
         let output = Command::new(&bin_path)
-            .args(["ingest", "--source", "claude", "--path", "tests/fixtures"])
+            .args([
+                "ingest",
+                "--source",
+                "claude",
+                "--path",
+                &fixture_path.to_string_lossy(),
+            ])
             .stdout(Stdio::piped())
             .stderr(Stdio::piped())
             .output()
@@ -198,9 +213,13 @@ mod cli_tests {
             .output()
             .expect("Failed to execute cai ingest");
 
-        // Should not crash even with placeholder implementation
+        // Should not crash even with placeholder implementation;
+        // without --path, it falls back to default path and emits a user-facing error on stderr
+        let stderr = String::from_utf8_lossy(&output.stderr);
         assert!(
-            output.status.success() || String::from_utf8_lossy(&output.stdout).contains("Source:")
+            output.status.success() || stderr.contains("error"),
+            "ingest without path should emit an error, got: stderr={}",
+            stderr,
         );
     }
 
