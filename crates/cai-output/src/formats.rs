@@ -12,7 +12,26 @@ use std::collections::HashMap;
 use std::io::Write;
 use tabled::builder::Builder;
 use tabled::settings::style::Style;
-use tabled::settings::{Alignment, Modify, Width};
+use tabled::settings::{Alignment, Modify};
+use tabled::Tabled;
+
+/// A display-friendly row for table output.
+#[derive(Tabled)]
+struct Row {
+    timestamp: String,
+    source: String,
+    prompt: String,
+}
+
+impl From<&cai_core::Entry> for Row {
+    fn from(e: &cai_core::Entry) -> Self {
+        Self {
+            timestamp: e.timestamp.format("%Y-%m-%d %H:%M:%S").to_string(),
+            source: format!("{:?}", e.source),
+            prompt: e.prompt.chars().take(60).collect(),
+        }
+    }
+}
 
 /// JSON array formatter
 #[derive(Debug, Clone, Default)]
@@ -165,57 +184,38 @@ impl TableFormatter {
         Self::default()
     }
 
-    /// Build a tabled table from entries
-    fn build_table(&self, entries: &[Entry]) -> String {
-        let colorize = self.config.colorize;
-        let truncate = self.config.truncate;
-
+    fn write_table<W: Write>(&self, entries: &[Entry], writer: &mut W) -> Result<()> {
+        let rows: Vec<Row> = entries.iter().map(Row::from).collect();
         let mut builder = Builder::new();
-        builder.push_record(["ID", "Source", "Timestamp", "Prompt", "Response"]);
 
-        for entry in entries {
-            let ts = entry.timestamp.format("%Y-%m-%d %H:%M:%S").to_string();
-            let prompt = if truncate > 0 {
-                self.config.truncate_text(&entry.prompt, truncate)
-            } else {
-                self.config.truncate_text(&entry.prompt, 60)
-            };
-            let response = if truncate > 0 {
-                self.config.truncate_text(&entry.response, truncate)
-            } else {
-                self.config.truncate_text(&entry.response, 60)
-            };
-            let source = colorize_source(&format!("{:?}", entry.source), colorize);
+        if self.config.show_header {
+            builder.push_record(["Timestamp", "Source", "Prompt"]);
+        }
 
-            builder.push_record([entry.id.as_str(), &source, &ts, &prompt, &response]);
+        for row in &rows {
+            builder.push_record([&row.timestamp, &row.source, &row.prompt]);
         }
 
         let mut table = builder.build();
-        table.with(Style::rounded());
-
-        // Apply max width constraint
-        if self.config.max_width > 0 {
-            table.with(Width::truncate(self.config.max_width));
+        if !self.config.compact {
+            table.with(Style::rounded());
+        } else {
+            table.with(Style::empty());
         }
 
-        table.to_string()
+        write!(writer, "{table}")?;
+        writeln!(writer)?;
+        Ok(())
     }
 }
 
 impl Formatter for TableFormatter {
     fn format<W: Write>(&self, entries: &[Entry], writer: &mut W) -> Result<()> {
-        if entries.is_empty() {
-            return Ok(());
-        }
-        let table = self.build_table(entries);
-        writeln!(writer, "{}", table)?;
-        Ok(())
+        self.write_table(entries, writer)
     }
 
     fn format_one<W: Write>(&self, entry: &Entry, writer: &mut W) -> Result<()> {
-        let table = self.build_table(&[entry.clone()]);
-        writeln!(writer, "{}", table)?;
-        Ok(())
+        self.write_table(std::slice::from_ref(entry), writer)
     }
 
     fn config(&self) -> &FormatterConfig {
@@ -594,11 +594,9 @@ mod tests {
         assert!(output.contains("╰"));
         assert!(output.contains("╯"));
         // Should contain column headers
-        assert!(output.contains("ID"));
         assert!(output.contains("Source"));
         assert!(output.contains("Timestamp"));
         assert!(output.contains("Prompt"));
-        assert!(output.contains("Response"));
         // Should contain entry data
         assert!(output.contains("Refactor"));
         assert!(output.contains("Claude"));
@@ -611,26 +609,27 @@ mod tests {
         let mut buf = Vec::new();
         formatter.format(&entries, &mut buf).unwrap();
         let output = String::from_utf8(buf).unwrap();
-        assert!(output.is_empty());
+        // Should render a header-only table (show_header defaults to true)
+        assert!(output.contains("Timestamp"));
+        assert!(output.contains("Source"));
+        assert!(output.contains("Prompt"));
     }
 
     #[test]
-    fn test_table_formatter_truncation() {
+    fn test_table_formatter_no_header() {
         let mut config = FormatterConfig::default();
-        config.truncate = 20;
+        config.show_header = false;
+        config.compact = true;
         let mut formatter = TableFormatter::default();
         formatter.set_config(config);
 
-        let mut entry = mock_entry();
-        entry.prompt = "This is a very long prompt that should be truncated".to_string();
-        let entries = vec![entry];
-
+        let entries = multiple_entries();
         let mut buf = Vec::new();
         formatter.format(&entries, &mut buf).unwrap();
         let output = String::from_utf8(buf).unwrap();
-        // Should be truncated
-        assert!(output.contains("..."));
-        assert!(!output.contains("should be truncated"));
+        // No header, compact mode
+        assert!(!output.contains("Timestamp"));
+        assert!(output.contains("Refactor"));
     }
 
     #[test]
