@@ -27,6 +27,7 @@ tokio = { workspace = true }
 tracing = { workspace = true }
 tracing-subscriber = { workspace = true }
 colored = { workspace = true }
+tabled = { workspace = true }
 chrono = { workspace = true }
 config = "0.15"
 dirs = "5.0"

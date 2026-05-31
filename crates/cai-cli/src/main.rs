@@ -1,8 +1,13 @@
 //! CAI CLI - Main command-line interface
+//!
+//! Orchestrates all CAI subsystems and presents a polished terminal UI
+//! with consistent styling, color theming, and user-friendly output.
 
 #![warn(missing_docs, unused_crate_dependencies)]
 
 mod config;
+
+use std::io::Write;
 
 use cai_core::{Entry, Metadata, Source};
 use cai_ingest::{IngestConfig, Ingestor};
@@ -14,6 +19,73 @@ use colored::Colorize;
 use config::load_config;
 use std::path::PathBuf;
 use std::sync::Arc;
+use tabled::builder::Builder;
+use tabled::settings::style::Style;
+
+// ---------------------------------------------------------------------------
+// Theme helpers
+// ---------------------------------------------------------------------------
+
+/// Check whether the user has opted out of color via env var.
+fn color_disabled() -> bool {
+    std::env::var("NO_COLOR")
+        .ok()
+        .and_then(|v| {
+            if v.is_empty() { None } else { Some(true) }
+        })
+        .unwrap_or(false)
+}
+
+/// Render a styled section header, e.g. "▸ CAI Statistics"
+fn section_header(text: &str) {
+    if color_disabled() {
+        println!("\n{}", text);
+        println!("{}", "─".repeat(text.len()));
+    } else {
+        println!("\n{}", format!("▸ {} ◂", text).cyan().bold());
+        println!("{}", "─".repeat(text.len() + 6).cyan().dimmed());
+    }
+}
+
+/// Render a success message
+fn success_msg(text: &str) {
+    if color_disabled() {
+        println!("✓ {}", text);
+    } else {
+        println!("{} {}", "✓".green().bold(), text);
+    }
+}
+
+/// Render an informational / secondary label
+fn info_label(label: &str, value: &str) {
+    if color_disabled() {
+        println!("{}: {}", label, value);
+    } else {
+        println!("{} {}", format!("{}:", label).cyan().bold(), value);
+    }
+}
+
+/// Render an empty-state notice
+fn empty_notice(msg: &str) {
+    if color_disabled() {
+        println!("{}", msg);
+    } else {
+        println!("{}", msg.dimmed());
+    }
+}
+
+/// Render a structured error message to stderr
+fn print_error(msg: &str) {
+    if color_disabled() {
+        eprintln!("error: {}", msg);
+    } else {
+        eprintln!("{} {}", "error".red().bold(), msg);
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Mock data
+// ---------------------------------------------------------------------------
 
 /// Create storage with mock data for testing
 async fn create_storage_with_mock_data() -> cai_storage::MemoryStorage {
@@ -108,7 +180,7 @@ enum Commands {
     Query {
         /// SQL-like query string
         query: String,
-        /// Output format
+        /// Output format (json, jsonl, csv, table, ai, stats)
         #[arg(short, long, default_value = "table")]
         output: String,
     },
@@ -140,7 +212,14 @@ enum Commands {
 
 /// Execute data ingestion from specified source
 async fn execute_ingest(source: &str, path: Option<&str>) -> cai_core::Result<()> {
-    println!("{} {}", "Ingesting from:".green(), source);
+    section_header("Data Ingestion");
+
+    let ingest_label = if color_disabled() {
+        source.to_string()
+    } else {
+        source.cyan().to_string()
+    };
+    info_label("Source", &ingest_label);
 
     // Build config based on source
     let config = match source.to_lowercase().as_str() {
@@ -167,6 +246,10 @@ async fn execute_ingest(source: &str, path: Option<&str>) -> cai_core::Result<()
             ..Default::default()
         },
         _ => {
+            print_error(&format!(
+                "Unknown source '{}'. Valid options: claude, codex, all",
+                source
+            ));
             return Err(cai_core::Error::Message(format!(
                 "Unknown source: '{}'. Valid options: claude, codex, all",
                 source
@@ -178,21 +261,37 @@ async fn execute_ingest(source: &str, path: Option<&str>) -> cai_core::Result<()
     let ingestor = Ingestor::new(config);
     let storage = cai_storage::MemoryStorage::new();
 
+    // Progress indicator
+    if !color_disabled() {
+        print!("{} ", "⏳ Processing...".yellow());
+        std::io::stdout().flush().ok();
+    }
+
     // Execute ingestion
     let count = match ingestor.ingest_all(&storage).await {
         Ok(count) => count,
         Err(e) => {
-            eprintln!("{} {}", "Error:".red(), e);
+            if !color_disabled() {
+                println!();
+            }
+            print_error(&e.to_string());
             std::process::exit(1);
         }
     };
 
-    println!("\n{} {} entries", "Successfully ingested:".green(), count);
+    if !color_disabled() {
+        println!("\r{}", " ".repeat(40));
+        print!("\r");
+    }
+
+    success_msg(&format!("Ingested {} entries from '{}'", count, source));
     Ok(())
 }
 
 /// Show statistics about stored entries
 async fn execute_stats() -> cai_core::Result<()> {
+    section_header("CAI Statistics");
+
     // Initialize storage with mock data for now
     let storage = cai_storage::MemoryStorage::new();
 
@@ -200,15 +299,13 @@ async fn execute_stats() -> cai_core::Result<()> {
     let entries = match storage.query(None as Option<&cai_storage::Filter>).await {
         Ok(entries) => entries,
         Err(e) => {
-            eprintln!("{} {}", "Error:".red(), e);
+            print_error(&e.to_string());
             std::process::exit(1);
         }
     };
 
-    println!("\n{} {} entries", "Found:".cyan(), entries.len());
-
     if entries.is_empty() {
-        println!("\n{}", "No entries found.".dimmed());
+        empty_notice("No entries found. Try 'cai ingest' first.");
         return Ok(());
     }
 
@@ -218,66 +315,64 @@ async fn execute_stats() -> cai_core::Result<()> {
     let output = String::from_utf8(buffer)
         .map_err(|e| cai_core::Error::Message(format!("Invalid UTF-8 in stats output: {}", e)))?;
 
-    println!("\n{}", output);
+    println!("{}", output);
     Ok(())
 }
 
 /// Show database schema information
-async fn execute_schema(table: Option<&str>) -> cai_core::Result<()> {
-    println!("\n{}", "Database Schema".bold().cyan());
-    println!("{}", "=================".cyan());
+async fn execute_schema(_table: Option<&str>) -> cai_core::Result<()> {
+    section_header("Database Schema");
 
-    // Show available tables
-    println!("\n{}", "Available Tables:".bold().green());
-    println!("  - {}", "entries".bold());
-
-    // If a table is specified, show its schema
-    if let Some(table_name) = table {
-        if table_name.to_lowercase() == "entries" {
-            println!("\n{}", format!("Table: {}", table_name).bold().green());
-            println!("────────────────────────────────────────────────────────────────────");
-            println!("{:<20} {:<20} {:<40}", "Column", "Type", "Description");
-            println!("────────────────────────────────────────────────────────────────────");
-            println!("{:<20} {:<20} {:<40}", "id", "TEXT", "Unique identifier");
-            println!(
-                "{:<20} {:<20} {:<40}",
-                "source", "TEXT", "Source system (Claude, Codex, Git, Other)"
-            );
-            println!(
-                "{:<20} {:<20} {:<40}",
-                "timestamp", "TIMESTAMP", "Interaction timestamp (UTC)"
-            );
-            println!(
-                "{:<20} {:<20} {:<40}",
-                "prompt", "TEXT", "User prompt/input"
-            );
-            println!(
-                "{:<20} {:<20} {:<40}",
-                "response", "TEXT", "AI response/output"
-            );
-            println!(
-                "{:<20} {:<20} {:<40}",
-                "metadata", "JSON", "Additional metadata (file_path, language, etc.)"
-            );
-            println!("────────────────────────────────────────────────────────────────────");
-        } else {
-            return Err(cai_core::Error::Message(format!(
-                "Unknown table: '{}'. Available tables: entries",
-                table_name
-            )));
-        }
-    } else {
-        // Show column list for entries table
-        println!("\n{}", "Columns in 'entries' table:".bold());
-        println!("  id         - Unique identifier (TEXT)");
-        println!("  source     - Source system (TEXT)");
-        println!("  timestamp  - Interaction timestamp (TIMESTAMP)");
-        println!("  prompt     - User prompt/input (TEXT)");
-        println!("  response   - AI response/output (TEXT)");
-        println!("  metadata   - Additional metadata (JSON)");
+    // Available tables list
+    {
+        let mut builder = Builder::new();
+        builder.push_record(["Table", "Description"]);
+        builder.push_record([
+            "entries",
+            "Core table storing all AI coding interactions",
+        ]);
+        let mut tbl = builder.build();
+        tbl.with(Style::rounded());
+        println!("{}", tbl);
     }
 
-    println!("\n{}", "Query Examples:".bold().green());
+    // Show columns for entries table
+    println!();
+    {
+        let mut builder = Builder::new();
+        builder.push_record(["Column", "Type", "Description"]);
+        builder.push_record(["id", "TEXT", "Unique identifier (UUID)"]);
+        builder.push_record([
+            "source",
+            "TEXT",
+            "Source system: Claude, Codex, Git, or Other",
+        ]);
+        builder.push_record([
+            "timestamp",
+            "TIMESTAMP",
+            "Interaction timestamp (UTC)",
+        ]);
+        builder.push_record(["prompt", "TEXT", "User prompt or input"]);
+        builder.push_record(["response", "TEXT", "AI response or output"]);
+        builder.push_record([
+            "metadata",
+            "JSON",
+            "Additional metadata (file_path, language, commit_hash, etc.)",
+        ]);
+
+        let mut tbl = builder.build();
+        tbl.with(Style::rounded());
+        println!("{}", tbl);
+    }
+
+    // Query examples
+    println!();
+    let ex_label = if color_disabled() {
+        "Examples"
+    } else {
+        "Examples"
+    };
+    info_label(ex_label, "");
     println!("  SHOW TABLES");
     println!("  DESCRIBE entries");
     println!("  SELECT * FROM entries LIMIT 10");
@@ -288,7 +383,9 @@ async fn execute_schema(table: Option<&str>) -> cai_core::Result<()> {
 
 /// Execute a SQL query and display results
 async fn execute_query(query: &str, output_format: &str) -> cai_core::Result<()> {
-    println!("{} {}", "Executing query:".green(), query.dimmed());
+    section_header("Query Results");
+
+    info_label("Query", query);
 
     // TODO: Use persistent storage from config instead of mock data
     let storage = create_storage_with_mock_data().await;
@@ -298,15 +395,19 @@ async fn execute_query(query: &str, output_format: &str) -> cai_core::Result<()>
     let results = query_engine
         .execute(query)
         .await
-        .map_err(|e| cai_core::Error::Message(format!("Query execution failed: {}", e)))?;
+        .map_err(|e| {
+            print_error(&format!("Query execution failed: {}", e));
+            cai_core::Error::Message(format!("Query execution failed: {}", e))
+        })?;
 
     // Display results count
-    println!("\n{} {} results", "Found:".cyan(), results.len());
-
     if results.is_empty() {
-        println!("\n{}", "No results found.".dimmed());
+        empty_notice("No results match your query. Try different filters.");
         return Ok(());
     }
+
+    let count_label = format!("Found {} result(s)", results.len());
+    info_label("Results", &count_label);
 
     // Format and display output
     let output = match output_format.to_lowercase().as_str() {
@@ -317,6 +418,10 @@ async fn execute_query(query: &str, output_format: &str) -> cai_core::Result<()>
         "ai" => format_with_formatter(&results, cai_output::AiFormatter::default(), "ai")?,
         "stats" => format_with_formatter(&results, cai_output::StatsFormatter::default(), "stats")?,
         _ => {
+            print_error(&format!(
+                "Unknown format '{}'. Valid options: json, jsonl, csv, table, ai, stats",
+                output_format
+            ));
             return Err(cai_core::Error::Message(format!(
                 "Unknown output format: '{}'. Valid options: json, jsonl, csv, table, ai, stats",
                 output_format
@@ -352,7 +457,6 @@ async fn main() -> cai_core::Result<()> {
         Commands::Stats => execute_stats().await,
         Commands::Schema { table } => execute_schema(table.as_deref()).await,
         Commands::Tui => {
-            // TODO: Use SQLite storage when config.storage.r#type == "sqlite"
             let storage = Arc::new(create_storage_with_mock_data().await);
             cai_tui::run(storage).await
         }
@@ -362,17 +466,13 @@ async fn main() -> cai_core::Result<()> {
                 port,
                 host: "127.0.0.1".to_string(),
             };
-            println!("{} {}", "Starting web server on port:".green(), port);
-            // TODO: Use configured storage backend based on config.storage.r#type
+            success_msg(&format!("Starting web server on port {}", port));
             let storage = std::sync::Arc::new(cai_storage::MemoryStorage::new());
             cai_web::run(storage, web_config).await
         }
         #[cfg(not(feature = "web"))]
         Commands::Web { .. } => {
-            eprintln!(
-                "{}",
-                "Web feature not enabled. Build with --features web.".red()
-            );
+            print_error("Web feature not enabled. Build with '--features web'.");
             Err(cai_core::Error::Message(
                 "Web feature not enabled".to_string(),
             ))

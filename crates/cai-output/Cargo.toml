@@ -13,6 +13,8 @@ documentation = "https://docs.rs/cai-output"
 cai-core = { path = "../cai-core", version = "0.1.0" }
 
 serde_json = { workspace = true }
+tabled = { workspace = true }
+colored = { workspace = true }
 
 [dev-dependencies]
 rstest = { workspace = true }
