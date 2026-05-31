@@ -4,7 +4,7 @@ use cai_core::{Entry, Result};
 use std::io::Write;
 
 /// Configuration for formatters
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone)]
 #[non_exhaustive]
 pub struct FormatterConfig {
     /// Maximum width for table output (0 = no limit)
@@ -15,6 +15,23 @@ pub struct FormatterConfig {
     pub truncate: usize,
     /// Number of entries to include (0 = all)
     pub limit: usize,
+    /// Show column headers in table output
+    pub show_header: bool,
+    /// Compact mode (minimal padding, no separators)
+    pub compact: bool,
+}
+
+impl Default for FormatterConfig {
+    fn default() -> Self {
+        Self {
+            max_width: 0,
+            colorize: false,
+            truncate: 0,
+            limit: 0,
+            show_header: true,
+            compact: false,
+        }
+    }
 }
 
 /// Core formatter trait for output formats
