@@ -7,8 +7,6 @@
 
 mod config;
 
-use std::io::Write;
-
 use cai_core::{Entry, Metadata, Source};
 use cai_ingest::{IngestConfig, Ingestor};
 use cai_output::{Formatter, StatsFormatter};
@@ -17,10 +15,9 @@ use chrono::{Duration, Utc};
 use clap::{Parser, Subcommand};
 use colored::Colorize;
 use config::load_config;
+use indicatif::{ProgressBar, ProgressStyle};
 use std::path::PathBuf;
 use std::sync::Arc;
-use tabled::builder::Builder;
-use tabled::settings::style::Style;
 
 // ---------------------------------------------------------------------------
 // Theme helpers
@@ -34,44 +31,6 @@ fn color_disabled() -> bool {
             if v.is_empty() { None } else { Some(true) }
         })
         .unwrap_or(false)
-}
-
-/// Render a styled section header, e.g. "▸ CAI Statistics"
-fn section_header(text: &str) {
-    if color_disabled() {
-        println!("\n{}", text);
-        println!("{}", "─".repeat(text.len()));
-    } else {
-        println!("\n{}", format!("▸ {} ◂", text).cyan().bold());
-        println!("{}", "─".repeat(text.len() + 6).cyan().dimmed());
-    }
-}
-
-/// Render a success message
-fn success_msg(text: &str) {
-    if color_disabled() {
-        println!("✓ {}", text);
-    } else {
-        println!("{} {}", "✓".green().bold(), text);
-    }
-}
-
-/// Render an informational / secondary label
-fn info_label(label: &str, value: &str) {
-    if color_disabled() {
-        println!("{}: {}", label, value);
-    } else {
-        println!("{} {}", format!("{}:", label).cyan().bold(), value);
-    }
-}
-
-/// Render an empty-state notice
-fn empty_notice(msg: &str) {
-    if color_disabled() {
-        println!("{}", msg);
-    } else {
-        println!("{}", msg.dimmed());
-    }
 }
 
 /// Render a structured error message to stderr
@@ -212,15 +171,6 @@ enum Commands {
 
 /// Execute data ingestion from specified source
 async fn execute_ingest(source: &str, path: Option<&str>) -> cai_core::Result<()> {
-    section_header("Data Ingestion");
-
-    let ingest_label = if color_disabled() {
-        source.to_string()
-    } else {
-        source.cyan().to_string()
-    };
-    info_label("Source", &ingest_label);
-
     // Build config based on source
     let config = match source.to_lowercase().as_str() {
         "claude" => IngestConfig {
@@ -261,41 +211,39 @@ async fn execute_ingest(source: &str, path: Option<&str>) -> cai_core::Result<()
     let ingestor = Ingestor::new(config);
     let storage = cai_storage::MemoryStorage::new();
 
-    // Progress indicator
-    if !color_disabled() {
-        print!("{} ", "⏳ Processing...".yellow());
-        std::io::stdout().flush().ok();
-    }
+    let spinner = ProgressBar::new_spinner();
+    spinner.set_style(
+        ProgressStyle::default_spinner()
+            .template("{spinner:.green} {msg}")
+            .unwrap(),
+    );
+    spinner.set_message(format!("Ingesting from {}...", source));
 
     // Execute ingestion
     let count = match ingestor.ingest_all(&storage).await {
         Ok(count) => count,
         Err(e) => {
-            if !color_disabled() {
-                println!();
-            }
             print_error(&e.to_string());
             std::process::exit(1);
         }
     };
 
-    if !color_disabled() {
-        println!("\r{}", " ".repeat(40));
-        print!("\r");
-    }
-
-    success_msg(&format!("Ingested {} entries from '{}'", count, source));
+    spinner.finish_and_clear();
+    println!("{} {} entries", "✔ Ingestion complete:".green().bold(), count);
     Ok(())
 }
 
 /// Show statistics about stored entries
 async fn execute_stats() -> cai_core::Result<()> {
-    section_header("CAI Statistics");
+    let spinner = ProgressBar::new_spinner();
+    spinner.set_style(
+        ProgressStyle::default_spinner()
+            .template("{spinner:.cyan} {msg}")
+            .unwrap(),
+    );
+    spinner.set_message("Computing statistics...");
 
-    // Initialize storage with mock data for now
     let storage = cai_storage::MemoryStorage::new();
-
-    // Query all entries
     let entries = match storage.query(None as Option<&cai_storage::Filter>).await {
         Ok(entries) => entries,
         Err(e) => {
@@ -304,8 +252,10 @@ async fn execute_stats() -> cai_core::Result<()> {
         }
     };
 
+    spinner.finish_and_clear();
+
     if entries.is_empty() {
-        empty_notice("No entries found. Try 'cai ingest' first.");
+        eprintln!("{}", "No entries found.".dimmed());
         return Ok(());
     }
 
@@ -320,77 +270,95 @@ async fn execute_stats() -> cai_core::Result<()> {
 }
 
 /// Show database schema information
-async fn execute_schema(_table: Option<&str>) -> cai_core::Result<()> {
-    section_header("Database Schema");
+async fn execute_schema(table: Option<&str>) -> cai_core::Result<()> {
+    eprintln!("{}", "▸ Schema".green().bold());
 
-    // Available tables list
-    {
-        let mut builder = Builder::new();
-        builder.push_record(["Table", "Description"]);
-        builder.push_record([
-            "entries",
-            "Core table storing all AI coding interactions",
-        ]);
-        let mut tbl = builder.build();
-        tbl.with(Style::rounded());
-        println!("{}", tbl);
-    }
+    if let Some(table_name) = table {
+        if table_name.to_lowercase() != "entries" {
+            return Err(cai_core::Error::Message(format!(
+                "Unknown table: '{}'. Available tables: entries",
+                table_name
+            )));
+        }
 
-    // Show columns for entries table
-    println!();
-    {
-        let mut builder = Builder::new();
-        builder.push_record(["Column", "Type", "Description"]);
-        builder.push_record(["id", "TEXT", "Unique identifier (UUID)"]);
-        builder.push_record([
-            "source",
-            "TEXT",
-            "Source system: Claude, Codex, Git, or Other",
-        ]);
-        builder.push_record([
-            "timestamp",
-            "TIMESTAMP",
-            "Interaction timestamp (UTC)",
-        ]);
-        builder.push_record(["prompt", "TEXT", "User prompt or input"]);
-        builder.push_record(["response", "TEXT", "AI response or output"]);
-        builder.push_record([
-            "metadata",
-            "JSON",
-            "Additional metadata (file_path, language, commit_hash, etc.)",
-        ]);
-
-        let mut tbl = builder.build();
-        tbl.with(Style::rounded());
-        println!("{}", tbl);
-    }
-
-    // Query examples
-    println!();
-    let ex_label = if color_disabled() {
-        "Examples"
+        eprintln!("  {} {}", "Table:".bold(), "entries".cyan());
+        eprintln!(
+            "{:<24} {:<20} {}",
+            "Column".bold(),
+            "Type".bold(),
+            "Description".bold()
+        );
+        eprintln!("{}", "─".repeat(80).dimmed());
+        eprintln!(
+            "{:<24} {:<20} {}",
+            "id".cyan(),
+            "TEXT".yellow(),
+            "Unique identifier"
+        );
+        eprintln!(
+            "{:<24} {:<20} {}",
+            "source".cyan(),
+            "TEXT".yellow(),
+            "Source system (Claude, Codex, Git, Other)"
+        );
+        eprintln!(
+            "{:<24} {:<20} {}",
+            "timestamp".cyan(),
+            "TIMESTAMP".yellow(),
+            "Interaction timestamp (UTC)"
+        );
+        eprintln!(
+            "{:<24} {:<20} {}",
+            "prompt".cyan(),
+            "TEXT".yellow(),
+            "User prompt/input"
+        );
+        eprintln!(
+            "{:<24} {:<20} {}",
+            "response".cyan(),
+            "TEXT".yellow(),
+            "AI response/output"
+        );
+        eprintln!(
+            "{:<24} {:<20} {}",
+            "metadata".cyan(),
+            "JSON".yellow(),
+            "Additional metadata (file_path, language, etc.)"
+        );
     } else {
-        "Examples"
-    };
-    info_label(ex_label, "");
-    println!("  SHOW TABLES");
-    println!("  DESCRIBE entries");
-    println!("  SELECT * FROM entries LIMIT 10");
-    println!("  SELECT * FROM entries WHERE source = 'Claude'");
+        eprintln!("  {} {}", "Available tables:".bold(), "entries".cyan());
+        eprintln!();
+        eprintln!("  {} `entries`", "Columns in".bold());
+        eprintln!("    {} {}", "id       ".cyan(), "- Unique identifier (TEXT)".dimmed());
+        eprintln!("    {} {}", "source   ".cyan(), "- Source system (TEXT)".dimmed());
+        eprintln!("    {} {}", "timestamp".cyan(), "- Interaction timestamp (TIMESTAMP)".dimmed());
+        eprintln!("    {} {}", "prompt   ".cyan(), "- User prompt/input (TEXT)".dimmed());
+        eprintln!("    {} {}", "response ".cyan(), "- AI response/output (TEXT)".dimmed());
+        eprintln!("    {} {}", "metadata ".cyan(), "- Additional metadata (JSON)".dimmed());
+        eprintln!();
+        eprintln!("  {}:", "Query examples".bold().green());
+        eprintln!("    {}", "SELECT * FROM entries LIMIT 10".dimmed());
+        eprintln!("    {}", "SELECT * FROM entries WHERE source = 'Claude'".dimmed());
+    }
 
     Ok(())
 }
 
 /// Execute a SQL query and display results
 async fn execute_query(query: &str, output_format: &str) -> cai_core::Result<()> {
-    section_header("Query Results");
-
-    info_label("Query", query);
+    eprintln!("{} {}", "▸ Query:".green().bold(), query.dimmed());
 
     // TODO: Use persistent storage from config instead of mock data
     let storage = create_storage_with_mock_data().await;
 
-    // Parse and execute query
+    let spinner = ProgressBar::new_spinner();
+    spinner.set_style(
+        ProgressStyle::default_spinner()
+            .template("{spinner:.cyan} {msg}")
+            .unwrap(),
+    );
+    spinner.set_message("Executing query...");
+
     let query_engine = cai_query::QueryEngine::new(storage);
     let results = query_engine
         .execute(query)
@@ -400,16 +368,20 @@ async fn execute_query(query: &str, output_format: &str) -> cai_core::Result<()>
             cai_core::Error::Message(format!("Query execution failed: {}", e))
         })?;
 
-    // Display results count
+    spinner.finish_and_clear();
+
     if results.is_empty() {
-        empty_notice("No results match your query. Try different filters.");
+        eprintln!("{}", "∅ No results found.".dimmed());
         return Ok(());
     }
 
-    let count_label = format!("Found {} result(s)", results.len());
-    info_label("Results", &count_label);
+    eprintln!(
+        "{} {} {}",
+        "📋".dimmed(),
+        format!("{} results", results.len()).cyan(),
+        "•".dimmed()
+    );
 
-    // Format and display output
     let output = match output_format.to_lowercase().as_str() {
         "json" => format_with_formatter(&results, cai_output::JsonFormatter::default(), "json")?,
         "jsonl" => format_with_formatter(&results, cai_output::JsonlFormatter::default(), "jsonl")?,
@@ -429,7 +401,7 @@ async fn execute_query(query: &str, output_format: &str) -> cai_core::Result<()>
         }
     };
 
-    println!("\n{}", output);
+    println!("{}", output);
     Ok(())
 }
 
@@ -451,6 +423,13 @@ async fn main() -> cai_core::Result<()> {
 
     let cli = Cli::parse();
 
+    eprintln!(
+        "{} {} {}",
+        "cai".bold().cyan(),
+        "v0.1.0".dimmed(),
+        "— AI coding history analyzer".dimmed()
+    );
+
     match cli.command {
         Commands::Query { query, output } => execute_query(&query, &output).await,
         Commands::Ingest { source, path } => execute_ingest(&source, path.as_deref()).await,
@@ -466,7 +445,7 @@ async fn main() -> cai_core::Result<()> {
                 port,
                 host: "127.0.0.1".to_string(),
             };
-            success_msg(&format!("Starting web server on port {}", port));
+            eprintln!("{} {}", "Starting web server on port:".green(), port);
             let storage = std::sync::Arc::new(cai_storage::MemoryStorage::new());
             cai_web::run(storage, web_config).await
         }
