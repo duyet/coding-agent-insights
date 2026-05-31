@@ -232,11 +232,10 @@ Include:
 ## Release Process
 
 1. Update version in `Cargo.toml`
-2. Update `CHANGELOG.md`
-3. Create git tag
-4. Build release binaries
-5. Publish to crates.io
-6. Create GitHub release
+2. Create git tag
+3. Build release binaries
+4. Publish to crates.io
+5. Create GitHub release
 
 ## Community Guidelines
 
