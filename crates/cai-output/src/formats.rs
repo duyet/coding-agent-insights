@@ -252,17 +252,28 @@ impl Formatter for AiFormatter {
             };
 
             writeln!(writer, "{}", marker)?;
-            let source_label = if colorize { "source:".dimmed().to_string() } else { "source:".to_string() };
-            let time_label = if colorize { "time:".dimmed().to_string() } else { "time:".to_string() };
-            let ask_label = if colorize { "ask:".dimmed().to_string() } else { "ask:".to_string() };
-            let ans_label = if colorize { "ans:".dimmed().to_string() } else { "ans:".to_string() };
+            let source_label = if colorize {
+                "source:".dimmed().to_string()
+            } else {
+                "source:".to_string()
+            };
+            let time_label = if colorize {
+                "time:".dimmed().to_string()
+            } else {
+                "time:".to_string()
+            };
+            let ask_label = if colorize {
+                "ask:".dimmed().to_string()
+            } else {
+                "ask:".to_string()
+            };
+            let ans_label = if colorize {
+                "ans:".dimmed().to_string()
+            } else {
+                "ans:".to_string()
+            };
 
-            writeln!(
-                writer,
-                "  {} {}",
-                source_label,
-                format!("{:?}", entry.source)
-            )?;
+            writeln!(writer, "  {} {:?}", source_label, entry.source)?;
             writeln!(
                 writer,
                 "  {} {}",
@@ -414,7 +425,7 @@ impl StatsFormatter {
         builder.push_record(["Source", "Entries", "%"]);
 
         let mut sorted: Vec<_> = by_source.into_iter().collect();
-        sorted.sort_by(|a, b| b.1.cmp(&a.1));
+        sorted.sort_by_key(|k| std::cmp::Reverse(k.1));
 
         for (source, count) in &sorted {
             let pct = *count as f64 / total * 100.0;
@@ -433,10 +444,7 @@ impl StatsFormatter {
 
         let mut table = builder.build();
         table.with(Style::rounded());
-        table.with(
-            Modify::new(tabled::settings::object::Columns::last())
-                .with(Alignment::right()),
-        );
+        table.with(Modify::new(tabled::settings::object::Columns::last()).with(Alignment::right()));
 
         format!("\n{}\n{}", header, table)
     }
@@ -617,9 +625,11 @@ mod tests {
 
     #[test]
     fn test_table_formatter_no_header() {
-        let mut config = FormatterConfig::default();
-        config.show_header = false;
-        config.compact = true;
+        let config = FormatterConfig {
+            show_header: false,
+            compact: true,
+            ..Default::default()
+        };
         let mut formatter = TableFormatter::default();
         formatter.set_config(config);
 

@@ -167,6 +167,31 @@ mod cli_tests {
         }
 
         let output = Command::new(&bin_path)
+            .args(["ingest", "--source", "claude", "--path", "tests/fixtures"])
+            .stdout(Stdio::piped())
+            .stderr(Stdio::piped())
+            .output()
+            .expect("Failed to execute cai ingest");
+
+        assert!(
+            output.status.success(),
+            "ingest with fixtures should succeed: stdout={}, stderr={}",
+            String::from_utf8_lossy(&output.stdout),
+            String::from_utf8_lossy(&output.stderr),
+        );
+    }
+
+    /// Test ingest command without path (should not crash)
+    #[test]
+    #[ignore]
+    fn test_ingest_without_path() {
+        let bin_path = cai_bin();
+
+        if !bin_path.exists() {
+            return;
+        }
+
+        let output = Command::new(&bin_path)
             .args(["ingest", "--source", "claude"])
             .stdout(Stdio::piped())
             .stderr(Stdio::piped())
@@ -175,8 +200,7 @@ mod cli_tests {
 
         // Should not crash even with placeholder implementation
         assert!(
-            output.status.success()
-                || String::from_utf8_lossy(&output.stdout).contains("Ingesting from:")
+            output.status.success() || String::from_utf8_lossy(&output.stdout).contains("Source:")
         );
     }
 

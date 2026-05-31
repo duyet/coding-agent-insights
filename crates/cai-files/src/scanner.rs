@@ -95,15 +95,11 @@ impl FileScanner {
         if let Some(ref source) = filter.source {
             let path_str = path.to_string_lossy();
             match source {
-                Source::Claude => {
-                    if !path_str.contains("claude") {
-                        return false;
-                    }
+                Source::Claude if !path_str.contains("claude") => {
+                    return false;
                 }
-                Source::Codex => {
-                    if !path_str.contains("codex") {
-                        return false;
-                    }
+                Source::Codex if !path_str.contains("codex") => {
+                    return false;
                 }
                 _ => {}
             }
