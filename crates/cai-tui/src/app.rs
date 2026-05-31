@@ -6,6 +6,65 @@ use ratatui::style::Color;
 use std::sync::Arc;
 use std::time::{SystemTime, UNIX_EPOCH};
 
+/// Async action triggered by key events, executed by the main loop
+#[derive(Debug, Clone)]
+pub enum Action {
+    /// No action to perform
+    None,
+    /// Execute a SQL query with the given string
+    ExecuteQuery(String),
+    /// Clear current search and reload all entries
+    ClearSearch,
+}
+
+/// Color theme for consistent styling
+#[derive(Debug, Clone)]
+pub struct Theme {
+    /// Primary brand color (green)
+    pub primary: Color,
+    /// Secondary info color (cyan)
+    pub secondary: Color,
+    /// Accent/highlight color (yellow)
+    pub accent: Color,
+    /// Selected row background
+    pub highlight: Color,
+    /// Dim/muted text color
+    pub dim: Color,
+    /// Success/positive color
+    pub success: Color,
+    /// Error/negative color
+    pub error: Color,
+    /// Default border color
+    pub border: Color,
+    /// Table header background
+    pub header_bg: Color,
+    /// Status bar border
+    pub status_border: Color,
+    /// Even row background
+    pub row_even: Color,
+    /// Odd row background
+    pub row_odd: Color,
+}
+
+impl Default for Theme {
+    fn default() -> Self {
+        Self {
+            primary: Color::Green,
+            secondary: Color::Cyan,
+            accent: Color::Yellow,
+            highlight: Color::DarkGray,
+            dim: Color::Gray,
+            success: Color::Green,
+            error: Color::Red,
+            border: Color::DarkGray,
+            header_bg: Color::DarkGray,
+            status_border: Color::DarkGray,
+            row_even: Color::Reset,
+            row_odd: Color::Reset,
+        }
+    }
+}
+
 /// Application mode
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Mode {
