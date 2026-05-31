@@ -1,9 +1,5 @@
-//! Terminal UI rendering and setup
-//!
-//! Provides terminal initialization, rendering, and restoration.
-
 use crate::{
-    app::{App as AppState, Column, Mode},
+    app::{Action, App as AppState, Column, Mode, Theme},
     event::EventHandler,
 };
 use crossterm::{
@@ -25,14 +21,8 @@ use ratatui::{
 use std::sync::Arc;
 use tokio::sync::RwLock;
 
-/// Terminal type alias
 type Term = Terminal<CrosstermBackend<std::io::Stdout>>;
 
-/// Initialize the terminal for TUI
-///
-/// # Errors
-///
-/// Returns an error if terminal initialization fails
 pub fn init_terminal() -> Result<Term, std::io::Error> {
     enable_raw_mode()?;
     let mut stdout = std::io::stdout();
@@ -41,11 +31,6 @@ pub fn init_terminal() -> Result<Term, std::io::Error> {
     Terminal::new(backend)
 }
 
-/// Restore terminal to original state
-///
-/// # Errors
-///
-/// Returns an error if terminal restoration fails
 pub fn restore_terminal(mut terminal: Term) -> Result<(), std::io::Error> {
     disable_raw_mode()?;
     execute!(terminal.backend_mut(), LeaveAlternateScreen)?;
@@ -53,7 +38,6 @@ pub fn restore_terminal(mut terminal: Term) -> Result<(), std::io::Error> {
     Ok(())
 }
 
-/// Run the main application loop
 pub async fn run_app<S>(
     terminal: &mut Term,
     app: &mut Arc<RwLock<AppState<S>>>,
@@ -62,14 +46,14 @@ pub async fn run_app<S>(
 where
     S: cai_storage::Storage,
 {
-    // Load initial data
+    let theme = Theme::default();
+
     {
         let mut a = app.write().await;
         a.execute_query("SELECT * FROM entries").await;
     }
 
     loop {
-        // Check if should quit
         {
             let a = app.read().await;
             if a.state == crate::AppState::Quitting {
@@ -77,34 +61,44 @@ where
             }
         }
 
-        // Draw UI
         terminal.draw(|f| {
-            let rt = tokio::runtime::Handle::current();
-            let a = rt.block_on(app.read());
-            ui(f, &a);
+            let a = app.try_read();
+            if let Ok(a) = a {
+                ui(f, &a, &theme);
+            }
         })?;
 
-        // Handle events
         let event = event_handler.next().await;
 
-        let mut a = app.write().await;
-
-        match event {
+        let action = match event {
             crate::Event::Key(key) => {
-                handle_key_event(&mut a, key);
+                let mut a = app.write().await;
+                handle_key_event(&mut a, key, &theme)
             }
             crate::Event::Tick => {
-                // Auto-clear status message
+                let mut a = app.write().await;
                 if a.should_clear_status() {
                     a.reset_status();
                 }
+                Action::None
             }
+        };
+
+        match action {
+            Action::ExecuteQuery(query) => {
+                let mut a = app.write().await;
+                a.execute_query(&query).await;
+            }
+            Action::ClearSearch => {
+                let mut a = app.write().await;
+                a.clear_search().await;
+            }
+            Action::None => {}
         }
     }
 }
 
-/// Handle keyboard events
-fn handle_key_event<S>(app: &mut AppState<S>, key: KeyEvent)
+fn handle_key_event<S>(app: &mut AppState<S>, key: KeyEvent, _theme: &Theme) -> Action
 where
     S: cai_storage::Storage,
 {
@@ -117,116 +111,115 @@ where
     }
 }
 
-/// Handle key events in normal mode
-fn handle_normal_mode<S>(app: &mut AppState<S>, key: KeyEvent)
+fn handle_normal_mode<S>(app: &mut AppState<S>, key: KeyEvent) -> Action
 where
     S: cai_storage::Storage,
 {
     match key.code {
         KeyCode::Char('q') => {
             app.state = crate::AppState::Quitting;
+            Action::None
         }
         KeyCode::Char('i') => {
             app.mode = Mode::Query;
-            app.set_status(
-                "Query mode: Enter SQL query, Esc to cancel, Enter to execute".to_string(),
-                Color::Cyan,
-            );
+            app.set_status("Enter SQL, Esc to cancel, Enter to execute".into(), Color::Cyan);
+            Action::None
         }
         KeyCode::Char('/') => {
             app.mode = Mode::Search;
             app.search_input.clear();
-            app.set_status(
-                "Search mode: Type to filter, Esc to cancel".to_string(),
-                Color::Cyan,
-            );
+            app.set_status("Type to filter entries, Esc to cancel".into(), Color::Cyan);
+            Action::None
         }
         KeyCode::Char('?') => {
             app.mode = Mode::Help;
             app.help_scroll = 0;
-            app.set_status("Help: Press Esc or q to close".to_string(), Color::Cyan);
+            app.set_status("Help — Esc or q to close".into(), Color::Cyan);
+            Action::None
         }
         KeyCode::Enter => {
             if app.selected_entry().is_some() {
                 app.mode = Mode::Detail;
                 app.detail_scroll_reset();
-                app.set_status(
-                    "Detail view: Press Esc or q to close, arrows to scroll".to_string(),
-                    Color::Cyan,
-                );
+                app.set_status("Esc or q to close, arrows to scroll".into(), Color::Cyan);
             }
+            Action::None
         }
         KeyCode::Up | KeyCode::Char('k') => {
             app.select_previous();
+            Action::None
         }
         KeyCode::Down | KeyCode::Char('j') => {
-            app.select_next(20); // Default height, will be refined
+            app.select_next(20);
+            Action::None
         }
         KeyCode::Char('t') => {
             app.toggle_sort(Column::Timestamp);
+            Action::None
         }
         KeyCode::Char('s') => {
             app.toggle_sort(Column::Source);
+            Action::None
         }
         KeyCode::Char('p') => {
             app.toggle_sort(Column::Prompt);
+            Action::None
         }
         KeyCode::Char('r') => {
-            // Refresh data
-            let rt = tokio::runtime::Handle::try_current();
-            if let Ok(rt) = rt {
-                let query = app.query_input.clone();
-                rt.block_on(app.execute_query(&query));
-            }
+            let query = app.query_input.clone();
+            Action::ExecuteQuery(query)
         }
         KeyCode::Esc => {
             app.reset_status();
+            Action::None
         }
-        _ => {}
+        _ => Action::None,
     }
 }
 
-/// Handle key events in query mode
-fn handle_query_mode<S>(app: &mut AppState<S>, key: KeyEvent)
+fn handle_query_mode<S>(app: &mut AppState<S>, key: KeyEvent) -> Action
 where
     S: cai_storage::Storage,
 {
     match key.code {
         KeyCode::Enter => {
             if !app.query_input.is_empty() {
-                let rt = tokio::runtime::Handle::try_current();
-                if let Ok(rt) = rt {
-                    let query = app.query_input.clone();
-                    rt.block_on(app.execute_query(&query));
-                    app.query_input.clear();
-                }
+                let query = app.query_input.clone();
+                app.query_input.clear();
+                app.mode = Mode::Normal;
+                return Action::ExecuteQuery(query);
             }
             app.mode = Mode::Normal;
+            Action::None
         }
         KeyCode::Esc => {
             app.query_input.clear();
             app.history_index = None;
             app.mode = Mode::Normal;
             app.reset_status();
+            Action::None
         }
         KeyCode::Up => {
             app.history_previous();
+            Action::None
         }
         KeyCode::Down => {
             app.history_next();
+            Action::None
         }
         KeyCode::Char(c) => {
             app.query_input.push(c);
+            Action::None
         }
         KeyCode::Backspace => {
             app.query_input.pop();
+            Action::None
         }
-        _ => {}
+        _ => Action::None,
     }
 }
 
-/// Handle key events in search mode
-fn handle_search_mode<S>(app: &mut AppState<S>, key: KeyEvent)
+fn handle_search_mode<S>(app: &mut AppState<S>, key: KeyEvent) -> Action
 where
     S: cai_storage::Storage,
 {
@@ -234,67 +227,70 @@ where
         KeyCode::Enter => {
             app.search();
             app.mode = Mode::Normal;
+            Action::None
         }
         KeyCode::Esc => {
-            let rt = tokio::runtime::Handle::try_current();
-            if let Ok(rt) = rt {
-                rt.block_on(app.clear_search());
-            }
             app.mode = Mode::Normal;
             app.reset_status();
+            Action::ClearSearch
         }
         KeyCode::Char(c) => {
             app.search_input.push(c);
+            Action::None
         }
         KeyCode::Backspace => {
             app.search_input.pop();
+            Action::None
         }
-        _ => {}
+        _ => Action::None,
     }
 }
 
-/// Handle key events in detail mode
-fn handle_detail_mode<S>(app: &mut AppState<S>, key: KeyEvent)
+fn handle_detail_mode<S>(_app: &mut AppState<S>, key: KeyEvent) -> Action
 where
     S: cai_storage::Storage,
 {
     match key.code {
         KeyCode::Esc | KeyCode::Char('q') => {
-            app.mode = Mode::Normal;
-            app.reset_status();
+            _app.mode = Mode::Normal;
+            _app.reset_status();
+            Action::None
         }
         KeyCode::Up | KeyCode::Char('k') => {
-            app.detail_scroll_up();
+            _app.detail_scroll_up();
+            Action::None
         }
         KeyCode::Down | KeyCode::Char('j') => {
-            app.detail_scroll_down();
+            _app.detail_scroll_down();
+            Action::None
         }
-        _ => {}
+        _ => Action::None,
     }
 }
 
-/// Handle key events in help mode
-fn handle_help_mode<S>(app: &mut AppState<S>, key: KeyEvent)
+fn handle_help_mode<S>(_app: &mut AppState<S>, key: KeyEvent) -> Action
 where
     S: cai_storage::Storage,
 {
     match key.code {
         KeyCode::Esc | KeyCode::Char('q') => {
-            app.mode = Mode::Normal;
-            app.reset_status();
+            _app.mode = Mode::Normal;
+            _app.reset_status();
+            Action::None
         }
         KeyCode::Up | KeyCode::Char('k') => {
-            app.help_scroll_up();
+            _app.help_scroll_up();
+            Action::None
         }
         KeyCode::Down | KeyCode::Char('j') => {
-            app.help_scroll_down();
+            _app.help_scroll_down();
+            Action::None
         }
-        _ => {}
+        _ => Action::None,
     }
 }
 
-/// Draw the UI
-fn ui<S>(f: &mut Frame, app: &AppState<S>)
+fn ui<S>(f: &mut Frame, app: &AppState<S>, theme: &Theme)
 where
     S: cai_storage::Storage,
 {
@@ -303,24 +299,19 @@ where
         .constraints([Constraint::Min(0), Constraint::Length(3)].as_ref())
         .split(f.area());
 
-    // Main content area
-    render_main(f, app, chunks[0]);
+    render_main(f, app, chunks[0], theme);
+    render_status(f, app, chunks[1], theme);
 
-    // Status bar
-    render_status(f, app, chunks[1]);
-
-    // Draw overlays based on mode
     match app.mode {
-        Mode::Query => render_query_input(f, app),
-        Mode::Search => render_search_input(f, app),
-        Mode::Detail => render_detail_view(f, app),
-        Mode::Help => render_help_screen(f, app),
+        Mode::Query => render_query_input(f, app, theme),
+        Mode::Search => render_search_input(f, app, theme),
+        Mode::Detail => render_detail_view(f, app, theme),
+        Mode::Help => render_help_screen(f, app, theme),
         Mode::Normal => {}
     }
 }
 
-/// Render main content area
-fn render_main<S>(f: &mut Frame, app: &AppState<S>, area: Rect)
+fn render_main<S>(f: &mut Frame, app: &AppState<S>, area: Rect, theme: &Theme)
 where
     S: cai_storage::Storage,
 {
@@ -329,56 +320,76 @@ where
         .constraints([Constraint::Length(1), Constraint::Min(0)].as_ref())
         .split(area);
 
-    // Header
+    let sort_label = format!("{:?}", app.sort_column);
+    let order_icon = match app.sort_order {
+        crate::SortOrder::Asc => " ▲",
+        crate::SortOrder::Desc => " ▼",
+    };
+
     let header = vec![Line::from(vec![
-        Span::styled(
-            "CAI",
-            Style::default()
-                .fg(Color::Green)
-                .add_modifier(Modifier::BOLD),
-        ),
-        Span::raw(" - "),
+        Span::styled("CAI", Style::default().fg(theme.primary).add_modifier(Modifier::BOLD)),
+        Span::raw(" · "),
         Span::styled(
             format!("{} entries", app.entries.len()),
-            Style::default().fg(Color::Cyan),
+            Style::default().fg(theme.secondary),
         ),
-        Span::raw(" | "),
+        Span::raw(" · "),
         Span::styled(
-            format!("Sort: {:?} ({:?})", app.sort_column, app.sort_order),
-            Style::default().fg(Color::Yellow),
+            format!("sorted by {}{}", sort_label.to_lowercase(), order_icon),
+            Style::default().fg(theme.accent),
         ),
     ])];
 
     let header = Paragraph::new(header)
-        .block(
-            Block::default()
-                .borders(Borders::ALL)
-                .border_style(Style::default().fg(Color::DarkGray)),
-        )
+        .block(Block::default().borders(Borders::ALL).border_style(Style::default().fg(theme.border)))
         .alignment(Alignment::Center);
-
     f.render_widget(header, chunks[0]);
 
-    // Results table
-    render_results_table(f, app, chunks[1]);
+    if app.entries.is_empty() {
+        render_empty_state(f, app, chunks[1], theme);
+    } else {
+        render_results_table(f, app, chunks[1], theme);
+    }
 }
 
-/// Render results table
-fn render_results_table<S>(f: &mut Frame, app: &AppState<S>, area: Rect)
+fn render_empty_state<S>(f: &mut Frame, _app: &AppState<S>, area: Rect, theme: &Theme)
 where
     S: cai_storage::Storage,
 {
+    let msg = Paragraph::new(vec![
+        Line::from(vec![Span::styled(
+            "No entries found",
+            Style::default().fg(theme.secondary).add_modifier(Modifier::BOLD),
+        )]),
+        Line::from(""),
+        Line::from(vec![Span::styled(
+            "  i  Enter query mode",
+            Style::default().fg(theme.dim),
+        )]),
+        Line::from(vec![Span::styled(
+            "  r  Refresh from storage",
+            Style::default().fg(theme.dim),
+        )]),
+    ])
+    .block(Block::default().borders(Borders::ALL).border_style(Style::default().fg(theme.border)))
+    .alignment(Alignment::Center);
+    f.render_widget(msg, area);
+}
+
+fn render_results_table<S>(f: &mut Frame, app: &AppState<S>, area: Rect, theme: &Theme)
+where
+    S: cai_storage::Storage,
+{
+    let sort_col_name = format!("{:?}", app.sort_column);
     let header_cells = ["Timestamp", "Source", "Prompt"].iter().map(|h| {
-        let style = if *h == format!("{:?}", app.sort_column) {
-            Style::default()
-                .fg(Color::Yellow)
-                .add_modifier(Modifier::BOLD)
+        let is_active = *h == sort_col_name;
+        let style = if is_active {
+            Style::default().fg(theme.accent).add_modifier(Modifier::BOLD)
         } else {
-            Style::default().fg(Color::Gray)
+            Style::default().fg(theme.dim)
         };
         Cell::from(*h).style(style)
     });
-
     let header = Row::new(header_cells).height(1).bottom_margin(0);
 
     let rows: Vec<Row> = app
@@ -388,12 +399,26 @@ where
         .skip(app.scroll)
         .take(area.height.saturating_sub(3) as usize)
         .map(|(i, entry)| {
+            let is_selected = i == app.selected;
+            let bg = if is_selected {
+                theme.highlight
+            } else if i % 2 == 0 {
+                theme.row_even
+            } else if theme.row_odd != Color::Reset {
+                theme.row_odd
+            } else {
+                Color::Reset
+            };
+            let row_style = Style::default().bg(bg);
             let cells = vec![
                 Cell::from(format_timestamp(entry.timestamp)),
-                Cell::from(format!("{:?}", entry.source)),
+                Cell::from(Span::styled(
+                    format!("{:?}", entry.source),
+                    Style::default().fg(theme.secondary),
+                )),
                 Cell::from(truncate_string(&entry.prompt, 60)),
             ];
-            Row::new(cells).style(app.row_style(i))
+            Row::new(cells).style(row_style)
         })
         .collect();
 
@@ -406,116 +431,142 @@ where
         ],
     )
     .header(header)
-    .block(
-        Block::default()
-            .borders(Borders::ALL)
-            .border_style(Style::default().fg(Color::DarkGray)),
-    )
-    .row_highlight_style(Style::default().bg(Color::DarkGray));
+    .block(Block::default().borders(Borders::ALL).border_style(Style::default().fg(theme.border)));
 
     let mut table_state = TableState::default();
     table_state.select(Some(app.selected.saturating_sub(app.scroll)));
 
     f.render_stateful_widget(table, area, &mut table_state);
 
-    // Render scrollbar
     let scrollbar = Scrollbar::new(ScrollbarOrientation::VerticalRight);
     let mut scrollbar_state = ScrollbarState::new(app.entries.len()).position(app.scroll);
-    f.render_stateful_widget(
-        scrollbar,
-        area.inner(Margin::new(0, 1)),
-        &mut scrollbar_state,
-    );
+    f.render_stateful_widget(scrollbar, area.inner(Margin::new(0, 1)), &mut scrollbar_state);
 }
 
-/// Render status bar
-fn render_status<S>(f: &mut Frame, app: &AppState<S>, area: Rect)
+fn render_status<S>(f: &mut Frame, app: &AppState<S>, area: Rect, theme: &Theme)
 where
     S: cai_storage::Storage,
 {
-    let status = vec![Line::from(vec![
-        Span::styled(
-            match app.mode {
-                Mode::Normal => "NORMAL",
-                Mode::Query => "QUERY",
-                Mode::Search => "SEARCH",
-                Mode::Detail => "DETAIL",
-                Mode::Help => "HELP",
-            },
-            Style::default()
-                .fg(Color::Green)
-                .add_modifier(Modifier::BOLD),
-        ),
-        Span::raw(" | "),
-        Span::styled(&app.status_message, Style::default().fg(app.status_color)),
-    ])];
+    fn active_label<'a>(label: &'a str, color: Color, is_active: bool) -> Span<'a> {
+        if is_active {
+            Span::styled(label, Style::default().fg(color).add_modifier(Modifier::BOLD))
+        } else {
+            Span::styled(label, Style::default().fg(Color::Gray))
+        }
+    }
 
-    let status_bar = Paragraph::new(status)
+    fn key_hint<'a>(keys: &'a str, label: &'a str, accent: Color, dim: Color) -> Vec<Span<'a>> {
+        vec![
+            Span::styled(keys, Style::default().fg(accent)),
+            Span::styled(label, Style::default().fg(dim)),
+        ]
+    }
+
+    let dim = theme.dim;
+    let accent = theme.accent;
+
+    let mode_label: Vec<Span> = match app.mode {
+        Mode::Normal => {
+            let mut sp = vec![active_label(" NORMAL ", theme.primary, app.mode == Mode::Normal)];
+            sp.push(Span::raw("│"));
+            sp.extend(key_hint(" i", "query ", accent, dim));
+            sp.extend(key_hint(" /", "search ", accent, dim));
+            sp.extend(key_hint(" ?", "help ", accent, dim));
+            sp.extend(key_hint(" r", "refresh ", accent, dim));
+            sp.extend(key_hint(" q", "quit", accent, dim));
+            sp
+        }
+        Mode::Query => {
+            let mut sp = vec![active_label(" QUERY ", Color::Cyan, true)];
+            if !app.query_input.is_empty() {
+                sp.push(Span::raw("│ "));
+                sp.push(Span::raw(&app.query_input));
+            }
+            sp
+        }
+        Mode::Search => {
+            let mut sp = vec![active_label(" SEARCH ", Color::Magenta, true)];
+            if !app.search_input.is_empty() {
+                sp.push(Span::raw("│ "));
+                sp.push(Span::raw(&app.search_input));
+            }
+            sp
+        }
+        Mode::Detail => {
+            let mut sp = vec![active_label(" DETAIL ", Color::Blue, true)];
+            sp.push(Span::raw("│"));
+            sp.extend(key_hint(" ↑↓", "scroll ", accent, dim));
+            sp.extend(key_hint(" Esc", "back", accent, dim));
+            sp
+        }
+        Mode::Help => {
+            let mut sp = vec![active_label(" HELP ", Color::Yellow, true)];
+            sp.push(Span::raw("│"));
+            sp.extend(key_hint(" ↑↓", "scroll ", accent, dim));
+            sp.extend(key_hint(" Esc", "close", accent, dim));
+            sp
+        }
+    };
+
+    let status_bar = Paragraph::new(Line::from(mode_label))
         .block(
             Block::default()
                 .borders(Borders::ALL)
-                .border_style(Style::default().fg(Color::DarkGray)),
+                .border_style(Style::default().fg(theme.status_border)),
         )
         .alignment(Alignment::Left);
 
     f.render_widget(status_bar, area);
 }
 
-/// Render query input overlay
-fn render_query_input<S>(f: &mut Frame, app: &AppState<S>)
+fn render_query_input<S>(f: &mut Frame, app: &AppState<S>, theme: &Theme)
 where
     S: cai_storage::Storage,
 {
     let area = centered_rect(60, 3, f.area());
-
     f.render_widget(Clear, area);
 
     let input = Paragraph::new(app.query_input.as_str())
         .block(
             Block::default()
                 .borders(Borders::ALL)
-                .border_style(Style::default().fg(Color::Cyan))
-                .title("Query (SQL)"),
+                .border_style(Style::default().fg(theme.secondary))
+                .title(" Query "),
         )
         .wrap(Wrap { trim: false });
-
     f.render_widget(input, area);
+
     let cursor_x = area.x + app.query_input.len() as u16 + 1;
     let cursor_y = area.y + 1;
-    // Ensure cursor is within bounds
     if cursor_x < area.right() && cursor_y < area.bottom() {
         f.set_cursor_position((cursor_x, cursor_y));
     }
 }
 
-/// Render search input overlay
-fn render_search_input<S>(f: &mut Frame, app: &AppState<S>)
+fn render_search_input<S>(f: &mut Frame, app: &AppState<S>, theme: &Theme)
 where
     S: cai_storage::Storage,
 {
     let area = centered_rect(60, 3, f.area());
-
     f.render_widget(Clear, area);
 
     let input = Paragraph::new(app.search_input.as_str())
         .block(
             Block::default()
                 .borders(Borders::ALL)
-                .border_style(Style::default().fg(Color::Cyan))
-                .title("Search"),
+                .border_style(Style::default().fg(theme.secondary))
+                .title(" Search "),
         )
         .wrap(Wrap { trim: false });
-
     f.render_widget(input, area);
+
     let cursor_x = area.x + app.search_input.len() as u16 + 1;
     let cursor_y = area.y + 1;
-    // Ensure cursor is within bounds
     if cursor_x < area.right() && cursor_y < area.bottom() {
         f.set_cursor_position((cursor_x, cursor_y));
     }
 }
 
-/// Helper to create centered rectangle
 fn centered_rect(percent_x: u16, percent_y: u16, r: Rect) -> Rect {
     let popup_layout = Layout::default()
         .direction(Direction::Vertical)
@@ -542,12 +593,10 @@ fn centered_rect(percent_x: u16, percent_y: u16, r: Rect) -> Rect {
         .split(popup_layout[1])[1]
 }
 
-/// Format timestamp for display
 fn format_timestamp(ts: chrono::DateTime<chrono::Utc>) -> String {
     ts.format("%Y-%m-%d %H:%M:%S").to_string()
 }
 
-/// Truncate string to max length
 fn truncate_string(s: &str, max_len: usize) -> String {
     if s.len() <= max_len {
         s.to_string()
@@ -556,190 +605,142 @@ fn truncate_string(s: &str, max_len: usize) -> String {
     }
 }
 
-/// Render detail view overlay
-fn render_detail_view<S>(f: &mut Frame, app: &AppState<S>)
+fn render_detail_view<S>(f: &mut Frame, app: &AppState<S>, theme: &Theme)
 where
     S: cai_storage::Storage,
 {
     let area = centered_rect(80, 70, f.area());
-
     f.render_widget(Clear, area);
 
     if let Some(entry) = app.selected_entry() {
-        let content = vec![
+        let meta_style = Style::default().fg(theme.secondary);
+        let label_style = Style::default().fg(theme.accent).add_modifier(Modifier::BOLD);
+
+        let mut lines = vec![
+            Line::from(vec![Span::styled("ID: ", meta_style), Span::raw(&entry.id)]),
             Line::from(vec![
-                Span::styled("ID: ", Style::default().fg(Color::Cyan)),
-                Span::raw(&entry.id),
-            ]),
-            Line::from(vec![
-                Span::styled("Source: ", Style::default().fg(Color::Cyan)),
+                Span::styled("Source: ", meta_style),
                 Span::raw(format!("{:?}", entry.source)),
             ]),
             Line::from(vec![
-                Span::styled("Timestamp: ", Style::default().fg(Color::Cyan)),
+                Span::styled("Timestamp: ", meta_style),
                 Span::raw(format_timestamp(entry.timestamp)),
             ]),
             Line::from(""),
-            Line::from(vec![Span::styled(
-                "Prompt:",
-                Style::default()
-                    .fg(Color::Yellow)
-                    .add_modifier(Modifier::BOLD),
-            )]),
+            Line::from(vec![Span::styled("Prompt:", label_style)]),
             Line::from(""),
         ];
 
-        let mut full_content = content.clone();
-
-        // Add prompt content (split into lines)
         for line in word_wrap(&entry.prompt, 76) {
-            full_content.push(Line::from(vec![Span::raw("  "), Span::raw(line)]));
+            lines.push(Line::from(vec![Span::raw("  "), Span::raw(line)]));
         }
 
-        full_content.push(Line::from(""));
-        full_content.push(Line::from(vec![Span::styled(
-            "Response:",
-            Style::default()
-                .fg(Color::Yellow)
-                .add_modifier(Modifier::BOLD),
-        )]));
-        full_content.push(Line::from(""));
+        lines.push(Line::from(""));
+        lines.push(Line::from(vec![Span::styled("Response:", label_style)]));
+        lines.push(Line::from(""));
 
-        // Add response content
         for line in word_wrap(&entry.response, 76) {
-            full_content.push(Line::from(vec![Span::raw("  "), Span::raw(line)]));
+            lines.push(Line::from(vec![Span::raw("  "), Span::raw(line)]));
         }
 
-        // Add metadata if present
         if entry.metadata.file_path.is_some() || entry.metadata.language.is_some() {
-            full_content.push(Line::from(""));
-            full_content.push(Line::from(vec![Span::styled(
-                "Metadata:",
-                Style::default().fg(Color::Cyan),
-            )]));
-
+            lines.push(Line::from(""));
+            lines.push(Line::from(vec![Span::styled("Metadata:", meta_style)]));
             if let Some(ref file) = entry.metadata.file_path {
-                full_content.push(Line::from(vec![Span::raw("  File: "), Span::raw(file)]));
+                lines.push(Line::from(vec![Span::raw("  File: "), Span::raw(file)]));
             }
-
             if let Some(ref lang) = entry.metadata.language {
-                full_content.push(Line::from(vec![Span::raw("  Language: "), Span::raw(lang)]));
+                lines.push(Line::from(vec![Span::raw("  Language: "), Span::raw(lang)]));
             }
-
             if let Some(ref repo) = entry.metadata.repo_url {
-                full_content.push(Line::from(vec![Span::raw("  Repo: "), Span::raw(repo)]));
+                lines.push(Line::from(vec![Span::raw("  Repo: "), Span::raw(repo)]));
             }
         }
 
-        let paragraph = Paragraph::new(full_content.clone())
+        let paragraph = Paragraph::new(lines.clone())
             .block(
                 Block::default()
                     .borders(Borders::ALL)
-                    .border_style(Style::default().fg(Color::Cyan))
-                    .title("Entry Details"),
+                    .border_style(Style::default().fg(theme.secondary))
+                    .title(" Entry Details "),
             )
             .scroll((app.detail_scroll as u16, 0))
             .wrap(Wrap { trim: false });
 
         f.render_widget(paragraph, area);
 
-        // Render scrollbar if content overflows
-        if full_content.len() > area.height as usize {
+        if lines.len() > area.height as usize {
             let scrollbar = Scrollbar::new(ScrollbarOrientation::VerticalRight);
             let mut scrollbar_state =
-                ScrollbarState::new(full_content.len()).position(app.detail_scroll);
-            f.render_stateful_widget(
-                scrollbar,
-                area.inner(Margin::new(0, 1)),
-                &mut scrollbar_state,
-            );
+                ScrollbarState::new(lines.len()).position(app.detail_scroll);
+            f.render_stateful_widget(scrollbar, area.inner(Margin::new(0, 1)), &mut scrollbar_state);
         }
     } else {
-        let no_entry = Paragraph::new("No entry selected").block(
-            Block::default()
-                .borders(Borders::ALL)
-                .border_style(Style::default().fg(Color::Cyan))
-                .title("Entry Details"),
-        );
+        let no_entry = Paragraph::new("No entry selected")
+            .block(
+                Block::default()
+                    .borders(Borders::ALL)
+                    .border_style(Style::default().fg(theme.secondary))
+                    .title(" Entry Details "),
+            );
         f.render_widget(no_entry, area);
     }
 }
 
-/// Render help screen overlay
-fn render_help_screen<S>(f: &mut Frame, app: &AppState<S>)
+fn render_help_screen<S>(f: &mut Frame, app: &AppState<S>, theme: &Theme)
 where
     S: cai_storage::Storage,
 {
     let area = centered_rect(80, 80, f.area());
-
     f.render_widget(Clear, area);
+
+    fn section_line<'a>(label: &'a str, secondary: Color) -> Line<'a> {
+        Line::from(vec![Span::styled(
+            label,
+            Style::default().fg(secondary).add_modifier(Modifier::BOLD),
+        )])
+    }
+    fn cmd_line<'a>(keys: &'a str, desc: &'a str, accent: Color, dim: Color) -> Line<'a> {
+        Line::from(vec![
+            Span::styled(format!("  {:<12}", keys), Style::default().fg(accent)),
+            Span::styled(desc, Style::default().fg(dim)),
+        ])
+    }
 
     let help_text = vec![
         Line::from(vec![Span::styled(
-            "CAI TUI - Keyboard Shortcuts",
-            Style::default()
-                .fg(Color::Green)
-                .add_modifier(Modifier::BOLD),
+            " CAI TUI — Keyboard Shortcuts ",
+            Style::default().fg(theme.primary).add_modifier(Modifier::BOLD),
         )]),
         Line::from(""),
-        Line::from(vec![Span::styled(
-            "Normal Mode:",
-            Style::default()
-                .fg(Color::Cyan)
-                .add_modifier(Modifier::BOLD),
-        )]),
-        Line::from("  q          - Quit application"),
-        Line::from("  i          - Enter query mode"),
-        Line::from("  /          - Enter search mode"),
-        Line::from("  ?          - Show this help screen"),
-        Line::from("  Enter      - View selected entry details"),
-        Line::from("  Up/Down    - Navigate entries"),
-        Line::from("  j/k        - Navigate entries (vim-style)"),
-        Line::from("  t          - Sort by timestamp"),
-        Line::from("  s          - Sort by source"),
-        Line::from("  p          - Sort by prompt"),
-        Line::from("  r          - Refresh data"),
+        section_line("Normal Mode", theme.secondary),
+        cmd_line("i", "Enter query mode", theme.accent, theme.dim),
+        cmd_line("/", "Search / filter", theme.accent, theme.dim),
+        cmd_line("?", "Help screen", theme.accent, theme.dim),
+        cmd_line("Enter", "View selected entry details", theme.accent, theme.dim),
+        cmd_line("↑/k, ↓/j", "Navigate entries", theme.accent, theme.dim),
+        cmd_line("t", "Sort by timestamp", theme.accent, theme.dim),
+        cmd_line("s", "Sort by source", theme.accent, theme.dim),
+        cmd_line("p", "Sort by prompt", theme.accent, theme.dim),
+        cmd_line("r", "Refresh data", theme.accent, theme.dim),
+        cmd_line("q", "Quit", theme.accent, theme.dim),
+        Line::from(""),
+        section_line("Query Mode", theme.secondary),
+        cmd_line("Enter", "Execute query", theme.accent, theme.dim),
+        cmd_line("Esc", "Cancel", theme.accent, theme.dim),
+        cmd_line("↑/↓", "History navigation", theme.accent, theme.dim),
+        Line::from(""),
+        section_line("Search Mode", theme.secondary),
+        cmd_line("Enter", "Apply filter", theme.accent, theme.dim),
+        cmd_line("Esc", "Clear and cancel", theme.accent, theme.dim),
+        Line::from(""),
+        section_line("Detail View", theme.secondary),
+        cmd_line("Esc/q", "Close", theme.accent, theme.dim),
+        cmd_line("↑/↓", "Scroll content", theme.accent, theme.dim),
         Line::from(""),
         Line::from(vec![Span::styled(
-            "Query Mode:",
-            Style::default()
-                .fg(Color::Cyan)
-                .add_modifier(Modifier::BOLD),
-        )]),
-        Line::from("  Enter      - Execute query"),
-        Line::from("  Esc        - Cancel"),
-        Line::from("  Up/Down    - Navigate history"),
-        Line::from(""),
-        Line::from(vec![Span::styled(
-            "Search Mode:",
-            Style::default()
-                .fg(Color::Cyan)
-                .add_modifier(Modifier::BOLD),
-        )]),
-        Line::from("  Enter      - Apply search"),
-        Line::from("  Esc        - Cancel"),
-        Line::from(""),
-        Line::from(vec![Span::styled(
-            "Detail View:",
-            Style::default()
-                .fg(Color::Cyan)
-                .add_modifier(Modifier::BOLD),
-        )]),
-        Line::from("  Esc/q      - Close detail view"),
-        Line::from("  Up/Down    - Scroll content"),
-        Line::from(""),
-        Line::from(vec![Span::styled(
-            "Help Screen:",
-            Style::default()
-                .fg(Color::Cyan)
-                .add_modifier(Modifier::BOLD),
-        )]),
-        Line::from("  Esc/q      - Close help"),
-        Line::from("  Up/Down    - Scroll help"),
-        Line::from(""),
-        Line::from(vec![Span::styled(
-            "Press Esc or q to close this help screen",
-            Style::default().fg(Color::Yellow),
+            " Press Esc or q to close ",
+            Style::default().fg(theme.accent),
         )]),
     ];
 
@@ -747,27 +748,21 @@ where
         .block(
             Block::default()
                 .borders(Borders::ALL)
-                .border_style(Style::default().fg(Color::Cyan))
-                .title("Help"),
+                .border_style(Style::default().fg(theme.secondary))
+                .title(" Help "),
         )
         .scroll((app.help_scroll as u16, 0))
         .wrap(Wrap { trim: false });
 
     f.render_widget(paragraph, area);
 
-    // Render scrollbar if content overflows
     if help_text.len() > area.height as usize {
         let scrollbar = Scrollbar::new(ScrollbarOrientation::VerticalRight);
         let mut scrollbar_state = ScrollbarState::new(help_text.len()).position(app.help_scroll);
-        f.render_stateful_widget(
-            scrollbar,
-            area.inner(Margin::new(0, 1)),
-            &mut scrollbar_state,
-        );
+        f.render_stateful_widget(scrollbar, area.inner(Margin::new(0, 1)), &mut scrollbar_state);
     }
 }
 
-/// Simple word wrap for text
 fn word_wrap(text: &str, max_width: usize) -> Vec<String> {
     let mut lines = Vec::new();
     let mut current_line = String::new();
@@ -794,13 +789,11 @@ fn word_wrap(text: &str, max_width: usize) -> Vec<String> {
         lines.push(current_line);
     }
 
-    // Handle long words that exceed max_width
     let mut result = Vec::new();
     for line in lines {
         if line.len() <= max_width {
             result.push(line);
         } else {
-            // Split long words
             for chunk in line.as_bytes().chunks(max_width) {
                 result.push(String::from_utf8_lossy(chunk).to_string());
             }

@@ -28,7 +28,7 @@ mod app;
 mod event;
 mod ui;
 
-pub use app::{App, AppState, Column, Mode, SortOrder};
+pub use app::{Action, App, AppState, Column, Mode, SortOrder, Theme};
 pub use event::{Event, EventHandler};
 
 use cai_storage::Storage;
