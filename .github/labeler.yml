@@ -1,73 +1,92 @@
-# GitHub Labeler Configuration
+# GitHub Labeler Configuration (v6 format)
 # Automatically labels PRs based on changed files
 
 # Core functionality
 cai-core:
-  - crates/cai-core/**/*
+  - changed-files:
+      - any-glob-to-any-file: crates/cai-core/**/*
 
 # Storage layer
 cai-storage:
-  - crates/cai-storage/**/*
+  - changed-files:
+      - any-glob-to-any-file: crates/cai-storage/**/*
 
 # Query engine
 cai-query:
-  - crates/cai-query/**/*
+  - changed-files:
+      - any-glob-to-any-file: crates/cai-query/**/*
 
 # Data ingestion
 cai-ingest:
-  - crates/cai-ingest/**/*
+  - changed-files:
+      - any-glob-to-any-file: crates/cai-ingest/**/*
 
 # Output formatting
 cai-output:
-  - crates/cai-output/**/*
+  - changed-files:
+      - any-glob-to-any-file: crates/cai-output/**/*
 
 # CLI interface
 cai-cli:
-  - crates/cai-cli/**/*
+  - changed-files:
+      - any-glob-to-any-file: crates/cai-cli/**/*
 
 # Terminal UI
 cai-tui:
-  - crates/cai-tui/**/*
+  - changed-files:
+      - any-glob-to-any-file: crates/cai-tui/**/*
 
 # Web interface
 cai-web:
-  - crates/cai-web/**/*
+  - changed-files:
+      - any-glob-to-any-file: crates/cai-web/**/*
 
 # Plugin system
 cai-plugin:
-  - crates/cai-plugin/**/*
-  - plugin/**/*
+  - changed-files:
+      - any-glob-to-any-file:
+          - crates/cai-plugin/**/*
+          - plugin/**/*
 
 # Testing
 testing:
-  - tests/**/*
-  - **/tests/**/*.rs
-  - TESTING.md
+  - changed-files:
+      - any-glob-to-any-file:
+          - tests/**/*
+          - "**/tests/**/*.rs"
+          - TESTING.md
 
 # Documentation
 documentation:
-  - "**.md"
-  - docs/**/*
-  - .github/ISSUE_TEMPLATE/**/*
+  - changed-files:
+      - any-glob-to-any-file:
+          - "**.md"
+          - docs/**/*
+          - .github/ISSUE_TEMPLATE/**/*
 
 # CI/CD
 ci-cd:
-  - .github/workflows/**/*
-  - .github/CODEOWNERS
-  - scripts/**/*
+  - changed-files:
+      - any-glob-to-any-file:
+          - .github/workflows/**/*
+          - .github/CODEOWNERS
+          - scripts/**/*
 
 # Build configuration
 build:
-  - Cargo.toml
-  - Cargo.lock
-  - .cargo/**/*
-  - Makefile
+  - changed-files:
+      - any-glob-to-any-file:
+          - Cargo.toml
+          - Cargo.lock
+          - .cargo/**/*
+          - Makefile
 
 # Dependencies
 dependencies:
-  - "**/Cargo.toml"
+  - changed-files:
+      - any-glob-to-any-file: "**/Cargo.toml"
 
-# Breaking changes
+# Breaking changes (matched by file path in v6)
 breaking-change:
-  - any: ['crates/**/src/lib.rs']
-    changed: ['**pub enum**', '**pub struct**']
+  - changed-files:
+      - any-glob-to-any-file: crates/**/src/lib.rs
