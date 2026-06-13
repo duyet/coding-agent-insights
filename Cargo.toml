@@ -50,7 +50,7 @@ async-trait = "0.1"
 git2 = { version = "0.20", features = ["vendored-libgit2", "vendored-openssl"] }
 
 # Output formatting
-tabled = "0.20"
+tabled = "0.21"
 colored = "3.0"
 
 # TUI
