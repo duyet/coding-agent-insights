@@ -252,10 +252,26 @@ impl Formatter for AiFormatter {
             };
 
             writeln!(writer, "{}", marker)?;
-            let source_label = if colorize { "source:".dimmed().to_string() } else { "source:".to_string() };
-            let time_label = if colorize { "time:".dimmed().to_string() } else { "time:".to_string() };
-            let ask_label = if colorize { "ask:".dimmed().to_string() } else { "ask:".to_string() };
-            let ans_label = if colorize { "ans:".dimmed().to_string() } else { "ans:".to_string() };
+            let source_label = if colorize {
+                "source:".dimmed().to_string()
+            } else {
+                "source:".to_string()
+            };
+            let time_label = if colorize {
+                "time:".dimmed().to_string()
+            } else {
+                "time:".to_string()
+            };
+            let ask_label = if colorize {
+                "ask:".dimmed().to_string()
+            } else {
+                "ask:".to_string()
+            };
+            let ans_label = if colorize {
+                "ans:".dimmed().to_string()
+            } else {
+                "ans:".to_string()
+            };
 
             writeln!(
                 writer,
@@ -433,10 +449,7 @@ impl StatsFormatter {
 
         let mut table = builder.build();
         table.with(Style::rounded());
-        table.with(
-            Modify::new(tabled::settings::object::Columns::last())
-                .with(Alignment::right()),
-        );
+        table.with(Modify::new(tabled::settings::object::Columns::last()).with(Alignment::right()));
 
         format!("\n{}\n{}", header, table)
     }
