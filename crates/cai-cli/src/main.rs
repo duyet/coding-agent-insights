@@ -27,9 +27,7 @@ use std::sync::Arc;
 fn color_disabled() -> bool {
     std::env::var("NO_COLOR")
         .ok()
-        .and_then(|v| {
-            if v.is_empty() { None } else { Some(true) }
-        })
+        .and_then(|v| if v.is_empty() { None } else { Some(true) })
         .unwrap_or(false)
 }
 
@@ -229,7 +227,11 @@ async fn execute_ingest(source: &str, path: Option<&str>) -> cai_core::Result<()
     };
 
     spinner.finish_and_clear();
-    println!("{} {} entries", "✔ Ingestion complete:".green().bold(), count);
+    println!(
+        "{} {} entries",
+        "✔ Ingestion complete:".green().bold(),
+        count
+    );
     Ok(())
 }
 
@@ -329,16 +331,43 @@ async fn execute_schema(table: Option<&str>) -> cai_core::Result<()> {
         eprintln!("  {} {}", "Available tables:".bold(), "entries".cyan());
         eprintln!();
         eprintln!("  {} `entries`", "Columns in".bold());
-        eprintln!("    {} {}", "id       ".cyan(), "- Unique identifier (TEXT)".dimmed());
-        eprintln!("    {} {}", "source   ".cyan(), "- Source system (TEXT)".dimmed());
-        eprintln!("    {} {}", "timestamp".cyan(), "- Interaction timestamp (TIMESTAMP)".dimmed());
-        eprintln!("    {} {}", "prompt   ".cyan(), "- User prompt/input (TEXT)".dimmed());
-        eprintln!("    {} {}", "response ".cyan(), "- AI response/output (TEXT)".dimmed());
-        eprintln!("    {} {}", "metadata ".cyan(), "- Additional metadata (JSON)".dimmed());
+        eprintln!(
+            "    {} {}",
+            "id       ".cyan(),
+            "- Unique identifier (TEXT)".dimmed()
+        );
+        eprintln!(
+            "    {} {}",
+            "source   ".cyan(),
+            "- Source system (TEXT)".dimmed()
+        );
+        eprintln!(
+            "    {} {}",
+            "timestamp".cyan(),
+            "- Interaction timestamp (TIMESTAMP)".dimmed()
+        );
+        eprintln!(
+            "    {} {}",
+            "prompt   ".cyan(),
+            "- User prompt/input (TEXT)".dimmed()
+        );
+        eprintln!(
+            "    {} {}",
+            "response ".cyan(),
+            "- AI response/output (TEXT)".dimmed()
+        );
+        eprintln!(
+            "    {} {}",
+            "metadata ".cyan(),
+            "- Additional metadata (JSON)".dimmed()
+        );
         eprintln!();
         eprintln!("  {}:", "Query examples".bold().green());
         eprintln!("    {}", "SELECT * FROM entries LIMIT 10".dimmed());
-        eprintln!("    {}", "SELECT * FROM entries WHERE source = 'Claude'".dimmed());
+        eprintln!(
+            "    {}",
+            "SELECT * FROM entries WHERE source = 'Claude'".dimmed()
+        );
     }
 
     Ok(())
@@ -360,13 +389,10 @@ async fn execute_query(query: &str, output_format: &str) -> cai_core::Result<()>
     spinner.set_message("Executing query...");
 
     let query_engine = cai_query::QueryEngine::new(storage);
-    let results = query_engine
-        .execute(query)
-        .await
-        .map_err(|e| {
-            print_error(&format!("Query execution failed: {}", e));
-            cai_core::Error::Message(format!("Query execution failed: {}", e))
-        })?;
+    let results = query_engine.execute(query).await.map_err(|e| {
+        print_error(&format!("Query execution failed: {}", e));
+        cai_core::Error::Message(format!("Query execution failed: {}", e))
+    })?;
 
     spinner.finish_and_clear();
 

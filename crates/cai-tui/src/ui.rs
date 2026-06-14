@@ -122,7 +122,10 @@ where
         }
         KeyCode::Char('i') => {
             app.mode = Mode::Query;
-            app.set_status("Enter SQL, Esc to cancel, Enter to execute".into(), Color::Cyan);
+            app.set_status(
+                "Enter SQL, Esc to cancel, Enter to execute".into(),
+                Color::Cyan,
+            );
             Action::None
         }
         KeyCode::Char('/') => {
@@ -327,7 +330,12 @@ where
     };
 
     let header = vec![Line::from(vec![
-        Span::styled("CAI", Style::default().fg(theme.primary).add_modifier(Modifier::BOLD)),
+        Span::styled(
+            "CAI",
+            Style::default()
+                .fg(theme.primary)
+                .add_modifier(Modifier::BOLD),
+        ),
         Span::raw(" · "),
         Span::styled(
             format!("{} entries", app.entries.len()),
@@ -341,7 +349,11 @@ where
     ])];
 
     let header = Paragraph::new(header)
-        .block(Block::default().borders(Borders::ALL).border_style(Style::default().fg(theme.border)))
+        .block(
+            Block::default()
+                .borders(Borders::ALL)
+                .border_style(Style::default().fg(theme.border)),
+        )
         .alignment(Alignment::Center);
     f.render_widget(header, chunks[0]);
 
@@ -359,7 +371,9 @@ where
     let msg = Paragraph::new(vec![
         Line::from(vec![Span::styled(
             "No entries found",
-            Style::default().fg(theme.secondary).add_modifier(Modifier::BOLD),
+            Style::default()
+                .fg(theme.secondary)
+                .add_modifier(Modifier::BOLD),
         )]),
         Line::from(""),
         Line::from(vec![Span::styled(
@@ -371,7 +385,11 @@ where
             Style::default().fg(theme.dim),
         )]),
     ])
-    .block(Block::default().borders(Borders::ALL).border_style(Style::default().fg(theme.border)))
+    .block(
+        Block::default()
+            .borders(Borders::ALL)
+            .border_style(Style::default().fg(theme.border)),
+    )
     .alignment(Alignment::Center);
     f.render_widget(msg, area);
 }
@@ -384,7 +402,9 @@ where
     let header_cells = ["Timestamp", "Source", "Prompt"].iter().map(|h| {
         let is_active = *h == sort_col_name;
         let style = if is_active {
-            Style::default().fg(theme.accent).add_modifier(Modifier::BOLD)
+            Style::default()
+                .fg(theme.accent)
+                .add_modifier(Modifier::BOLD)
         } else {
             Style::default().fg(theme.dim)
         };
@@ -431,7 +451,11 @@ where
         ],
     )
     .header(header)
-    .block(Block::default().borders(Borders::ALL).border_style(Style::default().fg(theme.border)));
+    .block(
+        Block::default()
+            .borders(Borders::ALL)
+            .border_style(Style::default().fg(theme.border)),
+    );
 
     let mut table_state = TableState::default();
     table_state.select(Some(app.selected.saturating_sub(app.scroll)));
@@ -440,7 +464,11 @@ where
 
     let scrollbar = Scrollbar::new(ScrollbarOrientation::VerticalRight);
     let mut scrollbar_state = ScrollbarState::new(app.entries.len()).position(app.scroll);
-    f.render_stateful_widget(scrollbar, area.inner(Margin::new(0, 1)), &mut scrollbar_state);
+    f.render_stateful_widget(
+        scrollbar,
+        area.inner(Margin::new(0, 1)),
+        &mut scrollbar_state,
+    );
 }
 
 fn render_status<S>(f: &mut Frame, app: &AppState<S>, area: Rect, theme: &Theme)
@@ -449,7 +477,10 @@ where
 {
     fn active_label<'a>(label: &'a str, color: Color, is_active: bool) -> Span<'a> {
         if is_active {
-            Span::styled(label, Style::default().fg(color).add_modifier(Modifier::BOLD))
+            Span::styled(
+                label,
+                Style::default().fg(color).add_modifier(Modifier::BOLD),
+            )
         } else {
             Span::styled(label, Style::default().fg(Color::Gray))
         }
@@ -467,7 +498,11 @@ where
 
     let mode_label: Vec<Span> = match app.mode {
         Mode::Normal => {
-            let mut sp = vec![active_label(" NORMAL ", theme.primary, app.mode == Mode::Normal)];
+            let mut sp = vec![active_label(
+                " NORMAL ",
+                theme.primary,
+                app.mode == Mode::Normal,
+            )];
             sp.push(Span::raw("│"));
             sp.extend(key_hint(" i", "query ", accent, dim));
             sp.extend(key_hint(" /", "search ", accent, dim));
@@ -614,7 +649,9 @@ where
 
     if let Some(entry) = app.selected_entry() {
         let meta_style = Style::default().fg(theme.secondary);
-        let label_style = Style::default().fg(theme.accent).add_modifier(Modifier::BOLD);
+        let label_style = Style::default()
+            .fg(theme.accent)
+            .add_modifier(Modifier::BOLD);
 
         let mut lines = vec![
             Line::from(vec![Span::styled("ID: ", meta_style), Span::raw(&entry.id)]),
@@ -671,18 +708,20 @@ where
 
         if lines.len() > area.height as usize {
             let scrollbar = Scrollbar::new(ScrollbarOrientation::VerticalRight);
-            let mut scrollbar_state =
-                ScrollbarState::new(lines.len()).position(app.detail_scroll);
-            f.render_stateful_widget(scrollbar, area.inner(Margin::new(0, 1)), &mut scrollbar_state);
+            let mut scrollbar_state = ScrollbarState::new(lines.len()).position(app.detail_scroll);
+            f.render_stateful_widget(
+                scrollbar,
+                area.inner(Margin::new(0, 1)),
+                &mut scrollbar_state,
+            );
         }
     } else {
-        let no_entry = Paragraph::new("No entry selected")
-            .block(
-                Block::default()
-                    .borders(Borders::ALL)
-                    .border_style(Style::default().fg(theme.secondary))
-                    .title(" Entry Details "),
-            );
+        let no_entry = Paragraph::new("No entry selected").block(
+            Block::default()
+                .borders(Borders::ALL)
+                .border_style(Style::default().fg(theme.secondary))
+                .title(" Entry Details "),
+        );
         f.render_widget(no_entry, area);
     }
 }
@@ -710,14 +749,21 @@ where
     let help_text = vec![
         Line::from(vec![Span::styled(
             " CAI TUI — Keyboard Shortcuts ",
-            Style::default().fg(theme.primary).add_modifier(Modifier::BOLD),
+            Style::default()
+                .fg(theme.primary)
+                .add_modifier(Modifier::BOLD),
         )]),
         Line::from(""),
         section_line("Normal Mode", theme.secondary),
         cmd_line("i", "Enter query mode", theme.accent, theme.dim),
         cmd_line("/", "Search / filter", theme.accent, theme.dim),
         cmd_line("?", "Help screen", theme.accent, theme.dim),
-        cmd_line("Enter", "View selected entry details", theme.accent, theme.dim),
+        cmd_line(
+            "Enter",
+            "View selected entry details",
+            theme.accent,
+            theme.dim,
+        ),
         cmd_line("↑/k, ↓/j", "Navigate entries", theme.accent, theme.dim),
         cmd_line("t", "Sort by timestamp", theme.accent, theme.dim),
         cmd_line("s", "Sort by source", theme.accent, theme.dim),
@@ -759,7 +805,11 @@ where
     if help_text.len() > area.height as usize {
         let scrollbar = Scrollbar::new(ScrollbarOrientation::VerticalRight);
         let mut scrollbar_state = ScrollbarState::new(help_text.len()).position(app.help_scroll);
-        f.render_stateful_widget(scrollbar, area.inner(Margin::new(0, 1)), &mut scrollbar_state);
+        f.render_stateful_widget(
+            scrollbar,
+            area.inner(Margin::new(0, 1)),
+            &mut scrollbar_state,
+        );
     }
 }
 
