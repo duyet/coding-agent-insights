@@ -86,7 +86,7 @@ impl GitScanner {
         // Build prompt from commit message (first line) and author
         let prompt = format!(
             "{}\n\nAuthor: {} <{}>",
-            commit.summary().unwrap_or(""),
+            commit.summary().ok().flatten().unwrap_or(""),
             commit.author().name().unwrap_or(""),
             commit.author().email().unwrap_or("")
         );
@@ -138,7 +138,7 @@ impl GitScanner {
 fn get_remote_url(repo: &Repository) -> Option<String> {
     repo.find_remote("origin")
         .ok()
-        .and_then(|r| r.url().map(|u| u.to_string()))
+        .and_then(|r| r.url().ok().map(|u| u.to_string()))
 }
 
 /// Convert git2 Time to DateTime<Utc>
