@@ -41,7 +41,7 @@ indicatif = "0.18"
 
 # Database
 rusqlite = { version = "0.40", features = ["bundled", "functions"] }
-sqlparser = "0.61"
+sqlparser = "0.62"
 
 # Async
 async-trait = "0.1"
