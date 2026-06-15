@@ -47,7 +47,7 @@ sqlparser = "0.62"
 async-trait = "0.1"
 
 # Git operations
-git2 = { version = "0.20", features = ["vendored-libgit2", "vendored-openssl"] }
+git2 = { version = "0.21", features = ["vendored-libgit2", "vendored-openssl"] }
 
 # Output formatting
 tabled = "0.21"
