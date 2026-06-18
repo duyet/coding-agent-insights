@@ -868,9 +868,9 @@ checksum = "baf0a07a401f374238ab8e2f11a104d2851bf9ce711ec69804834de8af45c7af"
 
 [[package]]
 name = "config"
-version = "0.15.23"
+version = "0.15.24"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f316c6237b2d38be61949ecd15268a4c6ca32570079394a2444d9ce2c72a72d8"
+checksum = "0b34d0237145f33580b89724f75d16950efd3e2c91b2d823917ecb69ec7f84f0"
 dependencies = [
  "async-trait",
  "convert_case 0.6.0",
